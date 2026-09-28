@@ -1,0 +1,77 @@
+/*
+ * Amazon Alexa+ add-on design tokens.
+ * Values are from the published Visual Foundations guide: typography on a 1.6 ratio,
+ * the documented spacing and shape scales, and the documented surface colours.
+ * Authored at the 768x480 base canvas; the host applies the root scale.
+ */
+:root {
+  --text-display-1: 48px;
+  --text-display-2: 40px;
+  --text-display-3: 32px;
+  --text-display-4: 28px;
+  --text-display-5: 24px;
+  --text-headline-1: 20px;
+  --text-headline-2: 18px;
+  --text-body-1: 16px;
+  --text-body-2: 14px;
+  --text-body-3: 12px;
+  --text-label-1: 10px;
+  --text-label-2: 8px;
+
+  --space-4xs: 2px;
+  --space-2xs: 6px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 24px;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-circle: 9999px;
+
+  --surface: #14181e;
+  --surface-nested: #1b2028;
+  --button-primary: #2d415e;
+  --button-secondary: #232f40;
+
+  --fg: #ffffff;
+  --fg-muted: #b9c0cc;
+  --accent-positive: #7fd1a6;
+  --accent-open: #f0c36d;
+  --accent-quiet: #8fa3bf;
+}
+
+:root[data-theme="light"] {
+  --surface: #ffffff;
+  --surface-nested: #faf9fb;
+  --fg: #14181e;
+  --fg-muted: #4d5666;
+  --accent-positive: #1d7a4c;
+  --accent-open: #8a6300;
+  --accent-quiet: #3f5878;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: var(--text-body-1);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  max-width: 768px;
+  min-height: 480px;
+  padding: var(--space-xl);
+}
