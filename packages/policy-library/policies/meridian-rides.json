@@ -1,0 +1,25 @@
+{
+  "merchant": "Meridian Rides",
+  "currency": "USD",
+  "retrieved_at": "2026-09-01",
+  "clauses": [
+    {
+      "id": "meridian/pickup-promise#2",
+      "title": "Pickup Promise 2",
+      "breach_kinds": ["late_eta"],
+      "source": "Meridian Rides Pickup Promise, clause 2 (docs/policies/meridian-rides.md)",
+      "quote": "If your driver arrives more than ten minutes after the time we quoted, your next ride is credited $3. Delays beyond twenty minutes are credited up to $5.",
+      "remedy": {
+        "kind": "fixed",
+        "stated": {
+          "minor": 300,
+          "currency": "USD"
+        },
+        "ceiling": {
+          "minor": 500,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
+}

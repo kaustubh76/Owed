@@ -1,0 +1,39 @@
+{
+  "merchant": "Calder & Co.",
+  "currency": "USD",
+  "retrieved_at": "2026-09-01",
+  "clauses": [
+    {
+      "id": "calder/refund-policy#1.1",
+      "title": "Refund Policy 1.1",
+      "breach_kinds": ["late_refund"],
+      "source": "Calder & Co. Refund Policy, clause 1.1 (docs/policies/calder-and-co.md)",
+      "quote": "Refunds are issued within five to seven working days. Where we exceed that, we add $5 in goodwill on request.",
+      "remedy": {
+        "kind": "fixed",
+        "stated": {
+          "minor": 500,
+          "currency": "USD"
+        },
+        "ceiling": {
+          "minor": 500,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "calder/price-promise#3",
+      "title": "Price Promise 3",
+      "breach_kinds": ["price_drop"],
+      "source": "Calder & Co. Price Promise, clause 3 (docs/policies/calder-and-co.md)",
+      "quote": "If the price falls within fourteen days of your purchase, we refund the difference, up to $50 per item.",
+      "remedy": {
+        "kind": "difference",
+        "ceiling": {
+          "minor": 5000,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
+}

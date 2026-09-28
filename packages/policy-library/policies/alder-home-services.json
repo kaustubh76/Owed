@@ -1,0 +1,25 @@
+{
+  "merchant": "Alder Home Services",
+  "currency": "USD",
+  "retrieved_at": "2026-09-01",
+  "clauses": [
+    {
+      "id": "alder/appointment-promise#2",
+      "title": "Appointment Promise 2",
+      "breach_kinds": ["no_show"],
+      "source": "Alder Home Services Appointment Promise, clause 2 (docs/policies/alder-home-services.md)",
+      "quote": "If nobody attends within your booked slot we credit $9 against your next visit, and up to $12 where you have waited in for the full slot.",
+      "remedy": {
+        "kind": "fixed",
+        "stated": {
+          "minor": 900,
+          "currency": "USD"
+        },
+        "ceiling": {
+          "minor": 1200,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
+}

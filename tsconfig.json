@@ -8,6 +8,9 @@
       "path": "packages/recourse-protocol"
     },
     {
+      "path": "packages/policy-library"
+    },
+    {
       "path": "packages/core"
     },
     {

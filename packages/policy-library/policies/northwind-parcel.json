@@ -1,0 +1,43 @@
+{
+  "merchant": "Northwind Parcel",
+  "currency": "USD",
+  "retrieved_at": "2026-09-01",
+  "clauses": [
+    {
+      "id": "northwind/delivery-guarantee#4.2",
+      "title": "Delivery Guarantee 4.2",
+      "breach_kinds": ["phantom_delivery"],
+      "source": "Northwind Parcel Delivery Guarantee, clause 4.2 (docs/policies/northwind-parcel.md)",
+      "quote": "Where a parcel is recorded as delivered but was not received, we credit $12. Where the customer provides evidence covering the recorded delivery time, we credit up to $15.",
+      "remedy": {
+        "kind": "fixed",
+        "stated": {
+          "minor": 1200,
+          "currency": "USD"
+        },
+        "ceiling": {
+          "minor": 1500,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "northwind/delivery-guarantee#4.1",
+      "title": "Delivery Guarantee 4.1",
+      "breach_kinds": ["missed_window"],
+      "source": "Northwind Parcel Delivery Guarantee, clause 4.1 (docs/policies/northwind-parcel.md)",
+      "quote": "If your parcel arrives outside the window we gave you, we credit $8, or up to $10 where the delay exceeds two hours.",
+      "remedy": {
+        "kind": "fixed",
+        "stated": {
+          "minor": 800,
+          "currency": "USD"
+        },
+        "ceiling": {
+          "minor": 1000,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
+}
