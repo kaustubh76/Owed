@@ -3,7 +3,9 @@
 Run it:
 
 ```bash
-pnpm build && pnpm --filter @owed/eval recourse
+pnpm build
+pnpm --filter @owed/eval recourse    # single-shot: does negotiating beat taking the first offer?
+pnpm --filter @owed/eval learning    # repeat games: does knowing who you are arguing with help?
 ```
 
 Results are written to `eval/results/recourse.json`, one row per session.
@@ -95,3 +97,68 @@ below the published figure, because on the first reply it has no way to know whe
 talking to a merchant that will improve or one that will withdraw. A version that learned
 per-merchant priors — which the ledger already records — should do better, and that is the
 obvious next piece of work rather than a defence of this one.
+
+
+---
+
+## Learning — does knowing who you are arguing with help?
+
+The single-shot result named its own weakness: the negotiator counters whenever an offer
+falls short, because on the first reply it cannot tell a merchant that will improve from
+one that will withdraw. That blind spot is the whole of its 23.3% loss rate.
+
+### What it learns, and from where
+
+Per `(merchant, breach kind)`, from a **projection of the ledger** rather than a new store:
+how often countering was tried, and what it realised. The rule is a mean and a comparison.
+
+```
+offer ≥ the published figure          → accept
+fewer than 3 counters on record       → counter   (you cannot learn without trying)
+mean realised when countering > offer → counter
+otherwise                             → accept
+```
+
+Not a model. Every input to the decision sits in the ledger where it can be read.
+
+### Results — 270 policies × 6 breach kinds × 20 episodes
+
+| Strategy | Share of owed |
+|---|---|
+| Accept the first offer | 30.8% |
+| Cold negotiator | 33.9% |
+| **Learner, episode 1** | **33.9%** |
+| **Learner, settled** | **44.1%** |
+| Oracle (knows each merchant's type) | 44.1% |
+
+- **Lift over the baseline rises from 1.10× to 1.43×.**
+- **The loss rate falls from 23.3% to 0%.** After three encounters the learner stops
+  arguing with merchants who punish it.
+- It takes exactly three episodes to switch, which is the exploration threshold.
+
+### Why this stays honest
+
+**Episode one equals the cold negotiator exactly**, and `learning.test.ts` asserts it. Any
+divergence would mean the learner is seeing something a household would not have on first
+contact — which is the specific way this kind of evaluation usually cheats.
+
+**Evaluation is online and sequential.** Each merchant is met cold; the learner knows only
+what it has already experienced with *that* merchant. **The pre-registered grid does not
+change** — same 270 policies, same parameters, still pinned to its generator.
+
+### What this does not show
+
+**Reaching the oracle is a property of the simulation, not a triumph of the algorithm.**
+These merchants are deterministic: after three identical encounters their type is known with
+certainty, so a mean is a perfect classifier. Against merchants who vary — who sometimes
+improve and sometimes withdraw — the learner would not converge this cleanly, and 100% of
+the available advantage is not a number to expect in the world.
+
+**The hypothesis is still not met.** H3 predicted ≥ 60% of owed and ≥ 1.5× the baseline.
+Learning moves the result from 33.9% to 44.1% and from 1.10× to 1.43× — much closer, and
+still short on both counts. A third of the grid refuses every claim outright and is
+unrecoverable by anyone, which caps what any strategy can reach.
+
+**Learning takes time a household may not have.** Three encounters with the same merchant
+about the same kind of broken promise is a lot of broken promises. The figures above are an
+upper bound on how quickly the loop pays off, not a description of a first month of use.

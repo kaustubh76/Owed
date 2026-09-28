@@ -19,7 +19,7 @@ interface NegotiationOptions {
 }
 
 /** Drive a real negotiation between the real negotiator and a real merchant agent. */
-function negotiate({ merchant, breachKind, shortfall, behaviour }: NegotiationOptions) {
+async function negotiate({ merchant, breachKind, shortfall, behaviour }: NegotiationOptions) {
   const policy = library.get(merchant);
   if (!policy) throw new Error(`no policy for ${merchant}`);
 
@@ -64,7 +64,7 @@ function negotiate({ merchant, breachKind, shortfall, behaviour }: NegotiationOp
     lookup: () => ({ stated: remedy.reservation, clause_title: remedy.clause.title }),
   });
 
-  const session = runSession({ ...createNegotiator({ bounds }), open: () => claim }, agent);
+  const session = await runSession({ ...createNegotiator({ bounds }), open: () => claim }, agent);
   return { session, remedy, claim };
 }
 
@@ -76,8 +76,8 @@ function negotiate({ merchant, breachKind, shortfall, behaviour }: NegotiationOp
  * shows a real outcome instead of a scripted one.
  */
 describe("the storyboard's negotiations", () => {
-  it("settles the hero claim at twelve dollars in two rounds", () => {
-    const { session, claim } = negotiate({
+  it("settles the hero claim at twelve dollars in two rounds", async () => {
+    const { session, claim } = await negotiate({
       merchant: "Northwind Parcel",
       breachKind: "phantom_delivery",
     });
@@ -88,8 +88,11 @@ describe("the storyboard's negotiations", () => {
     expect(session.rounds).toBe(2);
   });
 
-  it("opens at fifteen and counters at twelve — the merchant's own two figures", () => {
-    const { session } = negotiate({ merchant: "Northwind Parcel", breachKind: "phantom_delivery" });
+  it("opens at fifteen and counters at twelve — the merchant's own two figures", async () => {
+    const { session } = await negotiate({
+      merchant: "Northwind Parcel",
+      breachKind: "phantom_delivery",
+    });
     const [, offer, counter] = session.transcript;
 
     expect(offer?.type === "OFFER" && offer.amount).toEqual(usd(5));
@@ -99,27 +102,30 @@ describe("the storyboard's negotiations", () => {
     );
   });
 
-  it("settles a missed window at eight", () => {
-    const { session } = negotiate({ merchant: "Northwind Parcel", breachKind: "missed_window" });
+  it("settles a missed window at eight", async () => {
+    const { session } = await negotiate({
+      merchant: "Northwind Parcel",
+      breachKind: "missed_window",
+    });
 
     expect(session.settled).toEqual(usd(8));
   });
 
-  it("settles a late ride immediately when the merchant pays what it published", () => {
-    const { session } = negotiate({ merchant: "Meridian Rides", breachKind: "late_eta" });
+  it("settles a late ride immediately when the merchant pays what it published", async () => {
+    const { session } = await negotiate({ merchant: "Meridian Rides", breachKind: "late_eta" });
 
     expect(session.settled).toEqual(usd(3));
     expect(session.rounds).toBe(1);
   });
 
-  it("settles a missed appointment at nine", () => {
-    const { session } = negotiate({ merchant: "Alder Home Services", breachKind: "no_show" });
+  it("settles a missed appointment at nine", async () => {
+    const { session } = await negotiate({ merchant: "Alder Home Services", breachKind: "no_show" });
 
     expect(session.settled).toEqual(usd(9));
   });
 
-  it("settles a price match at the difference, without argument", () => {
-    const { session } = negotiate({
+  it("settles a price match at the difference, without argument", async () => {
+    const { session } = await negotiate({
       merchant: "Calder & Co.",
       breachKind: "price_drop",
       shortfall: usd(15),
@@ -128,8 +134,8 @@ describe("the storyboard's negotiations", () => {
     expect(session.settled).toEqual(usd(15));
   });
 
-  it("is stonewalled on the late refund, and is given somewhere to go", () => {
-    const { session } = negotiate({ merchant: "Calder & Co.", breachKind: "late_refund" });
+  it("is stonewalled on the late refund, and is given somewhere to go", async () => {
+    const { session } = await negotiate({ merchant: "Calder & Co.", breachKind: "late_refund" });
     const decline = session.transcript.at(-1);
 
     expect(session.outcome).toBe("escalated");
@@ -137,13 +143,13 @@ describe("the storyboard's negotiations", () => {
     expect(decline?.type === "DECLINE" && decline.escalation_route).toContain("Calder");
   });
 
-  it("charges the same merchant two postures, because a price promise is not a refund", () => {
-    const priceMatch = negotiate({
+  it("charges the same merchant two postures, because a price promise is not a refund", async () => {
+    const priceMatch = await negotiate({
       merchant: "Calder & Co.",
       breachKind: "price_drop",
       shortfall: usd(15),
     });
-    const refund = negotiate({ merchant: "Calder & Co.", breachKind: "late_refund" });
+    const refund = await negotiate({ merchant: "Calder & Co.", breachKind: "late_refund" });
 
     expect(priceMatch.session.outcome).toBe("settled");
     expect(refund.session.outcome).toBe("escalated");
@@ -156,8 +162,8 @@ describe("against a merchant that punishes negotiating", () => {
    * against a merchant who withdraws, the household ends with nothing where accepting
    * would have banked the opening offer.
    */
-  it("ends worse off than simply taking the first offer", () => {
-    const punishing = negotiate({
+  it("ends worse off than simply taking the first offer", async () => {
+    const punishing = await negotiate({
       merchant: "Northwind Parcel",
       breachKind: "phantom_delivery",
       // Withdrawing only bites when they would not have accepted the counter anyway,

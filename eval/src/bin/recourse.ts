@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { runRecourseMatrix } from "../recourse.js";
 
-const report = runRecourseMatrix();
+const report = await runRecourseMatrix();
 const pct = (value: number) => `${(value * 100).toFixed(1)}%`;
 const usd = (minor: number) => `$${(minor / 100).toFixed(2)}`;
 

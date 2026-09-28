@@ -153,9 +153,9 @@ function median(values: readonly number[]): number {
     : (sorted[middle] as number);
 }
 
-export function runRecourseMatrix(
+export async function runRecourseMatrix(
   grid: readonly MerchantBehaviour[] = generateGrid(),
-): MatrixReport {
+): Promise<MatrixReport> {
   const policies = builtinPolicies().all();
   const cells: Cell[] = [];
 
@@ -178,7 +178,7 @@ export function runRecourseMatrix(
         lookup: () => ({ stated: remedy.reservation, clause_title: remedy.clause.title }),
       });
 
-      const session = runSession(negotiator, agent);
+      const session = await runSession(negotiator, agent);
 
       cells.push({
         behaviour_id: behaviourId(behaviour),

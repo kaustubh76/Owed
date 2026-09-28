@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "recourse": "node dist/bin/recourse.js"
+    "recourse": "node dist/bin/recourse.js",
+    "learning": "node dist/bin/learning.js"
   },
   "dependencies": {
     "@owed/core": "workspace:*",

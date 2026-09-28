@@ -271,10 +271,14 @@ accepting the first offer — a **1.10× lift** at a **median of two rounds**. I
 than the baseline in **23.3%** of cells, every one a merchant that withdraws its offer when
 challenged.
 
-The pre-registered hypothesis (H3: ≥ 60% and ≥ 1.5×) is **not met**, and `eval/README.md`
-says so plainly along with two conditional readings and the grid's known weighting bias.
-Negotiating is worth doing; it is worth less than we predicted, and it is harmful against
-merchants who penalise it.
+**With per-merchant priors** — learned from the ledger, over 20 repeat encounters — the
+negotiator reaches **44.1%**, a **1.43× lift**, and its loss rate falls to **0%**: after
+three encounters it stops arguing with merchants who punish it. Episode one still matches
+the cold negotiator exactly, which is the check that proves nothing is leaking.
+
+The pre-registered hypothesis (H3: ≥ 60% and ≥ 1.5×) is **still not met** on either figure,
+and `eval/README.md` says so plainly — along with why reaching the oracle here is a property
+of simulated merchants being deterministic rather than a claim about the algorithm.
 
 ---
 
