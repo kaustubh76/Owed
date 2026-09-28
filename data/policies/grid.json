@@ -1,0 +1,2173 @@
+{
+  "$comment": "Pre-registered merchant policy grid. Generated from GRID_PARAMETERS before the negotiator was tuned against it. eval/src/grid.test.ts asserts this file still matches the generator, so it cannot be edited after seeing results.",
+  "parameters": {
+    "anchor_ratio": [0, 0.25, 0.4, 0.65, 1],
+    "concession_rate": [0, 0.3, 0.6],
+    "accept_ratio": [0.8, 1, 1.2],
+    "declines_at_round": [0, 1, 2],
+    "withdraws_on_counter": [false, true]
+  },
+  "size": 270,
+  "policies": [
+    {
+      "id": "a0-c0-t0.8-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t0.8-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0-t0.8-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t0.8-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0-t0.8-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t0.8-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0-t1-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t1-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0-t1-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t1-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0-t1-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t1-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0-t1.2-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t1.2-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0-t1.2-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t1.2-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0-t1.2-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0-t1.2-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t0.8-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t0.8-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t0.8-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t0.8-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t0.8-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t0.8-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t1-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t1-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t1-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t1-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t1-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t1-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t1.2-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t1.2-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t1.2-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t1.2-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.3-t1.2-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.3-t1.2-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t0.8-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t0.8-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t0.8-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t0.8-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t0.8-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t0.8-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t1-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t1-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t1-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t1-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t1-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t1-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t1.2-d0-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t1.2-d0-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t1.2-d1-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t1.2-d1-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0-c0.6-t1.2-d2-w0",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0-c0.6-t1.2-d2-w1",
+      "anchor_ratio": 0,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t0.8-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t0.8-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t0.8-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t0.8-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t0.8-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t0.8-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t1-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t1-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t1-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t1-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t1-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t1-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t1.2-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t1.2-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t1.2-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t1.2-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0-t1.2-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0-t1.2-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t0.8-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t0.8-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t0.8-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t0.8-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t0.8-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t0.8-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t1-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t1-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t1-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t1-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t1-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t1-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t1.2-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t1.2-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t1.2-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t1.2-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.3-t1.2-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.3-t1.2-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t0.8-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t0.8-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t0.8-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t0.8-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t0.8-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t0.8-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t1-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t1-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t1-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t1-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t1-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t1-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t1.2-d0-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t1.2-d0-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t1.2-d1-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t1.2-d1-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.25-c0.6-t1.2-d2-w0",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.25-c0.6-t1.2-d2-w1",
+      "anchor_ratio": 0.25,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t0.8-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t0.8-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t0.8-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t0.8-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t0.8-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t0.8-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t1-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t1-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t1-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t1-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t1-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t1-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t1.2-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t1.2-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t1.2-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t1.2-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0-t1.2-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0-t1.2-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t0.8-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t0.8-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t0.8-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t0.8-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t0.8-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t0.8-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t1-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t1-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t1-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t1-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t1-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t1-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t1.2-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t1.2-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t1.2-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t1.2-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.3-t1.2-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.3-t1.2-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t0.8-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t0.8-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t0.8-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t0.8-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t0.8-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t0.8-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t1-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t1-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t1-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t1-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t1-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t1-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t1.2-d0-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t1.2-d0-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t1.2-d1-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t1.2-d1-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.4-c0.6-t1.2-d2-w0",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.4-c0.6-t1.2-d2-w1",
+      "anchor_ratio": 0.4,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t0.8-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t0.8-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t0.8-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t0.8-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t0.8-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t0.8-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t1-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t1-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t1-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t1-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t1-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t1-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t1.2-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t1.2-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t1.2-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t1.2-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0-t1.2-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0-t1.2-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t0.8-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t0.8-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t0.8-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t0.8-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t0.8-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t0.8-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t1-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t1-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t1-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t1-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t1-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t1-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t1.2-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t1.2-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t1.2-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t1.2-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.3-t1.2-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.3-t1.2-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t0.8-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t0.8-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t0.8-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t0.8-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t0.8-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t0.8-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t1-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t1-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t1-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t1-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t1-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t1-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t1.2-d0-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t1.2-d0-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t1.2-d1-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t1.2-d1-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a0.65-c0.6-t1.2-d2-w0",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a0.65-c0.6-t1.2-d2-w1",
+      "anchor_ratio": 0.65,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t0.8-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t0.8-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t0.8-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t0.8-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t0.8-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t0.8-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t1-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t1-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t1-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t1-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t1-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t1-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t1.2-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t1.2-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t1.2-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t1.2-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0-t1.2-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0-t1.2-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t0.8-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t0.8-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t0.8-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t0.8-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t0.8-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t0.8-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t1-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t1-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t1-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t1-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t1-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t1-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t1.2-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t1.2-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t1.2-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t1.2-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.3-t1.2-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.3-t1.2-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.3,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t0.8-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t0.8-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t0.8-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t0.8-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t0.8-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t0.8-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 0.8,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t1-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t1-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t1-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t1-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t1-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t1-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t1.2-d0-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t1.2-d0-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 0,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t1.2-d1-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t1.2-d1-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 1,
+      "withdraws_on_counter": true
+    },
+    {
+      "id": "a1-c0.6-t1.2-d2-w0",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": false
+    },
+    {
+      "id": "a1-c0.6-t1.2-d2-w1",
+      "anchor_ratio": 1,
+      "concession_rate": 0.6,
+      "accept_ratio": 1.2,
+      "declines_at_round": 2,
+      "withdraws_on_counter": true
+    }
+  ]
+}

@@ -19,7 +19,8 @@
     "demo": "concurrently -n server,brain,home -c cyan,magenta,green \"pnpm --filter @owed/mcp-server start\" \"pnpm --filter @owed/brain start\" \"pnpm --filter @owed/home dev\"",
     "demo:build": "pnpm build",
     "conformance": "node scripts/conformance.mjs",
-    "verify:ui": "node scripts/verify-ui.mjs"
+    "verify:ui": "node scripts/verify-ui.mjs",
+    "eval": "pnpm --filter @owed/eval recourse"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",

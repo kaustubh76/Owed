@@ -92,11 +92,32 @@ importers:
         specifier: ^8.3.1
         version: 8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(tsx@4.23.15)
 
+  eval:
+    dependencies:
+      '@owed/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@owed/domain':
+        specifier: workspace:*
+        version: link:../packages/domain
+      '@owed/merchant-agents':
+        specifier: workspace:*
+        version: link:../packages/merchant-agents
+      '@owed/policy-library':
+        specifier: workspace:*
+        version: link:../packages/policy-library
+      '@owed/recourse-protocol':
+        specifier: workspace:*
+        version: link:../packages/recourse-protocol
+
   packages/core:
     dependencies:
       '@owed/domain':
         specifier: workspace:*
         version: link:../domain
+      '@owed/recourse-protocol':
+        specifier: workspace:*
+        version: link:../recourse-protocol
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -152,6 +173,33 @@ importers:
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
+
+  packages/merchant-agents:
+    dependencies:
+      '@owed/policy-library':
+        specifier: workspace:*
+        version: link:../policy-library
+      '@owed/recourse-protocol':
+        specifier: workspace:*
+        version: link:../recourse-protocol
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+
+  packages/policy-library:
+    dependencies:
+      '@owed/recourse-protocol':
+        specifier: workspace:*
+        version: link:../recourse-protocol
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+
+  packages/recourse-protocol:
+    dependencies:
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
 
   packages/ui-views:
     dependencies:
