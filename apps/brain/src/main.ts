@@ -1,0 +1,109 @@
+import { SystemClock } from "@owed/core";
+import { linkAccount } from "@owed/mcp-server";
+import { type WebSocket, WebSocketServer } from "ws";
+import { OwedBrain } from "./brain.js";
+import type { BrainToHome, HomeToBrain } from "./protocol.js";
+import { connectSession } from "./session.js";
+
+const MCP_URL = new URL(process.env.OWED_MCP_URL ?? "http://127.0.0.1:3939/mcp");
+const CLIENT_ID = process.env.OWED_CLIENT_ID ?? "owed-simulated-home";
+const CONTROL_URL = new URL("/control/clock", MCP_URL);
+const PORT = Number(process.env.OWED_BRAIN_PORT ?? 3940);
+
+/** Wall time here is for inspector timestamps only — never for domain decisions. */
+const wallClock = new SystemClock();
+const sockets = new Set<WebSocket>();
+
+function broadcast(message: BrainToHome): void {
+  const payload = JSON.stringify(message);
+  for (const socket of sockets) {
+    if (socket.readyState === socket.OPEN) socket.send(payload);
+  }
+}
+
+/**
+ * Link, then connect.
+ *
+ * The brain walks the real authorization-code + PKCE flow against Owed's own
+ * authorization server rather than being handed a token out of band, so the demo
+ * exercises account linking the same way a host would. `OWED_BRAIN_TOKEN` skips it
+ * when a token is already in hand.
+ */
+async function linkAndConnect(attempts = 40, delayMs = 500) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      const accessToken =
+        process.env.OWED_BRAIN_TOKEN ??
+        (await linkAccount({ baseUrl: new URL("/", MCP_URL), clientId: CLIENT_ID })).accessToken;
+
+      return await connectSession({
+        url: MCP_URL,
+        accessToken,
+        onFrame: (direction, message) => {
+          broadcast({ type: "frame", direction, at: wallClock.now(), message });
+        },
+      });
+    } catch (error) {
+      if (attempt >= attempts) throw error;
+      process.stdout.write(`waiting for ${MCP_URL.href} (${attempt}/${attempts})\n`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
+const client = await linkAndConnect();
+const brain = new OwedBrain(client);
+
+async function readClock(): Promise<string | undefined> {
+  const response = await fetch(CONTROL_URL);
+  if (!response.ok) return undefined;
+  return ((await response.json()) as { now?: string }).now;
+}
+
+async function setClock(instant: string): Promise<string | undefined> {
+  const response = await fetch(CONTROL_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ instant }),
+  });
+  if (!response.ok) return undefined;
+  return ((await response.json()) as { now?: string }).now;
+}
+
+async function handle(message: HomeToBrain): Promise<void> {
+  if (message.type === "utterance") {
+    broadcast(await brain.turn(message.text));
+    return;
+  }
+  const now = await setClock(message.instant);
+  if (now !== undefined) broadcast({ type: "clock", now });
+}
+
+const server = new WebSocketServer({ port: PORT, host: "127.0.0.1" });
+
+server.on("connection", (socket) => {
+  sockets.add(socket);
+  socket.on("close", () => sockets.delete(socket));
+
+  void readClock().then((now) => {
+    if (now !== undefined)
+      socket.send(JSON.stringify({ type: "clock", now } satisfies BrainToHome));
+  });
+
+  socket.on("message", (raw) => {
+    void (async () => {
+      try {
+        await handle(JSON.parse(String(raw)) as HomeToBrain);
+      } catch (error) {
+        broadcast({
+          type: "error",
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    })();
+  });
+});
+
+process.stdout.write(
+  `Owed brain on ws://127.0.0.1:${PORT} (linked to ${MCP_URL.href} as ${CLIENT_ID})\n`,
+);

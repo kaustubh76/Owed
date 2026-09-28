@@ -1,0 +1,33 @@
+{
+  "name": "@owed/brain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "zod": "^4.6.5",
+    "@owed/domain": "workspace:*",
+    "@modelcontextprotocol/client": "2.1.0",
+    "@modelcontextprotocol/core": "2.1.0",
+    "mcp-voice-simulator": "^0.2.2",
+    "ws": "^8.22.0",
+    "@owed/core": "workspace:*",
+    "@owed/mcp-server": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.23.15"
+  }
+}
