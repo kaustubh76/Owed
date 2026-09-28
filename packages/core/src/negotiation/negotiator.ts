@@ -20,11 +20,27 @@ export interface RemedyBounds {
   clause: { id: string; title: string };
 }
 
+/**
+ * What this household has learned about arguing with this merchant about this kind of
+ * broken promise.
+ *
+ * Declared structurally so the negotiator does not depend on the ledger layer; the
+ * `MerchantPrior` projection satisfies it.
+ */
+export interface CounterExperience {
+  countered: number;
+  countered_realised_minor: number;
+}
+
 export interface NegotiatorOptions {
   bounds: RemedyBounds;
   maxRounds?: number;
   evidenceIds?: readonly string[];
   coverageStatement?: string;
+  /** Absent means a cold start: nothing known about this merchant yet. */
+  experience?: CounterExperience;
+  /** Tries before experience is trusted over optimism. */
+  minObservations?: number;
 }
 
 export type NegotiatorAction =
@@ -33,6 +49,31 @@ export type NegotiatorAction =
   | { type: "ESCALATE"; reason: string };
 
 export const DEFAULT_MAX_ROUNDS = 3;
+
+/**
+ * How many times countering must have been tried before its record is trusted.
+ *
+ * Below this the negotiator counters regardless, because you cannot learn that a
+ * merchant punishes negotiation without negotiating with them. Optimism under
+ * uncertainty, and the cost of it is bounded by how few tries it takes.
+ */
+export const MIN_OBSERVATIONS = 3;
+
+/**
+ * Has arguing with this merchant, about this, actually paid?
+ *
+ * Compares what countering has realised on average against what is being given up to
+ * try it. Not a model — a mean and a comparison, with every input to it sitting in the
+ * ledger where it can be read.
+ */
+export function counteringHasPaid(
+  experience: CounterExperience | undefined,
+  standingMinor: number,
+  minObservations: number = MIN_OBSERVATIONS,
+): boolean | undefined {
+  if (experience === undefined || experience.countered < minObservations) return undefined;
+  return experience.countered_realised_minor / experience.countered > standingMinor;
+}
 
 /** The opening ask: the most the merchant's own wording allows, and never more. */
 export function openingAsk(bounds: RemedyBounds): Money {
@@ -79,12 +120,28 @@ export function nextAction(
     return { type: "ACCEPT" };
   }
 
+  const takeWhatIsStanding = (reason: string): NegotiatorAction =>
+    standing === undefined || standing.amount.minor <= 0
+      ? { type: "ESCALATE", reason }
+      : { type: "ACCEPT" };
+
   if (countRounds(transcript) >= maxRounds) {
     // Take what is actually on the table. Nothing on the table is an escalation, not
     // an acceptance of nothing.
-    return standing === undefined || standing.amount.minor <= 0
-      ? { type: "ESCALATE", reason: "the merchant left nothing on the table within the round cap" }
-      : { type: "ACCEPT" };
+    return takeWhatIsStanding("the merchant left nothing on the table within the round cap");
+  }
+
+  // Experience, once there is enough of it. This is the whole of the difference between
+  // the cold negotiator and the learning one: against a merchant whose record shows that
+  // arguing costs more than it wins, stop arguing.
+  if (
+    counteringHasPaid(
+      options.experience,
+      standing?.amount.minor ?? 0,
+      options.minObservations ?? MIN_OBSERVATIONS,
+    ) === false
+  ) {
+    return takeWhatIsStanding("this merchant has withdrawn more often than it has improved");
   }
 
   return {

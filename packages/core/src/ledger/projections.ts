@@ -1,6 +1,7 @@
 import {
   addMoney,
   type Breach,
+  type BreachKind,
   type Claim,
   type Currency,
   countRounds,
@@ -241,4 +242,117 @@ export function summarize(state: LedgerState, currency: Currency, since?: Instan
  */
 export function claimRoundCount(claim: Claim): number {
   return claim.round_count ?? countRounds(claim.rounds);
+}
+
+// ---------------------------------------------------------------------------
+// Merchant priors
+// ---------------------------------------------------------------------------
+
+/**
+ * What this household has learned about arguing with one merchant about one kind of
+ * broken promise.
+ *
+ * A projection of events already recorded, not a new store: every claim's transcript and
+ * outcome is in the ledger, so the feedback loop costs nothing to persist and everything
+ * feeding a decision stays inspectable.
+ */
+export interface MerchantPrior {
+  merchant: string;
+  breach_kind: BreachKind;
+  /** Times a lowball was countered. */
+  countered: number;
+  /** What those counters actually realised, in minor units. */
+  countered_realised_minor: number;
+  /** What was on the table at the moment of countering, and therefore given up to try. */
+  countered_forgone_minor: number;
+  /** Times an offer was taken as it stood. */
+  accepted: number;
+  accepted_realised_minor: number;
+}
+
+export type PriorTable = ReadonlyMap<string, MerchantPrior>;
+
+export function priorKey(merchant: string, breachKind: BreachKind): string {
+  return `${merchant}::${breachKind}`;
+}
+
+/** Mean realised when countering, or `undefined` when it has never been tried. */
+export function meanRealisedWhenCountered(prior: MerchantPrior | undefined): number | undefined {
+  if (prior === undefined || prior.countered === 0) return undefined;
+  return prior.countered_realised_minor / prior.countered;
+}
+
+function emptyPrior(merchant: string, breach_kind: BreachKind): MerchantPrior {
+  return {
+    merchant,
+    breach_kind,
+    countered: 0,
+    countered_realised_minor: 0,
+    countered_forgone_minor: 0,
+    accepted: 0,
+    accepted_realised_minor: 0,
+  };
+}
+
+/** Fold one finished claim into a table of priors. */
+export function recordOutcome(
+  table: Map<string, MerchantPrior>,
+  outcome: {
+    merchant: string;
+    breach_kind: BreachKind;
+    countered: boolean;
+    /** What was on the table when the decision was taken. */
+    standing_minor: number;
+    realised_minor: number;
+  },
+): void {
+  const key = priorKey(outcome.merchant, outcome.breach_kind);
+  const prior = table.get(key) ?? emptyPrior(outcome.merchant, outcome.breach_kind);
+
+  if (outcome.countered) {
+    prior.countered += 1;
+    prior.countered_realised_minor += outcome.realised_minor;
+    prior.countered_forgone_minor += outcome.standing_minor;
+  } else {
+    prior.accepted += 1;
+    prior.accepted_realised_minor += outcome.realised_minor;
+  }
+
+  table.set(key, prior);
+}
+
+/**
+ * Derive priors from the ledger.
+ *
+ * Only concluded claims count. A claim still being argued has not taught anything yet,
+ * and treating an open claim as a zero would make every merchant look hopeless.
+ */
+export function merchantPriors(state: LedgerState): PriorTable {
+  const table = new Map<string, MerchantPrior>();
+
+  for (const claim of state.claims.values()) {
+    if (claim.state !== "Settled" && claim.state !== "Recovered" && claim.state !== "Escalated") {
+      continue;
+    }
+
+    const breachKind = state.promises.get(claim.promise_id)?.assessment?.kind;
+    if (breachKind === undefined) continue;
+
+    const counterIndex = claim.rounds.findIndex((round) => round.type === "COUNTER");
+    const countered = counterIndex !== -1;
+    const standingBefore = claim.rounds
+      .slice(0, countered ? counterIndex : claim.rounds.length)
+      .filter((round) => round.type === "OFFER")
+      .at(-1);
+
+    recordOutcome(table, {
+      merchant: claim.merchant,
+      breach_kind: breachKind,
+      countered,
+      standing_minor: standingBefore?.amount?.minor ?? 0,
+      realised_minor: claim.settled_amount?.minor ?? 0,
+    });
+  }
+
+  return table;
 }
