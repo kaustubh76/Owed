@@ -1,0 +1,37 @@
+{
+  "name": "@owed/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "zod": "^4.6.5",
+    "@owed/domain": "workspace:*",
+    "@owed/core": "workspace:*",
+    "express": "^5.2.1",
+    "@modelcontextprotocol/core": "2.1.0",
+    "@modelcontextprotocol/server": "2.1.0",
+    "@modelcontextprotocol/node": "2.1.0",
+    "@modelcontextprotocol/express": "2.0.1",
+    "@modelcontextprotocol/ext-apps": "2.0.3",
+    "@owed/ui-views": "workspace:*",
+    "jose": "^6.2.12"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15",
+    "@types/express": "^5.0.4",
+    "@modelcontextprotocol/client": "2.1.0"
+  }
+}
