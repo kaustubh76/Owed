@@ -84,6 +84,7 @@ export function apply(state: LedgerState, event: StoredLedgerEvent): LedgerState
         merchant: event.merchant,
         state: "Proposed",
         ask: event.ask,
+        expected: event.expected,
         rounds: [],
         route: event.route,
       });
@@ -132,6 +133,7 @@ export function apply(state: LedgerState, event: StoredLedgerEvent): LedgerState
         claim.state = "Settled";
         claim.settled_amount = event.amount;
         claim.settled_at = event.occurred_at;
+        claim.round_count = event.rounds;
         claim.rounds.push({
           type: "SETTLE",
           at: event.occurred_at,
@@ -199,7 +201,7 @@ export function summarize(state: LedgerState, currency: Currency, since?: Instan
     if (claim.state === "Recovered" && claim.recovered_amount) {
       if (withinPeriod(claim.recovered_at)) recovered = addMoney(recovered, claim.recovered_amount);
     } else if (OPEN_CLAIM_STATES.has(claim.state)) {
-      open = addMoney(open, claim.settled_amount ?? claim.ask);
+      open = addMoney(open, claim.settled_amount ?? claim.expected);
     }
   }
 
@@ -230,6 +232,13 @@ export function summarize(state: LedgerState, currency: Currency, since?: Instan
   return { currency, recovered, open, kept, declined, items };
 }
 
+/**
+ * How many rounds the claim took.
+ *
+ * Prefers what the session recorded. Recounting from the transcript cannot distinguish
+ * a merchant's own settlement from the one written down when the household accepted an
+ * offer, and would report an extra round for every claim that settled on first contact.
+ */
 export function claimRoundCount(claim: Claim): number {
-  return countRounds(claim.rounds);
+  return claim.round_count ?? countRounds(claim.rounds);
 }

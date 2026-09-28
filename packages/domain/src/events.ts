@@ -54,7 +54,13 @@ export const ClaimProposedSchema = z.object({
   claim_id: ClaimIdSchema,
   promise_id: PromiseIdSchema,
   merchant: z.string().min(1),
+  /** The opening position: the most the merchant's own wording allows. */
   ask: MoneySchema,
+  /**
+   * What the merchant published, and therefore what the household is actually owed.
+   * Open money is totalled from this rather than from the ask, which would overstate it.
+   */
+  expected: MoneySchema,
   route: ClaimRouteSchema,
 });
 

@@ -67,6 +67,7 @@ function recoveredChain(
       promise_id: id,
       merchant,
       ask: usd(15),
+      expected: amount,
       route: "agent",
     },
     {
@@ -203,7 +204,7 @@ describe("ledger projection", () => {
     expect(summary.recovered).toEqual(usd(0));
   });
 
-  it("counts an escalated claim as open at the ask", async () => {
+  it("counts an escalated claim as open at the merchant's published figure, not the ask", async () => {
     const [captured, assessed, proposed, filed] = recoveredChain(
       "prm_e",
       "Calder & Co.",
@@ -224,7 +225,8 @@ describe("ledger projection", () => {
 
     const state = await projectAll(events);
 
-    expect(summarize(state, "USD").open).toEqual(usd(15));
+    // The ask was fifteen; Calder published five. Five is what is owed.
+    expect(summarize(state, "USD").open).toEqual(usd(5));
     expect(state.promises.get("prm_e")?.status).toBe("Escalated");
   });
 
@@ -235,7 +237,7 @@ describe("ledger projection", () => {
     const endOfWeek = summarize(await projectAll(events), "USD");
 
     expect(afterFiling.recovered).toEqual(usd(0));
-    expect(afterFiling.open).toEqual(usd(15));
+    expect(afterFiling.open).toEqual(usd(12));
     expect(endOfWeek.recovered).toEqual(usd(12));
     expect(endOfWeek.open).toEqual(usd(0));
   });

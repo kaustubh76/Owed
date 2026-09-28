@@ -31,6 +31,14 @@
 `ClaimProposed` · `ClaimFiled` · `OfferReceived` · `CounterSent` · `Settled` · `Escalated` ·
 `Recovered` · `WrittenOff`
 
+> **Amended again, when negotiations became real.** `ClaimProposed` gains `expected` — the
+> figure the merchant published — alongside `ask`, which is the opening position. Open money
+> is totalled from `expected`. Once the ask is the policy *ceiling*, totalling from it would
+> report a Meridian claim as $5 owed when their published remedy is $3, which is exactly the
+> overstatement this product exists not to make. `Settled` additionally carries the session's
+> own `rounds`, because a transcript cannot distinguish a merchant's settlement from one
+> recorded when the household accepted an offer.
+
 > **Amended D0, during implementation.** Two changes from the eleven events in `readme.md`:
 > `SourceUptimeRecorded` is added, because uptime must be replayable independently of the
 > observations inside it (§2); and `BreachDetected` becomes `PromiseAssessed`, carrying a
@@ -85,8 +93,10 @@ up, and visibly not enough when it was not. If the claimed moment *itself* fell 
 gap, confidence is further multiplied by 0.6, because the absence of a sighting then says
 much less however good the surrounding coverage looks.
 
-Every verdict in the seeded week is **computed by this engine**, not authored. The
-storyboard states only what was observed.
+Every verdict in the seeded week is **computed by this engine**, not authored, and every
+negotiation is **argued out against a merchant agent** over that merchant's own published
+policy. The storyboard states only what was observed and when a claim was filed; the
+figures, the verdicts and the transcripts are all outcomes.
 
 ---
 

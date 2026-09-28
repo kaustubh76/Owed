@@ -51,7 +51,17 @@ export const ClaimSchema = z.object({
   merchant: z.string().min(1),
   state: ClaimStateSchema,
   ask: MoneySchema,
+  /** The merchant's published figure — what "still open" is counted from. */
+  expected: MoneySchema,
   rounds: z.array(ClaimRoundSchema),
+  /**
+   * Rounds as the session counted them, recorded on settlement.
+   *
+   * Authoritative, because a transcript alone cannot tell a merchant's own SETTLE from
+   * the one recorded when the household accepted an offer — and only the first is
+   * another round of argument.
+   */
+  round_count: z.number().int().nonnegative().optional(),
   settled_amount: MoneySchema.optional(),
   settled_at: InstantSchema.optional(),
   recovered_amount: MoneySchema.optional(),
