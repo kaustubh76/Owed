@@ -212,7 +212,7 @@ DECLINE  { claim_id, reason, escalation_route }
 
 Rules: max N rounds (default 3); every message signed with the claim id; evidence is referenced, never re-sent; a `DECLINE` must carry a human escalation route. Negotiator strategy: reservation value from the policy library, concession schedule by merchant type, stop on `SETTLE ≥ reservation` or rounds exhausted.
 
-Merchant agents in `packages/merchant-agents`: three policies (**cooperative** — accepts first counter; **stingy** — anchors low, concedes 30%/round; **stonewalling** — declines twice then offers minimum). The eval harness runs 20 policy variants × 6 breach types.
+Merchant agents in `packages/merchant-agents` are configured per merchant *and breach kind*, because that is what is actually true of merchants: Calder & Co. settles its price promise on request and contests its refund timing, from one configuration. The eval harness runs the **full pre-registered grid of 270 policies × 6 breach kinds = 1,620 negotiations**, including merchants that withdraw an offer when countered.
 
 ---
 
@@ -262,10 +262,19 @@ The home embeds `mcp-voice-simulator` as the MCP client (account linking, tools/
 |---|---|---|
 | Promise extraction P/R | 120 labelled seeded messages, 7 promise kinds | `eval/extraction/` |
 | Breach detection P/R by kind | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/breach/` |
-| Recovery rate & rounds | 20 merchant policies × 6 breach types, negotiator vs. baseline "accept first offer" | `eval/recourse/` |
+| Recovery rate & rounds | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
 | Tool latency p95 | k6 against Streamable HTTP endpoint | `eval/latency/` |
 
-Headline claims go in the README top and the video: *"Recovered X% of owed value across 20 merchant policies, median 2 rounds; phantom-delivery breach precision Y at coverage ≥ 0.7."*
+**Measured so far (recourse, `eval/README.md`):** across 1,620 negotiations the negotiator
+recovers **33.9%** of what the merchants' own policies say they owe, against **30.8%** for
+accepting the first offer — a **1.10× lift** at a **median of two rounds**. It does *worse*
+than the baseline in **23.3%** of cells, every one a merchant that withdraws its offer when
+challenged.
+
+The pre-registered hypothesis (H3: ≥ 60% and ≥ 1.5×) is **not met**, and `eval/README.md`
+says so plainly along with two conditional readings and the grid's known weighting bias.
+Negotiating is worth doing; it is worth less than we predicted, and it is harmful against
+merchants who penalise it.
 
 ---
 
