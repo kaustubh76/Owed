@@ -1,34 +1,48 @@
-import { assessPromise } from "@owed/core";
-import type { Evidence, Instant, LedgerEvent, ObservationWindow } from "@owed/domain";
+import {
+  assessPromise,
+  fileClaim,
+  type IdGen,
+  type RemedyBounds,
+  remedyContextFor,
+  SeededIdGen,
+} from "@owed/core";
+import type { Evidence, Instant, LedgerEvent, ObservationWindow, OwedPromise } from "@owed/domain";
+import { createMerchantAgent, storyboardMerchant } from "@owed/merchant-agents";
+import { type BreachKind, builtinPolicies, remedyFor } from "@owed/policy-library";
 import type { ArcSpec } from "./types.js";
 
 export const DOORBELL_SOURCE = "src_doorbell";
 
-let sequence = 0;
-
-function nextId(prefix: string): string {
-  sequence += 1;
-  return `${prefix}_${String(sequence).padStart(4, "0")}`;
-}
-
-export function resetIds(): void {
-  sequence = 0;
+export function createIdGen(): IdGen {
+  return new SeededIdGen();
 }
 
 /**
  * Scenario time and wall time are the same in seeded data: the whole point is that a
- * replay produces byte-identical state on every run (plan §6.3).
+ * replay produces byte-identical state on every run.
  */
-function envelope(household_id: string, occurred_at: Instant) {
-  return { id: nextId("evt"), household_id, occurred_at, recorded_at: occurred_at };
+function envelope(idGen: IdGen, household_id: string, occurred_at: Instant) {
+  return { id: idGen.next("evt"), household_id, occurred_at, recorded_at: occurred_at };
 }
 
-export function evidenceEvent(household_id: string, evidence: Evidence): LedgerEvent {
-  return { ...envelope(household_id, evidence.captured_at), type: "EvidenceObserved", evidence };
+export function evidenceEvent(idGen: IdGen, household_id: string, evidence: Evidence): LedgerEvent {
+  return {
+    ...envelope(idGen, household_id, evidence.captured_at),
+    type: "EvidenceObserved",
+    evidence,
+  };
 }
 
-export function uptimeEvent(household_id: string, window: ObservationWindow): LedgerEvent {
-  return { ...envelope(household_id, window.interval.start), type: "SourceUptimeRecorded", window };
+export function uptimeEvent(
+  idGen: IdGen,
+  household_id: string,
+  window: ObservationWindow,
+): LedgerEvent {
+  return {
+    ...envelope(idGen, household_id, window.interval.start),
+    type: "SourceUptimeRecorded",
+    window,
+  };
 }
 
 function observationWindows(household_id: string, arc: ArcSpec): ObservationWindow[] {
@@ -39,23 +53,58 @@ function observationWindows(household_id: string, arc: ArcSpec): ObservationWind
   }));
 }
 
-/** Expand one arc into its ledger events, in the order they occurred. */
-export function arcEvents(household_id: string, arc: ArcSpec): LedgerEvent[] {
+/**
+ * What the merchant's own published policy entitles this household to.
+ *
+ * Throws rather than inventing a figure: if a merchant publishes nothing covering a
+ * breach, there is no claim to make, and the seed should not paper over the gap.
+ */
+function boundsFor(
+  promise: OwedPromise,
+  breachKind: BreachKind,
+  evidence: readonly Evidence[],
+): RemedyBounds {
+  const policy = builtinPolicies().get(promise.merchant);
+  if (policy === undefined) throw new Error(`no published policy for ${promise.merchant}`);
+
+  const remedy = remedyFor(policy, breachKind, remedyContextFor(promise, evidence));
+  if (remedy === undefined) {
+    throw new Error(`${promise.merchant} publishes no remedy for ${breachKind}`);
+  }
+
+  return {
+    reservation: remedy.reservation,
+    ceiling: remedy.ceiling,
+    clause: { id: remedy.clause.id, title: remedy.clause.title },
+  };
+}
+
+/**
+ * Expand one arc into its ledger events, in the order they occurred.
+ *
+ * Nothing here is asserted. The breach engine decides the verdict from the evidence, the
+ * policy library supplies the figures from the merchant's own wording, and the
+ * negotiation actually happens against a merchant agent — so the demo shows outcomes
+ * rather than a script.
+ */
+export async function arcEvents(
+  household_id: string,
+  arc: ArcSpec,
+  idGen: IdGen,
+): Promise<LedgerEvent[]> {
   const uptime = observationWindows(household_id, arc);
   const evidence = arc.evidence ?? [];
 
   const events: LedgerEvent[] = [
     {
-      ...envelope(household_id, arc.promise.made_at),
+      ...envelope(idGen, household_id, arc.promise.made_at),
       type: "PromiseCaptured",
       promise: arc.promise,
     },
-    ...uptime.map((window) => uptimeEvent(household_id, window)),
-    ...evidence.map((item) => evidenceEvent(household_id, item)),
+    ...uptime.map((window) => uptimeEvent(idGen, household_id, window)),
+    ...evidence.map((item) => evidenceEvent(idGen, household_id, item)),
   ];
 
-  // The verdict is computed, not asserted. If no detector can speak to a promise, that
-  // is a hole in the engine and the seed refuses to paper over it.
   const detection = assessPromise({
     promise: arc.promise,
     evidence,
@@ -67,99 +116,46 @@ export function arcEvents(household_id: string, arc: ArcSpec): LedgerEvent[] {
   }
 
   events.push({
-    ...envelope(household_id, arc.assessed_at),
+    ...envelope(idGen, household_id, arc.assessed_at),
     type: "PromiseAssessed",
-    assessment: { ...detection, id: nextId("brc"), detected_at: arc.assessed_at },
+    assessment: { ...detection, id: idGen.next("brc"), detected_at: arc.assessed_at },
   });
 
   const claim = arc.claim;
   if (!claim) return events;
 
-  events.push({
-    ...envelope(household_id, claim.proposed_at),
-    type: "ClaimProposed",
-    claim_id: claim.id,
-    promise_id: arc.promise.id,
-    merchant: arc.promise.merchant,
-    ask: claim.ask,
-    route: "agent",
-  });
-
-  events.push({
-    ...envelope(household_id, claim.filed_at),
-    type: "ClaimFiled",
-    claim_id: claim.id,
-    promise_id: arc.promise.id,
-    confirmed_by: claim.confirmed_by,
-    attached_evidence_ids: claim.attached_evidence_ids ?? [],
-  });
-
-  for (const exchange of claim.exchanges) {
-    events.push(
-      exchange.type === "OFFER"
-        ? {
-            ...envelope(household_id, exchange.at),
-            type: "OfferReceived",
-            claim_id: claim.id,
-            amount: exchange.amount,
-            form: exchange.form,
-            ...(exchange.terms === undefined ? {} : { terms: exchange.terms }),
-          }
-        : {
-            ...envelope(household_id, exchange.at),
-            type: "CounterSent",
-            claim_id: claim.id,
-            amount: exchange.amount,
-            justification: exchange.justification,
-          },
-    );
+  const bounds = boundsFor(arc.promise, detection.kind, evidence);
+  const config = storyboardMerchant(arc.promise.merchant);
+  if (config === undefined) {
+    throw new Error(`no merchant agent configured for ${arc.promise.merchant}`);
   }
 
-  const outcome = claim.outcome;
-  if (outcome.kind === "settled") {
-    const rounds = claim.exchanges.filter((e) => e.type === "OFFER").length + 1;
-    events.push({
-      ...envelope(household_id, outcome.at),
-      type: "Settled",
-      claim_id: claim.id,
-      amount: outcome.amount,
-      form: outcome.form,
-      rounds,
-    });
+  const filed = await fileClaim({
+    householdId: household_id,
+    claimId: claim.id,
+    promise: arc.promise,
+    detection,
+    evidence,
+    bounds,
+    respondent: createMerchantAgent({
+      config,
+      lookup: () => ({ stated: bounds.reservation, clause_title: bounds.clause.title }),
+    }),
+    proposedAt: claim.proposed_at,
+    filedAt: claim.filed_at,
+    confirmedBy: claim.confirmed_by,
+    idGen,
+    ...(claim.attached_evidence_ids === undefined
+      ? {}
+      : { attachedEvidenceIds: claim.attached_evidence_ids }),
+    ...(claim.reply_interval_ms === undefined ? {} : { replyIntervalMs: claim.reply_interval_ms }),
+    ...(claim.recovered_at === undefined ? {} : { recoveredAt: claim.recovered_at }),
+    ...(claim.coverage_statement === undefined
+      ? {}
+      : { coverageStatement: claim.coverage_statement }),
+  });
 
-    if (outcome.recovered_at !== undefined) {
-      const creditId = nextId("evd");
-      events.push({
-        ...envelope(household_id, outcome.recovered_at),
-        type: "EvidenceObserved",
-        evidence: {
-          id: creditId,
-          household_id,
-          source_id: "src_inbox",
-          kind: "refund_observed",
-          captured_at: outcome.recovered_at,
-          promise_id: arc.promise.id,
-          amount: outcome.amount,
-        },
-      });
-      events.push({
-        ...envelope(household_id, outcome.recovered_at),
-        type: "Recovered",
-        claim_id: claim.id,
-        amount: outcome.amount,
-        evidence_id: creditId,
-      });
-    }
-  } else if (outcome.kind === "escalated") {
-    events.push({
-      ...envelope(household_id, outcome.at),
-      type: "Escalated",
-      claim_id: claim.id,
-      reason: outcome.reason,
-      escalation_route: outcome.route,
-    });
-  }
-
+  events.push(...filed.events);
   return events;
 }
 

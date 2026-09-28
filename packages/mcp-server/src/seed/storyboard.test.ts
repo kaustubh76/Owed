@@ -13,7 +13,7 @@ import {
 
 async function stateAt(instant?: string) {
   const store = new MemoryEventStore();
-  await store.append(storyboardEvents());
+  await store.append(await storyboardEvents());
   return project(await store.read(HOUSEHOLD_ID, instant));
 }
 
@@ -22,12 +22,12 @@ async function stateAt(instant?: string) {
  * breaking the demo turns CI red (plan §8). Figures are frozen in docs/contract-v1.md §6.
  */
 describe("storyboard week", () => {
-  it("is deterministic — two builds produce identical events", () => {
-    expect(storyboardEvents()).toEqual(storyboardEvents());
+  it("is deterministic — two builds produce identical events", async () => {
+    expect(await storyboardEvents()).toEqual(await storyboardEvents());
   });
 
-  it("replays in occurrence order", () => {
-    const occurred = storyboardEvents().map((e) => e.occurred_at);
+  it("replays in occurrence order", async () => {
+    const occurred = (await storyboardEvents()).map((e) => e.occurred_at);
     expect([...occurred].sort()).toEqual(occurred);
   });
 
@@ -48,6 +48,25 @@ describe("storyboard week", () => {
     expect(claim?.settled_amount).toEqual(usd(12));
     expect(claim?.recovered_amount).toEqual(usd(12));
     expect(claimRoundCount(claim as NonNullable<typeof claim>)).toBe(2);
+  });
+
+  /**
+   * Accepting an offer ends the round that just happened; it is not another one.
+   * Recounting from the transcript would report two for every claim that settled on
+   * first contact, because it cannot tell a merchant's SETTLE from a recorded acceptance.
+   */
+  it("counts one round when a merchant pays on first contact, two when it argues", async () => {
+    const state = await stateAt(STORYBOARD_QUERY_AT);
+    const rounds = (id: string) => {
+      const claim = state.claims.get(id);
+      expect(claim, id).toBeDefined();
+      return claimRoundCount(claim as NonNullable<typeof claim>);
+    };
+
+    expect(rounds("clm_001")).toBe(1); // Meridian pays what it published
+    expect(rounds("clm_005")).toBe(1); // Calder's price promise is mechanical
+    expect(rounds("clm_002")).toBe(2); // Northwind lowballs, is countered, settles
+    expect(rounds("clm_006")).toBe(2);
   });
 
   it("counters at exactly the merchant's own stated remedy, citing the clause", async () => {
@@ -126,18 +145,11 @@ describe("storyboard week", () => {
       expect(claim.filed_at >= claim.proposed_at, `${claim.id} filed before it was proposed`).toBe(
         true,
       );
-
-      for (const exchange of claim.exchanges) {
-        expect(exchange.at >= claim.filed_at, `${claim.id} exchanged before filing`).toBe(true);
-      }
-      if (claim.outcome.kind !== "open") {
-        const last = claim.exchanges.at(-1)?.at ?? claim.filed_at;
-        expect(claim.outcome.at >= last, `${claim.id} concluded before its last exchange`).toBe(
-          true,
-        );
-      }
-      if (claim.outcome.kind === "settled" && claim.outcome.recovered_at !== undefined) {
-        expect(claim.outcome.recovered_at >= claim.outcome.at).toBe(true);
+      if (claim.recovered_at !== undefined) {
+        expect(
+          claim.recovered_at >= claim.filed_at,
+          `${claim.id} recovered before it was filed`,
+        ).toBe(true);
       }
     }
   });

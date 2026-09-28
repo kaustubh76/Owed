@@ -1,39 +1,36 @@
-import type {
-  Evidence,
-  Instant,
-  Interval,
-  Justification,
-  Money,
-  OwedPromise,
-  RemedyForm,
-} from "@owed/domain";
+import type { Evidence, Instant, Interval, OwedPromise } from "@owed/domain";
 
-export type ExchangeSpec =
-  | { type: "OFFER"; at: Instant; amount: Money; form: RemedyForm; terms?: string }
-  | { type: "COUNTER"; at: Instant; amount: Money; justification: Justification };
-
-export type OutcomeSpec =
-  | { kind: "settled"; at: Instant; amount: Money; form: RemedyForm; recovered_at?: Instant }
-  | { kind: "escalated"; at: Instant; reason: string; route: string }
-  | { kind: "open" };
-
+/**
+ * A claim, stated as the facts of filing it.
+ *
+ * There are no offers or counters here. The negotiation actually runs, against a merchant
+ * agent, over the merchant's own published policy — so the transcript is an outcome
+ * rather than a script.
+ */
 export interface ClaimSpec {
   id: string;
-  ask: Money;
+  /** When Owed proposed it — before the household said yes. */
   proposed_at: Instant;
+  /** When the household confirmed. Nothing is filed without this. */
   filed_at: Instant;
   confirmed_by: string;
   attached_evidence_ids?: string[];
-  exchanges: ExchangeSpec[];
-  outcome: OutcomeSpec;
+  /**
+   * How long each reply takes. Spacing messages is what lets a replay catch a
+   * negotiation still in flight, which is the honest state for a claim filed hours ago.
+   */
+  reply_interval_ms?: number;
+  /** When the credit was observed. Absent means it has not arrived. */
+  recovered_at?: Instant;
+  coverage_statement?: string;
 }
 
 /**
  * One promise's whole life.
  *
- * The verdict is deliberately absent: the breach engine computes it from the evidence
- * and uptime below. Seeded data states what was *observed*, never what to conclude —
- * so the demo exercises the same engine the evaluation measures.
+ * The verdict is absent because the breach engine computes it, and the figures are absent
+ * because the policy library supplies them. Seeded data states what was *observed*, never
+ * what to conclude.
  */
 export interface ArcSpec {
   promise: OwedPromise;

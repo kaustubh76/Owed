@@ -10,7 +10,7 @@ import {
   type PromiseKind,
   usd,
 } from "@owed/domain";
-import { arcEvents, resetIds, sortByOccurrence } from "./build.js";
+import { arcEvents, createIdGen, sortByOccurrence } from "./build.js";
 import type { ArcSpec } from "./types.js";
 
 export const HOUSEHOLD_ID = "hh_demo";
@@ -128,20 +128,6 @@ const priceSeen = (promise_id: string, captured_at: Instant, amount: Money): Evi
   source: MERCHANTS.retail,
 });
 
-const clause = (text: string, evidence_ids: string[], coverage_statement?: string) => ({
-  policy_clause: text,
-  evidence_ids,
-  ...(coverage_statement === undefined ? {} : { coverage_statement }),
-});
-
-const settled = (at_: Instant, amount: Money, recovered_at?: Instant) => ({
-  kind: "settled" as const,
-  at: at_,
-  amount,
-  form: "credit" as const,
-  ...(recovered_at === undefined ? {} : { recovered_at }),
-});
-
 // ---------------------------------------------------------------------------
 
 /**
@@ -176,12 +162,10 @@ export function buildArcs(): ArcSpec[] {
       assessed_at: at("mon", "08:34"),
       claim: {
         id: "clm_001",
-        ask: usd(5),
         proposed_at: at("mon", "08:40"),
         filed_at: at("mon", "09:02"),
         confirmed_by: "household",
-        exchanges: [{ type: "OFFER", at: at("mon", "09:03"), amount: usd(3), form: "credit" }],
-        outcome: settled(at("mon", "09:04"), usd(3), at("mon", "17:20")),
+        recovered_at: at("mon", "17:20"),
       },
     },
 
@@ -197,25 +181,13 @@ export function buildArcs(): ArcSpec[] {
       assessed_at: at("tue", "14:42"),
       claim: {
         id: "clm_002",
-        ask: usd(15),
         proposed_at: at("tue", "14:45"),
         filed_at: STORYBOARD_PROACTIVE_AT,
         confirmed_by: "household",
-        attached_evidence_ids: heroSnapshots.map((s) => s.id),
-        exchanges: [
-          { type: "OFFER", at: at("tue", "18:40"), amount: usd(5), form: "credit" },
-          {
-            type: "COUNTER",
-            at: at("tue", "18:40"),
-            amount: usd(12),
-            justification: clause(
-              "Delivery Guarantee 4.2",
-              [heroScan.id, ...heroSnapshots.map((s) => s.id)],
-              "Doorbell coverage of the scan window was 82%, including the moment of the scan.",
-            ),
-          },
-        ],
-        outcome: settled(at("tue", "18:41"), usd(12), at("wed", "10:05")),
+        attached_evidence_ids: heroSnapshots.map((snap) => snap.id),
+        coverage_statement:
+          "Doorbell coverage of the scan window was 82%, including the moment of the scan.",
+        recovered_at: at("wed", "10:05"),
       },
     },
 
@@ -230,20 +202,10 @@ export function buildArcs(): ArcSpec[] {
       assessed_at: at("wed", "15:30"),
       claim: {
         id: "clm_003",
-        ask: usd(12),
         proposed_at: at("wed", "15:35"),
         filed_at: at("wed", "18:10"),
         confirmed_by: "household",
-        exchanges: [
-          { type: "OFFER", at: at("wed", "18:11"), amount: usd(6), form: "credit" },
-          {
-            type: "COUNTER",
-            at: at("wed", "18:11"),
-            amount: usd(9),
-            justification: clause("Appointment Promise 2", []),
-          },
-        ],
-        outcome: settled(at("wed", "18:12"), usd(9), at("wed", "21:40")),
+        recovered_at: at("wed", "21:40"),
       },
     },
 
@@ -257,17 +219,9 @@ export function buildArcs(): ArcSpec[] {
       assessed_at: at("thu", "09:05"),
       claim: {
         id: "clm_004",
-        ask: usd(5),
         proposed_at: at("thu", "09:10"),
         filed_at: at("thu", "12:15"),
         confirmed_by: "household",
-        exchanges: [],
-        outcome: {
-          kind: "escalated",
-          at: at("thu", "12:20"),
-          reason: "Declined twice without addressing the promised window.",
-          route: "Calder & Co. customer relations",
-        },
       },
     },
 
@@ -282,12 +236,10 @@ export function buildArcs(): ArcSpec[] {
       assessed_at: at("fri", "11:00"),
       claim: {
         id: "clm_005",
-        ask: usd(15),
         proposed_at: at("fri", "11:05"),
         filed_at: at("fri", "13:00"),
         confirmed_by: "household",
-        exchanges: [{ type: "OFFER", at: at("fri", "13:01"), amount: usd(15), form: "credit" }],
-        outcome: settled(at("fri", "13:02"), usd(15), at("sat", "09:15")),
+        recovered_at: at("sat", "09:15"),
       },
     },
 
@@ -306,20 +258,10 @@ export function buildArcs(): ArcSpec[] {
       assessed_at: at("sat", "15:20"),
       claim: {
         id: "clm_006",
-        ask: usd(10),
         proposed_at: at("sat", "15:25"),
         filed_at: at("sat", "16:00"),
         confirmed_by: "household",
-        exchanges: [
-          { type: "OFFER", at: at("sat", "16:01"), amount: usd(3), form: "credit" },
-          {
-            type: "COUNTER",
-            at: at("sat", "16:01"),
-            amount: usd(8),
-            justification: clause("Delivery Guarantee 4.1", []),
-          },
-        ],
-        outcome: settled(at("sat", "16:02"), usd(8), at("sat", "19:00")),
+        recovered_at: at("sat", "19:00"),
       },
     },
 
@@ -333,12 +275,12 @@ export function buildArcs(): ArcSpec[] {
       assessed_at: at("sun", "11:41"),
       claim: {
         id: "clm_007",
-        ask: usd(3),
         proposed_at: at("sun", "11:45"),
         filed_at: at("sun", "12:10"),
         confirmed_by: "household",
-        exchanges: [{ type: "OFFER", at: at("sun", "12:11"), amount: usd(1), form: "credit" }],
-        outcome: { kind: "open" },
+        // Sunday afternoon: the merchant has replied, our counter has not landed yet.
+        // Five hours a reply is what leaves this genuinely mid-negotiation at 19:30.
+        reply_interval_ms: 5 * 60 * 60 * 1000,
       },
     },
 
@@ -380,8 +322,18 @@ export function buildArcs(): ArcSpec[] {
 
 export const ARCS: ArcSpec[] = buildArcs();
 
-/** The whole seeded week, in occurrence order. */
-export function storyboardEvents(): LedgerEvent[] {
-  resetIds();
-  return sortByOccurrence(buildArcs().flatMap((arc) => arcEvents(HOUSEHOLD_ID, arc)));
+/**
+ * The whole seeded week, in occurrence order.
+ *
+ * Asynchronous because the negotiations genuinely run: each claim is argued out against
+ * a merchant agent rather than replayed from a script.
+ */
+export async function storyboardEvents(): Promise<LedgerEvent[]> {
+  const idGen = createIdGen();
+  const arcs = buildArcs();
+  const events: LedgerEvent[] = [];
+  for (const arc of arcs) {
+    events.push(...(await arcEvents(HOUSEHOLD_ID, arc, idGen)));
+  }
+  return sortByOccurrence(events);
 }

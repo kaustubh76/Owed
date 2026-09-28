@@ -27,7 +27,10 @@
     "@modelcontextprotocol/express": "2.0.1",
     "@modelcontextprotocol/ext-apps": "2.0.3",
     "@owed/ui-views": "workspace:*",
-    "jose": "^6.2.12"
+    "jose": "^6.2.12",
+    "@owed/policy-library": "workspace:*",
+    "@owed/merchant-agents": "workspace:*",
+    "@owed/recourse-protocol": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.23.15",

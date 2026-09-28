@@ -24,7 +24,7 @@ const AUTH_SECRET = process.env.OWED_AUTH_SECRET ?? "owed-development-secret-not
  * Token lifetimes deliberately do not use this clock.
  */
 const store = new MemoryEventStore();
-await store.append(storyboardEvents());
+await store.append(await storyboardEvents());
 
 const clock = new FixedClock(process.env.OWED_NOW ?? STORYBOARD_QUERY_AT);
 const deps: OwedDeps = { store, clock, householdId: HOUSEHOLD_ID, currency: CURRENCY };

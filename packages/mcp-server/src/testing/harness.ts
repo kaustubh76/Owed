@@ -38,7 +38,7 @@ export interface HarnessOptions {
  */
 export async function startHarness(options: HarnessOptions = {}): Promise<Harness> {
   const store = new MemoryEventStore();
-  await store.append(storyboardEvents());
+  await store.append(await storyboardEvents());
 
   const clock = new FixedClock(options.now ?? STORYBOARD_QUERY_AT);
   const deps: OwedDeps = { store, clock, householdId: HOUSEHOLD_ID, currency: CURRENCY };
