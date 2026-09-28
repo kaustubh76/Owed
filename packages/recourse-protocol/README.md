@@ -80,7 +80,7 @@ const agent: Respondent = {
   },
 };
 
-const report = checkMerchantConformance(agent);
+const report = await checkMerchantConformance(agent);
 // report.passed === true
 ```
 
@@ -101,11 +101,14 @@ import { recourseJsonSchema } from "@owed/recourse-protocol";
 ```ts
 import { runSession } from "@owed/recourse-protocol";
 
-const result = runSession(claimant, merchant, { maxRounds: 3 });
+const result = await runSession(claimant, merchant, { maxRounds: 3 });
 // result.outcome: "settled" | "escalated"
 // result.rounds:  merchant replies
 ```
 
 `runSession` is the enforcement point: it validates every message, checks the claim id holds
 across the transcript, and rejects a merchant that says something only a claimant may say.
-It is pure and takes an injected clock, so a transcript is byte-identical on every run.
+It takes an injected clock, so a transcript is byte-identical on every run.
+
+Replies are awaited, because any merchant worth implementing this for is across a network.
+An in-process implementation just returns a value and costs nothing extra.

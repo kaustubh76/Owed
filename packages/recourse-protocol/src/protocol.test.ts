@@ -74,16 +74,16 @@ const counterOnce = (amount: Money) =>
   );
 
 describe("runSession", () => {
-  it("settles when the claimant accepts the offer", () => {
-    const result = runSession(alwaysAccept, respondent("cooperative", [offer(usd(12))]));
+  it("settles when the claimant accepts the offer", async () => {
+    const result = await runSession(alwaysAccept, respondent("cooperative", [offer(usd(12))]));
 
     expect(result.outcome).toBe("settled");
     expect(result.settled).toEqual(usd(12));
     expect(result.transcript.map((m) => m.type)).toEqual(["CLAIM", "OFFER", "SETTLE"]);
   });
 
-  it("counts offer, counter and settle as two rounds", () => {
-    const result = runSession(
+  it("counts offer, counter and settle as two rounds", async () => {
+    const result = await runSession(
       counterOnce(usd(12)),
       respondent("stingy", [offer(usd(5)), settle(usd(12))]),
     );
@@ -94,8 +94,8 @@ describe("runSession", () => {
     expect(result.transcript.map((m) => m.type)).toEqual(["CLAIM", "OFFER", "COUNTER", "SETTLE"]);
   });
 
-  it("escalates on a decline, carrying the route the merchant gave", () => {
-    const result = runSession(
+  it("escalates on a decline, carrying the route the merchant gave", async () => {
+    const result = await runSession(
       alwaysAccept,
       respondent("stonewall", [decline("ombudsman@example.test")]),
     );
@@ -104,8 +104,8 @@ describe("runSession", () => {
     expect(result.reason).toContain("outside policy");
   });
 
-  it("stops at the round cap rather than haggling forever", () => {
-    const result = runSession(
+  it("stops at the round cap rather than haggling forever", async () => {
+    const result = await runSession(
       claimant(() => ({
         type: "COUNTER",
         amount: usd(15),
@@ -120,8 +120,8 @@ describe("runSession", () => {
     expect(result.reason).toContain("within 3 rounds");
   });
 
-  it("exposes the first offer, which is the accept-first-offer baseline", () => {
-    const result = runSession(
+  it("exposes the first offer, which is the accept-first-offer baseline", async () => {
+    const result = await runSession(
       counterOnce(usd(12)),
       respondent("stingy", [offer(usd(5)), settle(usd(12))]),
     );
@@ -131,95 +131,95 @@ describe("runSession", () => {
 });
 
 describe("protocol enforcement", () => {
-  it("refuses a merchant that tries to open a claim", () => {
+  it("refuses a merchant that tries to open a claim", async () => {
     const rogue: Respondent = {
       name: "rogue",
       respond: () => CLAIM as unknown as RespondentMessage,
     };
 
-    expect(() => runSession(alwaysAccept, rogue)).toThrow(ProtocolViolation);
+    await expect(runSession(alwaysAccept, rogue)).rejects.toThrow(ProtocolViolation);
   });
 
-  it("refuses a reply carrying somebody else's claim id", () => {
+  it("refuses a reply carrying somebody else's claim id", async () => {
     const spliced: Respondent = {
       name: "spliced",
       respond: () => ({ ...offer(usd(5)), claim_id: "clm_somebody_else" }),
     };
 
-    expect(() => runSession(alwaysAccept, spliced)).toThrow(/different claim id/);
+    await expect(runSession(alwaysAccept, spliced)).rejects.toThrow(/different claim id/);
   });
 
-  it("refuses a malformed message", () => {
+  it("refuses a malformed message", async () => {
     const broken: Respondent = {
       name: "broken",
       respond: () => ({ type: "OFFER", claim_id: CLAIM.claim_id }) as unknown as RespondentMessage,
     };
 
-    expect(() => runSession(alwaysAccept, broken)).toThrow(ProtocolViolation);
+    await expect(runSession(alwaysAccept, broken)).rejects.toThrow(ProtocolViolation);
   });
 
-  it("requires a session to open with a CLAIM", () => {
+  it("requires a session to open with a CLAIM", async () => {
     const notAClaim = {
       open: () => offer(usd(5)) as unknown as ClaimMessage,
       react: () => ({ type: "ACCEPT" as const }),
     };
 
-    expect(() => runSession(notAClaim, respondent("any", [offer(usd(5))]))).toThrow(
+    await expect(runSession(notAClaim, respondent("any", [offer(usd(5))]))).rejects.toThrow(
       ProtocolViolation,
     );
   });
 });
 
 describe("merchant conformance suite", () => {
-  it("passes a well-behaved merchant", () => {
-    const report = checkMerchantConformance(
+  it("passes a well-behaved merchant", async () => {
+    const report = await checkMerchantConformance(
       respondent("cooperative", [offer(usd(12)), settle(usd(12))]),
     );
 
     expect(report.passed).toBe(true);
   });
 
-  it("passes a merchant that declines everything — refusing is allowed", () => {
-    const report = checkMerchantConformance(respondent("stonewall", [decline()]));
+  it("passes a merchant that declines everything — refusing is allowed", async () => {
+    const report = await checkMerchantConformance(respondent("stonewall", [decline()]));
 
     expect(report.passed).toBe(true);
   });
 
-  it("fails a decline whose escalation route is only whitespace", () => {
+  it("fails a decline whose escalation route is only whitespace", async () => {
     const noRoute: Respondent = {
       name: "dead-end",
       respond: () => ({ ...decline(), escalation_route: "   " }) as RespondentMessage,
     };
-    const report = checkMerchantConformance(noRoute);
+    const report = await checkMerchantConformance(noRoute);
 
     expect(report.passed).toBe(false);
     // The schema itself rejects it, so this never reaches a behavioural check.
     expect(report.results.find((c) => c.id === "valid-messages")?.pass).toBe(false);
   });
 
-  it("fails a merchant answering in the wrong currency", () => {
+  it("fails a merchant answering in the wrong currency", async () => {
     const wrongCurrency: Respondent = {
       name: "wrong-currency",
       respond: () => offer({ minor: 1200, currency: "EUR" }),
     };
-    const report = checkMerchantConformance(wrongCurrency);
+    const report = await checkMerchantConformance(wrongCurrency);
 
     expect(report.results.find((c) => c.id === "matching-currency")?.pass).toBe(false);
     expect(report.passed).toBe(false);
   });
 
-  it("fails a merchant that does not echo the claim id", () => {
+  it("fails a merchant that does not echo the claim id", async () => {
     const forgetful: Respondent = {
       name: "forgetful",
       respond: () => ({ ...offer(usd(5)), claim_id: "clm_other" }),
     };
 
-    expect(checkMerchantConformance(forgetful).passed).toBe(false);
+    expect((await checkMerchantConformance(forgetful)).passed).toBe(false);
   });
 });
 
 describe("published JSON Schema", () => {
-  it("generates from the zod definitions, so spec and code cannot drift", () => {
+  it("generates from the zod definitions, so spec and code cannot drift", async () => {
     const schema = recourseJsonSchema();
 
     expect(schema.$id).toContain("recourse/v1");

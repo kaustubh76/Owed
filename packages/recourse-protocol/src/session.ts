@@ -10,10 +10,16 @@ import {
   type RespondentMessage,
 } from "./messages.js";
 
-/** The merchant's side. It may offer, settle or decline — never claim, never counter. */
+/**
+ * The merchant's side. It may offer, settle or decline — never claim, never counter.
+ *
+ * Replies may be awaited. Any merchant worth implementing this for is across a network,
+ * so a synchronous-only interface would make the package unusable for its actual
+ * audience. An in-process implementation simply returns a value.
+ */
 export interface Respondent {
   readonly name?: string;
-  respond(transcript: readonly RecourseMessage[]): RespondentMessage;
+  respond(transcript: readonly RecourseMessage[]): RespondentMessage | Promise<RespondentMessage>;
 }
 
 export type ClaimantDecision =
@@ -24,8 +30,8 @@ export type ClaimantDecision =
 /** The household's side. */
 export interface Claimant {
   readonly name?: string;
-  open(): ClaimMessage;
-  react(transcript: readonly RecourseMessage[]): ClaimantDecision;
+  open(): ClaimMessage | Promise<ClaimMessage>;
+  react(transcript: readonly RecourseMessage[]): ClaimantDecision | Promise<ClaimantDecision>;
 }
 
 /** Three exchanges is the documented cap; a household is not made to haggle. */
@@ -69,31 +75,39 @@ function expectValid(message: unknown, from: string): RecourseMessage {
  * say is rejected rather than tolerated. That is what lets the same code drive both
  * the in-process evaluation and the real agents over HTTP.
  */
-export function runSession(
+export async function runSession(
   claimant: Claimant,
   respondent: Respondent,
   options: SessionOptions = {},
-): SessionResult {
+): Promise<SessionResult> {
   const maxRounds = options.maxRounds ?? DEFAULT_MAX_ROUNDS;
   const clock = options.clock ?? defaultClock;
 
-  const claim = expectValid(claimant.open(), "claimant") as ClaimMessage;
+  const claim = expectValid(await claimant.open(), "claimant") as ClaimMessage;
   if (claim.type !== "CLAIM") throw new ProtocolViolation("a session must open with a CLAIM");
 
   const transcript: RecourseMessage[] = [claim];
   let step = 0;
 
-  const finish = (outcome: SessionOutcome, reason: string, settled?: Money): SessionResult => ({
+  const finish = (
+    outcome: SessionOutcome,
+    reason: string,
+    settled?: Money,
+    rounds = countRounds(transcript),
+  ): SessionResult => ({
     transcript,
     outcome,
     ...(settled === undefined ? {} : { settled }),
-    rounds: countRounds(transcript),
+    rounds,
     reason,
   });
 
   while (countRounds(transcript) < maxRounds) {
     step += 1;
-    const reply = expectValid(respondent.respond(transcript), respondent.name ?? "respondent");
+    const reply = expectValid(
+      await respondent.respond(transcript),
+      respondent.name ?? "respondent",
+    );
 
     if (!isRespondentMessage(reply)) {
       throw new ProtocolViolation(`a merchant may not send ${reply.type}`);
@@ -108,9 +122,12 @@ export function runSession(
       return finish("escalated", `declined: ${reply.reason}`);
     }
 
-    const decision = claimant.react(transcript);
+    const decision = await claimant.react(transcript);
 
     if (decision.type === "ACCEPT") {
+      // Counted before the settlement is recorded: accepting an offer is not another
+      // round of argument, it is the end of the one that just happened.
+      const rounds = countRounds(transcript);
       // The offer stands, so the merchant is taken at its word: the settlement is
       // recorded as theirs, at the amount they named.
       step += 1;
@@ -121,7 +138,7 @@ export function runSession(
         amount: reply.amount,
         form: reply.form,
       });
-      return finish("settled", "the claimant accepted the offer", reply.amount);
+      return finish("settled", "the claimant accepted the offer", reply.amount, rounds);
     }
 
     if (decision.type === "ESCALATE") {

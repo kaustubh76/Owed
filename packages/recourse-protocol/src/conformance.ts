@@ -68,16 +68,16 @@ function acceptingClaimant(claim: ClaimMessage): Claimant {
  * obligations the specification actually imposes, not our negotiator's preferences:
  * a merchant is free to decline every claim and still be fully conformant.
  */
-export function checkMerchantConformance(
+export async function checkMerchantConformance(
   respondent: Respondent,
   claim: ClaimMessage = sampleClaim(),
-): MerchantConformanceReport {
+): Promise<MerchantConformanceReport> {
   const results: MerchantCheck[] = [];
   const record = (check: MerchantCheck) => results.push(check);
 
   let reply: unknown;
   try {
-    reply = respondent.respond([claim]);
+    reply = await respondent.respond([claim]);
   } catch (error) {
     record({
       id: "replies-to-claim",
@@ -135,7 +135,7 @@ export function checkMerchantConformance(
   let conclusion = "";
   let reachedConclusion = false;
   try {
-    const session = runSession(acceptingClaimant(claim), respondent);
+    const session = await runSession(acceptingClaimant(claim), respondent);
     reachedConclusion = true;
     conclusion = `${session.outcome} after ${session.rounds} round(s)`;
   } catch (error) {
@@ -149,7 +149,7 @@ export function checkMerchantConformance(
     detail: conclusion,
   });
 
-  const repeat = RecourseMessageSchema.safeParse(respondent.respond([claim]));
+  const repeat = RecourseMessageSchema.safeParse(await respondent.respond([claim]));
   record({
     id: "deterministic-first-reply",
     description: "The same transcript produces the same kind of reply.",
