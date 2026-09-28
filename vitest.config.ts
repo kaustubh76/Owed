@@ -9,6 +9,9 @@ export default defineConfig({
     alias: {
       "@owed/domain": pkg("domain"),
       "@owed/core": pkg("core"),
+      "@owed/recourse-protocol": pkg("recourse-protocol"),
+      "@owed/policy-library": pkg("policy-library"),
+      "@owed/merchant-agents": pkg("merchant-agents"),
     },
   },
   test: {
