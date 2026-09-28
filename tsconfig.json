@@ -1,0 +1,23 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/domain"
+    },
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/mcp-server"
+    },
+    {
+      "path": "packages/ui-views"
+    },
+    {
+      "path": "apps/brain"
+    },
+    {
+      "path": "apps/home"
+    }
+  ]
+}

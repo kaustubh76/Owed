@@ -1,0 +1,41 @@
+{
+  "name": "owed",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -b && pnpm --filter @owed/ui-views build",
+    "typecheck": "tsc -b",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "pnpm build && pnpm lint && pnpm test && pnpm conformance",
+    "dev:server": "pnpm --filter @owed/mcp-server dev",
+    "demo": "concurrently -n server,brain,home -c cyan,magenta,green \"pnpm --filter @owed/mcp-server start\" \"pnpm --filter @owed/brain start\" \"pnpm --filter @owed/home dev\"",
+    "demo:build": "pnpm build",
+    "conformance": "node scripts/conformance.mjs",
+    "verify:ui": "node scripts/verify-ui.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@types/node": "^26.6.3",
+    "concurrently": "^10.0.5",
+    "fast-check": "^4.10.2",
+    "playwright-core": "^1.63.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "@biomejs/biome"
+    ]
+  }
+}
