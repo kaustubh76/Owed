@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "zod": "^4.6.5",
-    "@owed/domain": "workspace:*"
+    "@owed/domain": "workspace:*",
+    "@owed/recourse-protocol": "workspace:*"
   }
 }
