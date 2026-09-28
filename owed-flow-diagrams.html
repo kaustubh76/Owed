@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owed — Flow Diagrams</title>
+<style>
+  :root { --bg:#0f1115; --fg:#e8e8ea; --muted:#9a9ba3; --card:#171a21; --line:#2a2e38; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 -apple-system,Segoe UI,Inter,sans-serif; padding:24px 16px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  h2 { font-size:18px; margin:32px 0 8px; }
+  p.sub { color:var(--muted); margin:0 0 24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; overflow:auto; }
+  .mermaid { min-width: 720px; }
+  .note { color:var(--muted); font-size:13px; margin-top:8px; }
+</style>
+</head>
+<body>
+<h1>Owed — the add-on that works for the customer</h1>
+<p class="sub">Alexa+ track · Build, Ship, Shape 2026 · four diagrams: system, promise lifecycle, phantom-delivery sequence, recourse protocol</p>
+
+<h2>1. System architecture</h2>
+<div class="card"><pre class="mermaid">
+flowchart LR
+    subgraph HOUSEHOLD["Household surfaces (simulated home)"]
+        ES[Echo Show frame<br/>768×480, Alexa tokens]
+        FTV[Fire TV overlay]
+        DOT[Echo Dot<br/>voice-only]
+        PH[Phone rail]
+        TL[Timeline scrubber<br/>week-in-the-life]
+        INS[Protocol inspector<br/>live JSON-RPC]
+    end
+    subgraph STANDIN["Alexa+ stand-ins"]
+        SIM[mcp-voice-simulator<br/>OAuth 2.1+PKCE · tools/list · MCP Apps]
+        BRIDGE[alexa-skill-mcp-bridge<br/>real Echo via Skill + AgentCore]
+        BRAIN[Owed brain<br/>tool routing · proactive scheduler]
+    end
+    subgraph OWED["Owed MCP server (real) — Streamable HTTP 2025-11-25"]
+        AUTH[Account linking<br/>OAuth 2.1 + PKCE]
+        TOOLS[Tools<br/>ledger.summary · promises.list · promise.check<br/>claim.file · claim.status · evidence.get]
+        UI[MCP Apps<br/>ui://owed/ledger · claim · evidence]
+        ELIC[Elicitation<br/>File it? · Attach clip?]
+    end
+    subgraph CORE["Core engines"]
+        EXT[Promise extractor<br/>Bedrock → typed Promise]
+        BRE[Breach engine<br/>confidence + coverage]
+        NEG[Recourse negotiator]
+        LED[(Event-sourced ledger)]
+        POL[(Policy library<br/>open source)]
+    end
+    subgraph SOURCES["Evidence & promise sources"]
+        INBOX[Linked inbox<br/>receipts · confirmations · ETAs]
+        RING[Ring events & snapshots<br/>emulator fallback]
+        CLOCK[Timestamps · carrier scans]
+    end
+    subgraph MERCH["Merchant agents (simulated, open protocol)"]
+        M1[Cooperative]
+        M2[Stingy]
+        M3[Stonewalling]
+    end
+    ES & FTV & DOT & PH --> SIM
+    TL --> BRAIN
+    SIM --> BRAIN
+    BRIDGE --> TOOLS
+    BRAIN --> AUTH --> TOOLS
+    TOOLS --> UI
+    TOOLS --> ELIC
+    TOOLS --> BRE & LED
+    INBOX --> EXT --> LED
+    RING & CLOCK --> BRE
+    BRE --> LED
+    TOOLS --> NEG
+    NEG <-->|recourse protocol| M1 & M2 & M3
+    NEG --> POL
+    NEG --> LED
+    INS -.observes.- SIM & TOOLS & NEG
+</pre></div>
+<p class="note">Real: OWED, CORE, SOURCES (seeded inbox; Ring via emulator unless API access lands). Simulated and labelled: Alexa+ orchestrator/voice, proactive delivery, device frames, merchant agents, speaker identity.</p>
+
+<h2>2. Promise lifecycle (every transition is a ledger event)</h2>
+<div class="card"><pre class="mermaid">
+stateDiagram-v2
+    [*] --> Captured : promise found in receipt / confirmation / ETA
+    Captured --> Watching : window or deadline known
+    Watching --> Kept : fulfilment evidence inside window
+    Watching --> Suspected : deadline passed, coverage below threshold
+    Watching --> Breached : breach evidence, confidence above threshold
+    Suspected --> Breached : more evidence
+    Suspected --> Kept : late fulfilment evidence
+    Breached --> Filed : user confirms (elicitation)
+    Filed --> Negotiating : merchant agent responds
+    Negotiating --> Settled : offer accepted
+    Negotiating --> Escalated : rounds exhausted / stonewall
+    Escalated --> Settled : human-route resolved
+    Escalated --> WrittenOff : user declines
+    Settled --> Recovered : credit or refund observed
+    Kept --> [*]
+    Recovered --> [*]
+    WrittenOff --> [*]
+</pre></div>
+
+<h2>3. Sequence — phantom-delivery claim (the 20-second demo core)</h2>
+<div class="card"><pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant Inbox as Linked inbox
+    participant EXT as Promise extractor
+    participant LED as Ledger
+    participant Ring as Ring events
+    participant BRE as Breach engine
+    participant Brain as Owed brain (Alexa+ stand-in)
+    participant Echo as Echo Show
+    participant MCP as Owed MCP server
+    participant Merch as Merchant agent
+    Inbox->>EXT: "Your order will arrive Tue 12:00–16:00"
+    EXT->>LED: Promise{delivery_window}
+    Inbox->>LED: carrier scan "delivered 14:12"
+    Ring->>BRE: 13:42–14:42 no human, no package · coverage 82%
+    BRE->>LED: Breach{phantom_delivery, conf 0.91, cov 0.82, 2 snapshots}
+    Brain->>Echo: proactive: "Scanned delivered, nobody came. File it?"
+    Echo->>Brain: "Yes"
+    Brain->>MCP: tools/call claim.file
+    MCP-->>Brain: elicitation: attach doorbell clip? → yes
+    MCP->>Merch: CLAIM {promise, evidence_pack, policy_ref}
+    Merch-->>MCP: OFFER ₹50 credit
+    MCP->>Merch: COUNTER ₹75 (Guarantee §4.2, coverage stmt)
+    Merch-->>MCP: SETTLE ₹75
+    MCP->>LED: Settled{75, 2 rounds, 9 s}
+    MCP-->>Brain: result + _meta.ui.resourceUri = ui://owed/claim
+    Brain->>Echo: claim card: offer → counter → settled
+    Inbox->>LED: credit observed → Recovered
+</pre></div>
+
+<h2>4. Recourse protocol (open, MCP-shaped)</h2>
+<div class="card"><pre class="mermaid">
+flowchart LR
+    C[CLAIM<br/>promise · evidence_pack · policy_ref · ask] --> O[OFFER<br/>amount · form · terms]
+    O -->|below reservation| K[COUNTER<br/>amount · policy_clause · evidence_ids]
+    K --> O
+    O -->|at or above reservation| S[SETTLE<br/>amount · form · reference]
+    O -->|rounds exhausted| D[DECLINE<br/>reason · escalation_route]
+    K -->|rounds exhausted| D
+    D --> E[Escalated → human route]
+    S --> R[Recovered when credit observed]
+</pre></div>
+<p class="note">Rules: max 3 rounds by default · every message carries the claim id · evidence referenced, never re-sent · a DECLINE must carry a human escalation route. Negotiator: reservation value from the policy library, concession schedule by merchant type.</p>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "dark", securityLevel: "loose" });
+</script>
+</body>
+</html>
