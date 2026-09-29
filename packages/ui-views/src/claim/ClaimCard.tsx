@@ -19,6 +19,29 @@ const STEP_LABEL: Readonly<Record<string, string>> = {
 };
 
 /**
+ * What went with the claim, in words.
+ *
+ * Read off the transcript rather than recomputed, because what matters is what the
+ * merchant was actually sent — not what Owed could have said.
+ */
+function argumentMade(claim: ClaimView): string | undefined {
+  const justification = claim.rounds.find(
+    (round) => round.justification?.coverage_statement !== undefined,
+  )?.justification;
+  if (justification === undefined) return undefined;
+
+  const attached = justification.evidence_ids.length;
+  const count =
+    attached === 0
+      ? "No evidence was attached."
+      : attached === 1
+        ? "One piece of evidence went with it."
+        : `${attached} pieces of evidence went with it.`;
+
+  return `${justification.coverage_statement} ${count}`;
+}
+
+/**
  * The claim, as an exchange rather than a status.
  *
  * The transcript is the point: a household can see what was asked, what was offered and
@@ -27,6 +50,7 @@ const STEP_LABEL: Readonly<Record<string, string>> = {
 export function ClaimCard({ claim }: { claim: ClaimView }) {
   const headline = claim.recovered_amount ?? claim.settled_amount ?? claim.expected;
   const settled = claim.state === "Settled" || claim.state === "Recovered";
+  const evidence = argumentMade(claim);
 
   return (
     <main className="claim">
@@ -55,6 +79,21 @@ export function ClaimCard({ claim }: { claim: ClaimView }) {
           </li>
         ))}
       </ol>
+
+      {/*
+        What Owed actually put to them.
+
+        The steps show the shape of the argument; this is its substance — how much of the
+        window was watched, and how many pieces of evidence went with the claim. A
+        merchant's agent received exactly these words, and a household should be able to
+        read what was said on their behalf.
+      */}
+      {evidence ? (
+        <p className="claim__evidence">
+          <span className="claim__evidence-label">Sent with the claim</span>
+          {evidence}
+        </p>
+      ) : null}
 
       {claim.state === "Escalated" ? (
         <p className="claim__note">

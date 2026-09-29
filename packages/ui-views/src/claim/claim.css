@@ -58,3 +58,24 @@
 }
 
 .claim__status { font-size: var(--text-headline-1); color: var(--fg-muted); }
+
+/* The argument Owed put to the merchant, in the words it used. */
+.claim__evidence {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent-quiet, #8a8f98);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0 8px 8px 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--fg, #eef1f6);
+}
+
+.claim__evidence-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--fg-muted, #98a2b3);
+}

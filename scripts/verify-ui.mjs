@@ -300,6 +300,15 @@ try {
     "Delivery Guarantee 4.1",
   );
 
+  // The substance of the argument, not just its shape: what Owed actually put to them.
+  const sentWith = await cardText(".claim__evidence");
+  check(
+    "claim card shows what was sent with the claim",
+    sentWith.includes("Coverage of the evaluated window"),
+    true,
+  );
+  check("and how much evidence went with it", sentWith.includes("evidence went with it"), true);
+
   // The inspector's claim is that it shows the wire, including the argument with the
   // merchant that the brain never sees itself.
   const recourseRows = await page.locator(".inspector__line--recourse").count();
