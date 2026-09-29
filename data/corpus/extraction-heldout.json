@@ -1,0 +1,689 @@
+{
+  "size": 40,
+  "messages": [
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_01",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery",
+        "body": "Yr parcel arrives between 2 and 6pm tomorrow. No need to be in."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T21:00:00.000Z",
+            "end": "2026-10-07T01:00:00.000Z"
+          }
+        }
+      ],
+      "note": "SMS abbreviations around a normal window"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_02",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "DPD",
+        "body": "Out for delivery. Est. arrival by 4:20pm today."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-05T23:20:00.000Z"
+        }
+      ],
+      "note": "abbreviated 'Est.'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_03",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery",
+        "body": "Driver 20 mins away. With you by 11:45am."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-05T18:45:00.000Z"
+        }
+      ],
+      "note": "a duration and a deadline, no verb"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_04",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Slot",
+        "body": "Tues 9-11am. Reply CHANGE to move it."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T16:00:00.000Z",
+            "end": "2026-10-06T18:00:00.000Z"
+          }
+        }
+      ],
+      "note": "abbreviated weekday, no cue noun"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_05",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your recent order",
+        "body": "Dear Ms Okafor,\n\nThank you for your order. We write to confirm that delivery will take place on Thursday 8 October between the hours of 2pm and 6pm.\n\nYours sincerely,\nCustomer Services"
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-08T21:00:00.000Z",
+            "end": "2026-10-09T01:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'between the hours of'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_06",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund notification",
+        "body": "Dear Customer,\n\nFollowing your cancellation we confirm that a refund of $128.00 will be remitted to the original payment method no later than 14 days from today.\n\nRegards"
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-19T16:00:00.000Z"
+        }
+      ],
+      "note": "'remitted', 'no later than N days'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_07",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Guarantee of service",
+        "body": "We undertake to complete the works on Friday between 8am and 1pm. Should we fail to attend within this period, the call-out fee will be waived."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-09T15:00:00.000Z",
+            "end": "2026-10-09T20:00:00.000Z"
+          }
+        },
+        {
+          "kind": "guarantee",
+          "window": {
+            "start": "2026-10-09T15:00:00.000Z",
+            "end": "2026-10-09T20:00:00.000Z"
+          }
+        }
+      ],
+      "note": "formal guarantee, remedy phrased as a waiver"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_08",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Prescription ready",
+        "body": "Your prescription is ready to collect. The pharmacy is open 8am to 7pm today."
+      },
+      "expected": [],
+      "note": "opening hours, nothing promised"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_09",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Repeat prescription",
+        "body": "Your repeat order will be delivered tomorrow between 10am and 2pm."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T17:00:00.000Z",
+            "end": "2026-10-06T21:00:00.000Z"
+          }
+        }
+      ],
+      "note": "pharmacy delivery"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_10",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Consultation",
+        "body": "Your pharmacist consultation is booked for Wednesday between 3 and 4pm."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-07T22:00:00.000Z",
+            "end": "2026-10-07T23:00:00.000Z"
+          }
+        }
+      ],
+      "note": "consultation as an appointment"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_11",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "MOT booking",
+        "body": "Your MOT is booked in for Wednesday between 8am and 10am. Please drop the car off in good time."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-07T15:00:00.000Z",
+            "end": "2026-10-07T17:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'booked in for' with no engineer noun"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_12",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Work completed",
+        "body": "The repair is done and comes with a 12 month parts and labour guarantee."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2027-09-30T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'guarantee' meaning warranty"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_13",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your car",
+        "body": "Ready for collection any time after 3pm. We close at 6."
+      },
+      "expected": [],
+      "note": "collection availability, not a promise with a deadline"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_14",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund for cancelled show",
+        "body": "The performance was cancelled. Refunds are issued automatically and take up to 21 days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-26T16:00:00.000Z"
+        }
+      ],
+      "note": "'take up to N days'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_15",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your tickets",
+        "body": "Doors open at 7pm and the show starts at 7:30pm."
+      },
+      "expected": [],
+      "note": "event times, not promises to this household"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_16",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery of tickets",
+        "body": "Physical tickets will be posted and should arrive by 9 October."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-09T07:00:00.000Z"
+        }
+      ],
+      "note": "a deadline that is a date with no clock"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_17",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Engineer appointment",
+        "body": "An Openreach engineer will attend between 1pm and 5pm on 7 October. Someone over 18 must be present."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-07T20:00:00.000Z",
+            "end": "2026-10-08T00:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'attend' rather than visit"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_18",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your new router",
+        "body": "Your router is on its way and should be with you by Wednesday."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-07T07:00:00.000Z"
+        }
+      ],
+      "note": "a day-level deadline"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_19",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Service credit",
+        "body": "We're sorry about the outage. A credit of $15.00 will appear on your next bill within 30 days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-11-04T16:00:00.000Z"
+        }
+      ],
+      "note": "a credit rather than a refund"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_20",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Broadband speed",
+        "body": "Your line is estimated at 67Mbps. Speeds vary between 7am and 11pm."
+      },
+      "expected": [],
+      "note": "a number range that is bandwidth, and hours that promise nothing"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_21",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery booked",
+        "body": "Your sofa will be delivered on Saturday. Our two-man team will call between 7am and 11am to confirm a slot."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-10T14:00:00.000Z",
+            "end": "2026-10-10T18:00:00.000Z"
+          }
+        }
+      ],
+      "note": "a call window, not the delivery itself — a genuinely ambiguous label"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_22",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Warranty activated",
+        "body": "Your appliance now carries 5 years of cover, and 10 years on the motor."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2031-10-04T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "two warranty terms, the longer one about a component"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_23",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Price promise",
+        "body": "Seen it cheaper? Tell us up to 28 days after purchase and we'll refund the difference."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-11-02T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'up to N days after'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_24",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Assembly",
+        "body": "Our fitters will assemble everything. They'll be with you between 9 and 12 on Monday."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-12T16:00:00.000Z",
+            "end": "2026-10-12T19:00:00.000Z"
+          }
+        }
+      ],
+      "note": "a bare range with no meridiem on either end"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_25",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your grocery order",
+        "body": "Your slot is confirmed for tomorrow, 6pm to 7pm. Substitutions are allowed unless you opt out."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-07T01:00:00.000Z",
+            "end": "2026-10-07T02:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'slot is confirmed for'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_26",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Takeaway",
+        "body": "Order accepted. Estimated 35-45 minutes."
+      },
+      "expected": [],
+      "note": "a duration in minutes, which is not one of the units"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_27",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Late order",
+        "body": "Sorry, we're running behind. Your food will be with you by 8:40pm or the delivery fee is on us."
+      },
+      "expected": [
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-06T03:40:00.000Z"
+        }
+      ],
+      "note": "remedy with no word 'guarantee' anywhere"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_28",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Freshness",
+        "body": "All our bread is baked within 12 hours of delivery."
+      },
+      "expected": [],
+      "note": "a duration about the merchant's process"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_29",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Chargeback",
+        "body": "We've raised a dispute with the merchant. They have 45 days to respond."
+      },
+      "expected": [],
+      "note": "a deadline binding somebody else"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_30",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Statement ready",
+        "body": "Your October statement is available. Payment is due within 21 days."
+      },
+      "expected": [],
+      "note": "a deadline binding the household, not the merchant"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_31",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Compensation",
+        "body": "We accept the delay was ours. $50.00 will be paid to you within 7 working days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-12T16:00:00.000Z"
+        }
+      ],
+      "note": "compensation phrased as a payment"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_32",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Flash sale",
+        "body": "24 hours only! Everything reduced until midnight tomorrow."
+      },
+      "expected": [],
+      "note": "a sale deadline, not a promise to the household"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_33",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Recruitment",
+        "body": "We're hiring drivers. Shifts run 6am to 2pm and 2pm to 10pm."
+      },
+      "expected": [],
+      "note": "shift patterns"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_34",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your review",
+        "body": "Thanks! Reviews are published within 2 working days."
+      },
+      "expected": [],
+      "note": "a process time, not a commitment about an order"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_35",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Recall notice",
+        "body": "If you bought this product between 1 March and 30 June, please stop using it."
+      },
+      "expected": [],
+      "note": "a date range about the past"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_36",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Loyalty points",
+        "body": "You earned 340 points. They expire 12 months from today."
+      },
+      "expected": [],
+      "note": "an expiry, not something owed"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_37",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery attempted",
+        "body": "We called at 11:20am but couldn't get an answer. Card left."
+      },
+      "expected": [],
+      "note": "a past attempt with a precise time"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_38",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Two-factor",
+        "body": "Your code is 4821 and is valid for 10 minutes."
+      },
+      "expected": [],
+      "note": "a code that looks like a time and a duration in minutes"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_39",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Christmas cut-off",
+        "body": "Order by 18 December for delivery before the 24th."
+      },
+      "expected": [],
+      "note": "a conditional offer, not yet a promise about an order"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "h_40",
+        "merchant": "Held-out Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Survey reminder",
+        "body": "You have 7 days left to tell us how we did."
+      },
+      "expected": [],
+      "note": "a deadline binding the household"
+    }
+  ]
+}

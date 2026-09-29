@@ -97,7 +97,8 @@ export interface ClockTime {
 /** `1pm`, `1:30 PM`, `13:00`, `noon`, `midnight`, or a bare `5` inside a range. */
 export function parseClockTime(text: string): ClockTime | undefined {
   const trimmed = text.trim().toLowerCase();
-  if (trimmed === "noon" || trimmed === "midday") return { hour: 12, minute: 0, meridiemGiven: true };
+  if (trimmed === "noon" || trimmed === "midday")
+    return { hour: 12, minute: 0, meridiemGiven: true };
   if (trimmed === "midnight") return { hour: 0, minute: 0, meridiemGiven: true };
 
   const match = /^(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?$/.exec(trimmed);
@@ -145,17 +146,19 @@ export function resolveDate(
   if (/\btoday\b|\bthis afternoon\b|\bthis morning\b|\bthis evening\b/.test(lower)) return received;
   if (/\btomorrow\b/.test(lower)) return addDays(received, 1);
 
-  const named = /\b(\d{1,2})(?:st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/.exec(
-    lower,
-  );
+  const named =
+    /\b(\d{1,2})(?:st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/.exec(
+      lower,
+    );
   if (named) {
     const month = MONTHS.indexOf(named[2] as (typeof MONTHS)[number]) + 1;
     return withYear(received, month, Number(named[1]));
   }
 
-  const american = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:st|nd|rd|th)?\b/.exec(
-    lower,
-  );
+  const american =
+    /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:st|nd|rd|th)?\b/.exec(
+      lower,
+    );
   if (american) {
     const month = MONTHS.indexOf(american[1] as (typeof MONTHS)[number]) + 1;
     return withYear(received, month, Number(american[2]));
@@ -179,7 +182,9 @@ function withYear(received: CivilDate, month: number, day: number): CivilDate {
   const receivedMs = Date.UTC(received.year, received.month - 1, received.day);
   const candidateMs = Date.UTC(sameYear.year, month - 1, day);
   // More than a fortnight in the past reads as next year rather than a typo.
-  return candidateMs < receivedMs - 14 * DAY_MS ? { ...sameYear, year: received.year + 1 } : sameYear;
+  return candidateMs < receivedMs - 14 * DAY_MS
+    ? { ...sameYear, year: received.year + 1 }
+    : sameYear;
 }
 
 export interface Duration {
@@ -206,7 +211,7 @@ const UNIT_DAYS: Readonly<Record<string, number>> = {
  */
 export function parseDuration(text: string): Duration | undefined {
   const match =
-    /\b(?:with ?in|in|after|of)?\s*(\d{1,3})\s*(?:[-–to]{1,3}\s*(\d{1,3}))?\s*(?:business\s+|working\s+)?(days?|weeks?|months?|years?)\b/i.exec(
+    /\b(?:with ?in|in|after|for|up to|over|of)?\s*(?:the\s+next\s+|their\s+first\s+|a\s+further\s+)?(\d{1,3})\s*(?:[-–to]{1,3}\s*(\d{1,3}))?\s*(?:business\s+|working\s+)?(days?|weeks?|months?|years?)\b/i.exec(
       text,
     );
   if (!match) return undefined;

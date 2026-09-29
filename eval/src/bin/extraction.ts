@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { generateExtractionCorpus } from "../extraction/corpus.js";
+import { heldOutMessages } from "../extraction/heldout.js";
 import { measureExtraction } from "../extraction/measure.js";
 
 const report = measureExtraction(generateExtractionCorpus());
@@ -53,7 +54,40 @@ if (report.misses.length > 0) {
   }
 }
 
+/**
+ * The held-out set, run last and never tuned against.
+ *
+ * The corpus above stopped being evidence the moment the extractor was changed in
+ * response to it. This is the number that means something.
+ */
+const heldOut = measureExtraction(heldOutMessages());
+process.stdout.write(`
+  held out — ${heldOut.messages} messages the extractor has never been run against
+
+    kind only                 ${pct(heldOut.kind.overall.precision)} precision, ${pct(heldOut.kind.overall.recall)} recall
+    kind and timing           ${pct(heldOut.exact.overall.precision)} precision, ${pct(heldOut.exact.overall.recall)} recall
+`);
+if (heldOut.false_alarms.length > 0) {
+  process.stdout.write(
+    `\n    read a promise out of ${heldOut.false_alarms.length} message(s) that made none:\n`,
+  );
+  for (const alarm of heldOut.false_alarms) {
+    process.stdout.write(`      ${alarm.id}  read ${alarm.read.join(", ")}  — ${alarm.note}\n`);
+  }
+}
+if (heldOut.misses.length > 0) {
+  process.stdout.write(`\n    missed ${heldOut.misses.length} message(s):\n`);
+  for (const miss of heldOut.misses) {
+    process.stdout.write(
+      `      ${miss.id}  wanted ${miss.expected.join(", ")}${miss.read.length > 0 ? `, read ${miss.read.join(", ")}` : ""}  — ${miss.note}\n`,
+    );
+  }
+}
+
 const dir = fileURLToPath(new URL("../../results/", import.meta.url));
 mkdirSync(dir, { recursive: true });
-writeFileSync(`${dir}extraction.json`, `${JSON.stringify(report, null, 2)}\n`);
+writeFileSync(
+  `${dir}extraction.json`,
+  `${JSON.stringify({ tuned: report, held_out: heldOut }, null, 2)}\n`,
+);
 process.stdout.write("\n  written to eval/results/extraction.json\n");

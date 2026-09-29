@@ -1,213 +1,319 @@
 {
-  "parameters": {
-    "sets": ["generated", "authored"],
-    "kinds": [
-      "delivery_window",
-      "eta",
-      "refund_sla",
-      "appointment_slot",
-      "guarantee",
-      "price_match",
-      "warranty"
-    ],
+  "tuned": {
+    "parameters": {
+      "sets": ["generated", "authored"],
+      "kinds": [
+        "delivery_window",
+        "eta",
+        "refund_sla",
+        "appointment_slot",
+        "guarantee",
+        "price_match",
+        "warranty"
+      ],
+      "messages": 120,
+      "received_at": "2026-10-05T16:00:00.000Z",
+      "utc_offset": "-07:00"
+    },
     "messages": 120,
-    "received_at": "2026-10-05T16:00:00.000Z",
-    "utc_offset": "-07:00"
-  },
-  "messages": 120,
-  "kind": {
-    "overall": {
-      "true_positive": 88,
-      "false_positive": 4,
-      "false_negative": 13,
-      "precision": 0.9565217391304348,
-      "recall": 0.8712871287128713
-    },
-    "by_set": {
-      "generated": {
-        "true_positive": 59,
-        "false_positive": 3,
-        "false_negative": 4,
-        "precision": 0.9516129032258065,
-        "recall": 0.9365079365079365
+    "kind": {
+      "overall": {
+        "true_positive": 100,
+        "false_positive": 0,
+        "false_negative": 1,
+        "precision": 1,
+        "recall": 0.9900990099009901
       },
-      "authored": {
-        "true_positive": 29,
-        "false_positive": 1,
-        "false_negative": 9,
-        "precision": 0.9666666666666667,
-        "recall": 0.7631578947368421
+      "by_set": {
+        "generated": {
+          "true_positive": 63,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "authored": {
+          "true_positive": 37,
+          "false_positive": 0,
+          "false_negative": 1,
+          "precision": 1,
+          "recall": 0.9736842105263158
+        }
+      },
+      "by_kind": {
+        "delivery_window": {
+          "true_positive": 19,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "eta": {
+          "true_positive": 15,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "refund_sla": {
+          "true_positive": 16,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "appointment_slot": {
+          "true_positive": 17,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "guarantee": {
+          "true_positive": 11,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "price_match": {
+          "true_positive": 11,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "warranty": {
+          "true_positive": 11,
+          "false_positive": 0,
+          "false_negative": 1,
+          "precision": 1,
+          "recall": 0.9166666666666666
+        }
       }
     },
-    "by_kind": {
-      "delivery_window": {
-        "true_positive": 19,
+    "exact": {
+      "overall": {
+        "true_positive": 100,
         "false_positive": 0,
-        "false_negative": 0,
+        "false_negative": 1,
         "precision": 1,
-        "recall": 1
+        "recall": 0.9900990099009901
       },
-      "eta": {
-        "true_positive": 12,
-        "false_positive": 0,
-        "false_negative": 3,
-        "precision": 1,
-        "recall": 0.8
-      },
-      "refund_sla": {
+      "by_set": {
+        "generated": {
+          "true_positive": 63,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "authored": {
+          "true_positive": 37,
+          "false_positive": 0,
+          "false_negative": 1,
+          "precision": 1,
+          "recall": 0.9736842105263158
+        }
+      }
+    },
+    "false_alarms": [],
+    "misses": [
+      {
+        "id": "a_05",
+        "set": "authored",
+        "note": "two promises, different kinds",
+        "expected": ["warranty"],
+        "read": ["price_match"]
+      }
+    ]
+  },
+  "held_out": {
+    "parameters": {
+      "sets": ["generated", "authored"],
+      "kinds": [
+        "delivery_window",
+        "eta",
+        "refund_sla",
+        "appointment_slot",
+        "guarantee",
+        "price_match",
+        "warranty"
+      ],
+      "messages": 120,
+      "received_at": "2026-10-05T16:00:00.000Z",
+      "utc_offset": "-07:00"
+    },
+    "messages": 40,
+    "kind": {
+      "overall": {
         "true_positive": 14,
-        "false_positive": 4,
-        "false_negative": 2,
-        "precision": 0.7777777777777778,
-        "recall": 0.875
-      },
-      "appointment_slot": {
-        "true_positive": 15,
-        "false_positive": 0,
-        "false_negative": 2,
-        "precision": 1,
-        "recall": 0.8823529411764706
-      },
-      "guarantee": {
-        "true_positive": 10,
-        "false_positive": 0,
-        "false_negative": 1,
-        "precision": 1,
-        "recall": 0.9090909090909091
-      },
-      "price_match": {
-        "true_positive": 7,
-        "false_positive": 0,
-        "false_negative": 4,
-        "precision": 1,
-        "recall": 0.6363636363636364
-      },
-      "warranty": {
-        "true_positive": 11,
-        "false_positive": 0,
-        "false_negative": 1,
-        "precision": 1,
-        "recall": 0.9166666666666666
-      }
-    }
-  },
-  "exact": {
-    "overall": {
-      "true_positive": 87,
-      "false_positive": 5,
-      "false_negative": 14,
-      "precision": 0.9456521739130435,
-      "recall": 0.8613861386138614
-    },
-    "by_set": {
-      "generated": {
-        "true_positive": 59,
-        "false_positive": 3,
-        "false_negative": 4,
-        "precision": 0.9516129032258065,
-        "recall": 0.9365079365079365
-      },
-      "authored": {
-        "true_positive": 28,
-        "false_positive": 2,
+        "false_positive": 5,
         "false_negative": 10,
-        "precision": 0.9333333333333333,
-        "recall": 0.7368421052631579
+        "precision": 0.7368421052631579,
+        "recall": 0.5833333333333334
+      },
+      "by_set": {
+        "generated": {
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "authored": {
+          "true_positive": 14,
+          "false_positive": 5,
+          "false_negative": 10,
+          "precision": 0.7368421052631579,
+          "recall": 0.5833333333333334
+        }
+      },
+      "by_kind": {
+        "delivery_window": {
+          "true_positive": 4,
+          "false_positive": 0,
+          "false_negative": 2,
+          "precision": 1,
+          "recall": 0.6666666666666666
+        },
+        "eta": {
+          "true_positive": 3,
+          "false_positive": 2,
+          "false_negative": 1,
+          "precision": 0.6,
+          "recall": 0.75
+        },
+        "refund_sla": {
+          "true_positive": 3,
+          "false_positive": 0,
+          "false_negative": 1,
+          "precision": 1,
+          "recall": 0.75
+        },
+        "appointment_slot": {
+          "true_positive": 2,
+          "false_positive": 2,
+          "false_negative": 3,
+          "precision": 0.5,
+          "recall": 0.4
+        },
+        "guarantee": {
+          "true_positive": 0,
+          "false_positive": 1,
+          "false_negative": 2,
+          "precision": 0,
+          "recall": 0
+        },
+        "price_match": {
+          "true_positive": 1,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "warranty": {
+          "true_positive": 1,
+          "false_positive": 0,
+          "false_negative": 1,
+          "precision": 1,
+          "recall": 0.5
+        }
       }
-    }
-  },
-  "false_alarms": [],
-  "misses": [
-    {
-      "id": "g_app_2",
-      "set": "generated",
-      "note": "installer",
-      "expected": ["appointment_slot"],
-      "read": []
     },
-    {
-      "id": "g_gua_8",
-      "set": "generated",
-      "note": "guarantee borrows the eta",
-      "expected": ["eta"],
-      "read": ["refund_sla", "guarantee"]
+    "exact": {
+      "overall": {
+        "true_positive": 12,
+        "false_positive": 7,
+        "false_negative": 12,
+        "precision": 0.631578947368421,
+        "recall": 0.5
+      },
+      "by_set": {
+        "generated": {
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "authored": {
+          "true_positive": 12,
+          "false_positive": 7,
+          "false_negative": 12,
+          "precision": 0.631578947368421,
+          "recall": 0.5
+        }
+      }
     },
-    {
-      "id": "g_pm_2",
-      "set": "generated",
-      "note": "'price match guarantee'",
-      "expected": ["price_match"],
-      "read": []
-    },
-    {
-      "id": "g_pm_5",
-      "set": "generated",
-      "note": "'price promise'",
-      "expected": ["price_match"],
-      "read": []
-    },
-    {
-      "id": "a_02",
-      "set": "authored",
-      "note": "apology wrapper",
-      "expected": ["eta"],
-      "read": []
-    },
-    {
-      "id": "a_03",
-      "set": "authored",
-      "note": "'up to' hedging",
-      "expected": ["refund_sla"],
-      "read": []
-    },
-    {
-      "id": "a_05",
-      "set": "authored",
-      "note": "two promises, different kinds",
-      "expected": ["price_match"],
-      "read": ["warranty"]
-    },
-    {
-      "id": "a_12",
-      "set": "authored",
-      "note": "'covered for' without the word warranty",
-      "expected": ["warranty"],
-      "read": []
-    },
-    {
-      "id": "a_16",
-      "set": "authored",
-      "note": "'you have N days'",
-      "expected": ["refund_sla"],
-      "read": []
-    },
-    {
-      "id": "a_17",
-      "set": "authored",
-      "note": "two promises in one sentence",
-      "expected": ["eta"],
-      "read": ["refund_sla"]
-    },
-    {
-      "id": "a_18",
-      "set": "authored",
-      "note": "'slot is' without 'between'",
-      "expected": ["appointment_slot"],
-      "read": []
-    },
-    {
-      "id": "a_24",
-      "set": "authored",
-      "note": "'in the next N days'",
-      "expected": ["price_match"],
-      "read": []
-    },
-    {
-      "id": "a_30",
-      "set": "authored",
-      "note": "remedy stated before the word guarantee",
-      "expected": ["guarantee"],
-      "read": ["refund_sla"]
-    }
-  ]
+    "false_alarms": [
+      {
+        "id": "h_39",
+        "set": "authored",
+        "note": "a conditional offer, not yet a promise about an order",
+        "read": ["eta"]
+      }
+    ],
+    "misses": [
+      {
+        "id": "h_04",
+        "set": "authored",
+        "note": "abbreviated weekday, no cue noun",
+        "expected": ["delivery_window"],
+        "read": ["appointment_slot"]
+      },
+      {
+        "id": "h_07",
+        "set": "authored",
+        "note": "formal guarantee, remedy phrased as a waiver",
+        "expected": ["appointment_slot", "guarantee"],
+        "read": []
+      },
+      {
+        "id": "h_10",
+        "set": "authored",
+        "note": "consultation as an appointment",
+        "expected": ["appointment_slot"],
+        "read": []
+      },
+      {
+        "id": "h_11",
+        "set": "authored",
+        "note": "'booked in for' with no engineer noun",
+        "expected": ["appointment_slot"],
+        "read": []
+      },
+      {
+        "id": "h_12",
+        "set": "authored",
+        "note": "'guarantee' meaning warranty",
+        "expected": ["warranty"],
+        "read": ["guarantee"]
+      },
+      {
+        "id": "h_18",
+        "set": "authored",
+        "note": "a day-level deadline",
+        "expected": ["eta"],
+        "read": []
+      },
+      {
+        "id": "h_25",
+        "set": "authored",
+        "note": "'slot is confirmed for'",
+        "expected": ["delivery_window"],
+        "read": ["appointment_slot"]
+      },
+      {
+        "id": "h_27",
+        "set": "authored",
+        "note": "remedy with no word 'guarantee' anywhere",
+        "expected": ["guarantee"],
+        "read": ["eta"]
+      },
+      {
+        "id": "h_31",
+        "set": "authored",
+        "note": "compensation phrased as a payment",
+        "expected": ["refund_sla"],
+        "read": []
+      }
+    ]
+  }
 }

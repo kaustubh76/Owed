@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { EXTRACTION_PARAMETERS, generateExtractionCorpus, type LabelledMessage } from "./corpus.js";
+import { heldOutMessages } from "./heldout.js";
 import { measureExtraction } from "./measure.js";
 
 const committed = JSON.parse(
@@ -69,5 +70,46 @@ describe("what the corpus measures", () => {
     for (const kind of EXTRACTION_PARAMETERS.kinds) {
       expect(report.kind.by_kind[kind]).toBeDefined();
     }
+  });
+});
+
+describe("the held-out set", () => {
+  const committedHeldOut = JSON.parse(
+    readFileSync(
+      fileURLToPath(new URL("../../../data/corpus/extraction-heldout.json", import.meta.url)),
+      "utf8",
+    ),
+  ) as { size: number; messages: LabelledMessage[] };
+
+  /**
+   * Pinned for the opposite reason to the corpus next door.
+   *
+   * That one is pinned so its cases cannot be softened. This one is pinned so it cannot
+   * be *used*: the moment a message here is reworded to suit the extractor, or quietly
+   * dropped because it fails, the only number in this repository that was not fitted
+   * stops being one. Its value is entirely that the extractor has never been changed
+   * because of it.
+   */
+  it("still matches the generator, message for message", () => {
+    expect(committedHeldOut.size).toBe(40);
+    expect(committedHeldOut.messages).toEqual(JSON.parse(JSON.stringify(heldOutMessages())));
+  });
+
+  it("still speaks in voices the tuned corpus does not", () => {
+    const negatives = committedHeldOut.messages.filter((m) => m.expected.length === 0);
+    expect(negatives.length).toBeGreaterThanOrEqual(15);
+  });
+
+  /**
+   * Asserts the gap exists rather than asserting a score.
+   *
+   * If held-out performance ever matched the tuned corpus, either the extractor got
+   * genuinely better or this set got used. The first would be good news and this test
+   * would be deleted deliberately; the second is what it is here to make noisy.
+   */
+  it("still scores below the corpus the extractor was tuned against", () => {
+    const tuned = measureExtraction(generateExtractionCorpus());
+    const held = measureExtraction(heldOutMessages());
+    expect(held.kind.overall.recall ?? 0).toBeLessThan(tuned.kind.overall.recall ?? 0);
   });
 });

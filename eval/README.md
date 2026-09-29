@@ -92,8 +92,74 @@ because it demands `within|in|after` immediately before the number. Plus three c
 absent from their lists: "installation", "reach you", "covered for".
 
 The first is a defect in how the rules are applied. The second is a rule-based extractor
-being exactly as good as its vocabulary, which is the honest cost of not using a model —
-and the reason to report it rather than quietly widen the patterns until the number moves.
+being exactly as good as its vocabulary.
+
+### Results — after three rounds of fixing what the corpus found
+
+| | precision | recall |
+|---|---|---|
+| generated, kind only | 100.0% | 100.0% |
+| authored, kind only | 100.0% | 97.4% |
+| overall, kind only | 100.0% | 99.0% |
+| overall, kind and timing | 100.0% | 99.0% |
+
+Three changes: a cue before the clock now beats one after it however far away; a cue that
+can only mean one thing (engineer, warranty, price match) outranks a generic verb sitting
+nearer; and the duration pattern accepts "for 30 days", "up to 10 working days" and "you
+have 28 days" alongside "within 7 days".
+
+**And this number is worthless as evidence.** It measures a fit, not an ability. The
+extractor was changed three times in response to the very messages it is scored against,
+and 95.7/87.1 became 100/99 by exactly the process that makes a benchmark meaningless.
+
+### The number that means something — held out
+
+Forty more messages, in
+[`eval/src/extraction/heldout.ts`](src/extraction/heldout.ts), written **after** the
+tuning was finished and deliberately in voices the first corpus never uses: clipped
+courier SMS, a formal letter, a pharmacy, a garage, a ticket agency, a telecoms provider,
+a takeaway. Fifteen of them promise nothing. Run **once**. Nothing in the extractor has
+been or will be changed because of them.
+
+| | precision | recall |
+|---|---|---|
+| **held out, kind only** | **73.7%** | **58.3%** |
+| held out, kind and timing | 63.2% | 50.0% |
+
+| | tuned corpus | held out |
+|---|---|---|
+| precision | 100.0% | **73.7%** |
+| recall | 99.0% | **58.3%** |
+
+**H1 is met on the corpus it was tuned against and missed badly on data it has not seen.**
+It asks for 0.9 precision and 0.8 recall; held out, the extractor reaches 0.74 and 0.58.
+It finds **four promises in seven**, and one in four of the things it reports is wrong.
+
+That gap is the most useful measurement in this repository. It is what "we tested it and
+it works" is worth when the test was written against the implementation, and it is the
+reason every corpus here is pinned and committed before the thing it measures is touched.
+
+Two of the nine held-out misses are the tuning itself backfiring. A `slot` cue was added
+because an authored message said "your installation slot is Wednesday" — and on held-out
+data it reads a grocery delivery ("your slot is confirmed for tomorrow, 6pm to 7pm") and a
+courier text subject-lined "Slot" as engineer appointments. A rule added to catch one
+phrasing broke two others, which is the characteristic failure of tuning against a fixed
+set and is visible here only because the held-out set exists.
+
+The rest are plain gaps, all of them ordinary merchant English: day-level deadlines with
+no clock ("with you by Wednesday", "should arrive by 9 October"), compensation phrased as
+a payment rather than a refund, "booked in for" and "consultation" as appointment cues,
+a guarantee whose remedy never uses the word, and "parts and labour guarantee" meaning a
+warranty. Each is a line of vocabulary away. **None of them will be fixed against this
+set** — the whole value of these forty messages is that the extractor has never seen them,
+and spending that once buys a number nobody has to take on trust.
+
+### What this does not show
+
+Every message here was written by us. A held-out set written by the same people who wrote
+the extractor is better than one they tuned against and worse than real merchant email,
+which is what this should be measured on next. There is no prose from a real inbox in this
+repository, and no result here should be read as though there were.
 
 ---
 

@@ -1,9 +1,6 @@
 {
   "parameters": {
-    "sets": [
-      "generated",
-      "authored"
-    ],
+    "sets": ["generated", "authored"],
     "kinds": [
       "delivery_window",
       "eta",

@@ -275,10 +275,25 @@ The home embeds `mcp-voice-simulator` as the MCP client (account linking, tools/
 
 | Metric | Method | Where |
 |---|---|---|
-| Promise extraction P/R | 120 labelled seeded messages, 7 promise kinds | `eval/extraction/` |
+| Promise extraction P/R | 120 labelled messages + 40 held out, 7 promise kinds | `eval/src/extraction/` |
 | Breach detection P/R by kind | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/src/breach/` |
 | Recovery rate & rounds | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
 | Tool latency p95 | k6 against Streamable HTTP endpoint | `eval/latency/` |
+
+**Measured so far (promise extraction, `eval/README.md`):** the rule-based extractor
+reaches **100% precision and 99% recall** on the 120-message labelled corpus — and
+**73.7% and 58.3%** on forty held-out messages it has never been run against.
+
+That gap is the most useful number in this repository. The corpus figure was reached by
+changing the extractor three times in response to the very messages it is scored against,
+which is exactly the process that makes a benchmark meaningless. **H1 is met on the corpus
+it was tuned against and missed badly on data it has not seen** — held out it finds four
+promises in seven, and one in four of the things it reports is wrong.
+
+The held-out set was written after the tuning was finished, run once, and will not be
+fixed against. Two of its nine misses are the tuning itself backfiring: a cue word added
+to catch one authored phrasing reads a grocery delivery slot and a courier text as
+engineer appointments.
 
 **Measured so far (breach detection, `eval/README.md`):** over sixty pre-registered
 timelines the engine reaches **93.5% precision** and **100% recall** on the cases it could
