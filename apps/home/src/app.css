@@ -198,6 +198,16 @@ body {
 }
 
 .inspector__line:hover { background: #1a2029; }
+
+/* Traffic between the add-on and a merchant's agent, not between here and the add-on. */
+.inspector__line--recourse { border-left: 2px solid var(--accent-open); padding-left: 6px; }
+
+.inspector__channel {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--accent-open);
+  white-space: nowrap;
+}
 .inspector__dir { font-size: 13px; }
 .inspector__dir--out { color: var(--accent-out); }
 .inspector__dir--in { color: var(--accent-in); }

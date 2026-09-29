@@ -8,6 +8,7 @@ import { connectSession } from "./session.js";
 const MCP_URL = new URL(process.env.OWED_MCP_URL ?? "http://127.0.0.1:3939/mcp");
 const CLIENT_ID = process.env.OWED_CLIENT_ID ?? "owed-simulated-home";
 const CONTROL_URL = new URL("/control/clock", MCP_URL);
+const RECOURSE_URL = new URL("/control/recourse", MCP_URL);
 const PORT = Number(process.env.OWED_BRAIN_PORT ?? 3940);
 
 /** Wall time here is for inspector timestamps only — never for domain decisions. */
@@ -40,7 +41,7 @@ async function linkAndConnect(attempts = 40, delayMs = 500) {
         url: MCP_URL,
         accessToken,
         onFrame: (direction, message) => {
-          broadcast({ type: "frame", direction, at: wallClock.now(), message });
+          broadcast({ type: "frame", channel: "mcp", direction, at: wallClock.now(), message });
         },
       });
     } catch (error) {
@@ -70,9 +71,44 @@ async function setClock(instant: string): Promise<string | undefined> {
   return ((await response.json()) as { now?: string }).now;
 }
 
+/**
+ * Recourse traffic the server recorded while it was answering.
+ *
+ * Polled after the turn rather than streamed: the exchange is over by the time the tool
+ * returns, and the inspector sorts by timestamp so it still reads in the order it
+ * happened — the call, then the argument with the merchant, then the result.
+ */
+let recourseCursor = 0;
+
+async function drainRecourse(): Promise<void> {
+  try {
+    const response = await fetch(new URL(`?since=${recourseCursor}`, RECOURSE_URL));
+    if (!response.ok) return;
+    const { frames, next } = (await response.json()) as {
+      frames: Array<{ at: string; merchant: string; direction: "out" | "in"; message: unknown }>;
+      next: number;
+    };
+    recourseCursor = next;
+    for (const frame of frames) {
+      broadcast({
+        type: "frame",
+        channel: "recourse",
+        merchant: frame.merchant,
+        direction: frame.direction,
+        at: frame.at,
+        message: frame.message,
+      });
+    }
+  } catch {
+    // The observation window is a nicety; losing it must never break a turn.
+  }
+}
+
 async function handle(message: HomeToBrain): Promise<void> {
   if (message.type === "utterance") {
-    broadcast(await brain.turn(message.text));
+    const turn = await brain.turn(message.text);
+    await drainRecourse();
+    broadcast(turn);
     return;
   }
   const now = await setClock(message.instant);

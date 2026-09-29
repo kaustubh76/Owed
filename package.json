@@ -16,7 +16,7 @@
     "test:watch": "vitest",
     "verify": "pnpm build && pnpm lint && pnpm test && pnpm conformance",
     "dev:server": "pnpm --filter @owed/mcp-server dev",
-    "demo": "concurrently -n server,brain,home -c cyan,magenta,green \"pnpm --filter @owed/mcp-server start\" \"pnpm --filter @owed/brain start\" \"pnpm --filter @owed/home dev\"",
+    "demo": "concurrently -n merchants,server,brain,home -c yellow,cyan,magenta,green \"pnpm --filter @owed/merchant-agents start\" \"OWED_MERCHANTS_URL=http://127.0.0.1:3941 pnpm --filter @owed/mcp-server start\" \"pnpm --filter @owed/brain start\" \"pnpm --filter @owed/home dev\"",
     "demo:build": "pnpm build",
     "conformance": "node scripts/conformance.mjs",
     "verify:ui": "node scripts/verify-ui.mjs",

@@ -29,9 +29,17 @@ export interface TurnMessage {
   view?: { uri: string; html: string; result: unknown };
 }
 
-/** A real JSON-RPC frame, captured on the wire for the protocol inspector. */
+/**
+ * A real JSON-RPC frame, captured on the wire for the protocol inspector.
+ *
+ * Two channels: `mcp` is this brain talking to the add-on, `recourse` is the add-on
+ * talking to a merchant's agent. The second is traffic the brain never sees itself — the
+ * server records it and hands it over, so the pane stays a recording either way.
+ */
 export interface FrameMessage {
   type: "frame";
+  channel: "mcp" | "recourse";
+  merchant?: string;
   direction: "out" | "in";
   at: string;
   message: unknown;

@@ -56,7 +56,18 @@ const reachable = (url) =>
     .then((r) => r.ok)
     .catch(() => false);
 
-start("server", process.execPath, ["packages/mcp-server/dist/main.js"], { OWED_PORT: SERVER_PORT });
+// Merchant agents first: the server is told where to find them and will not quietly
+// fall back to in-process ones if they are missing.
+const MERCHANTS_PORT = process.env.OWED_MERCHANTS_PORT ?? "3941";
+start("merchants", process.execPath, ["packages/merchant-agents/dist/bin/serve.js"], {
+  OWED_MERCHANTS_PORT: MERCHANTS_PORT,
+});
+await waitFor("merchant agents", () => reachable(`http://127.0.0.1:${MERCHANTS_PORT}/merchants`));
+
+start("server", process.execPath, ["packages/mcp-server/dist/main.js"], {
+  OWED_PORT: SERVER_PORT,
+  OWED_MERCHANTS_URL: `http://127.0.0.1:${MERCHANTS_PORT}`,
+});
 await waitFor("MCP server", () =>
   reachable(`http://127.0.0.1:${SERVER_PORT}/.well-known/oauth-protected-resource`),
 );
@@ -140,6 +151,16 @@ try {
     "counter cites the merchant's own clause",
     await cardText(".claim__step-clause"),
     "Delivery Guarantee 4.1",
+  );
+
+  // The inspector's claim is that it shows the wire, including the argument with the
+  // merchant that the brain never sees itself.
+  const recourseRows = await page.locator(".inspector__line--recourse").count();
+  check("inspector shows the recourse exchange", recourseRows > 0, true);
+  check(
+    "recourse rows name the merchant",
+    (await page.locator(".inspector__channel").first().textContent())?.trim(),
+    "Northwind Parcel",
   );
 
   check("console clean", consoleErrors.length, 0);

@@ -3,6 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export interface Frame {
   /** Assigned on arrival so each row has a stable identity as the list grows. */
   id: number;
+  /** `mcp` is the brain talking to the add-on; `recourse` is the add-on and a merchant. */
+  channel: "mcp" | "recourse";
+  merchant?: string;
   direction: "out" | "in";
   at: string;
   message: unknown;
@@ -53,7 +56,14 @@ export function useBrain(): BrainState {
       if (message.type === "frame") {
         frameSeq.current += 1;
         const frame = { ...(message as unknown as Frame), id: frameSeq.current };
-        setFrames((previous) => [...previous, frame].slice(-MAX_FRAMES));
+        // Recourse frames are polled after the turn that caused them, so they arrive
+        // late. Both channels carry the same wall clock, so sorting puts the exchange
+        // back where it happened: the call, the argument, then the result.
+        setFrames((previous) =>
+          [...previous, frame]
+            .sort((a, b) => (a.at === b.at ? a.id - b.id : a.at < b.at ? -1 : 1))
+            .slice(-MAX_FRAMES),
+        );
       } else if (message.type === "turn") {
         setTurn(message as unknown as Turn);
       } else if (message.type === "clock") {
