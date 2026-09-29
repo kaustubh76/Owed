@@ -4,12 +4,96 @@ Run it:
 
 ```bash
 pnpm build
+pnpm --filter @owed/eval extraction  # H1: does the rule-based extractor read promises out of merchant email?
 pnpm --filter @owed/eval breach      # H2: does the breach engine get it right, and hold back when it cannot?
 pnpm --filter @owed/eval recourse    # H3 single-shot: does negotiating beat taking the first offer?
 pnpm --filter @owed/eval learning    # H3 repeat games: does knowing who you are arguing with help?
 ```
 
 Results are written to `eval/results/`, one file per evaluation.
+
+---
+
+## Promise extraction — H1
+
+### What is measured
+
+120 labelled messages in [`eval/src/extraction/corpus.ts`](src/extraction/corpus.ts),
+committed to [`data/corpus/extraction.json`](../data/corpus/extraction.json), split into
+two halves that are **reported separately and never rolled together**:
+
+- **generated (60)** — templated, so every promise kind meets several phrasings of the
+  same commitment. The template defines the label, which is legitimate: a template that
+  writes "between 1pm and 5pm tomorrow" *is* the ground truth for what it wrote. It is
+  also the easy half.
+- **authored (60)** — merchant email as merchants actually write it, wrapped in apology,
+  order numbers, tracking codes and small talk. **Twenty-five of them promise nothing at
+  all.**
+
+The negatives are the half that decides the result. An extractor with nothing to trip
+over reaches perfect recall by reading every number as a commitment, and only precision
+catches it. They include the traps a rule-based reader is most likely to fall into: shop
+opening hours, sale countdowns, order and tracking numbers, an expiring password link, a
+delivery already attempted, and guarantees with nothing behind them.
+
+Two readings are reported: **kind only**, which is what H1 claims, and **kind and resolved
+timing**, which is what actually has to be right for the breach engine to do anything with
+the promise.
+
+The extractor is rules, not a model — `packages/extractor`, no network, no AWS. Every
+extraction carries the sentence it was read from, because a promise a household cannot
+trace back to words somebody wrote them is a promise Owed invented.
+
+### Results — first run, before any extractor change
+
+| | precision | recall |
+|---|---|---|
+| generated, kind only | 95.2% | 93.7% |
+| **authored, kind only** | **96.7%** | **76.3%** |
+| overall, kind only | **95.7%** | **87.1%** |
+| overall, kind and timing | 94.6% | 86.1% |
+
+| kind | precision | recall | right / wrong / missed |
+|---|---|---|---|
+| delivery_window | 100.0% | 100.0% | 19 / 0 / 0 |
+| eta | 100.0% | 80.0% | 12 / 0 / 3 |
+| refund_sla | 77.8% | 87.5% | 14 / 4 / 2 |
+| appointment_slot | 100.0% | 88.2% | 15 / 0 / 2 |
+| guarantee | 100.0% | 90.9% | 10 / 0 / 1 |
+| price_match | 100.0% | 63.6% | 7 / 0 / 4 |
+| warranty | 100.0% | 91.7% | 11 / 0 / 1 |
+
+**H1 is met on the headline** — it asks for ≥ 0.9 precision and ≥ 0.8 recall, and the
+overall figures clear both.
+
+**It is not met on prose.** Authored recall is **76.3%**, under the bar. Nearly a quarter
+of the promises a person would read out of real merchant email are missed, and the
+templated half is carrying the average. That is exactly why the sets are reported apart.
+
+The one number that came out clean is the floor: **zero false alarms**. Not one of the 25
+messages that promised nothing had a promise read out of it. That is asserted as a test
+rather than reported as a result, because unlike a threshold it is not a hypothesis —
+filing claims nobody was ever owed would make the product unusable.
+
+### What the thirteen misses actually are
+
+Two classes.
+
+**A precedence bug, and it is the whole of the refund_sla precision problem.** A cue is
+searched for in a window *around* a time expression, so a word appearing after it counts
+as much as one before. "Arriving by 4pm. Guaranteed or we'll credit you" reads the 4pm
+deadline as a refund promise, because "credit" sits twelve characters later. Four of the
+misses and all four false positives are this. A cue after the clock is weaker evidence
+than one before it, and cue proximity should beat the order the cue list happens to be in.
+
+**Vocabulary the rules simply do not have.** "for 30 days", "up to 10 working days", "you
+have 28 days", "in the next 21 days" — four ways of writing a duration the pattern misses
+because it demands `within|in|after` immediately before the number. Plus three cue words
+absent from their lists: "installation", "reach you", "covered for".
+
+The first is a defect in how the rules are applied. The second is a rule-based extractor
+being exactly as good as its vocabulary, which is the honest cost of not using a model —
+and the reason to report it rather than quietly widen the patterns until the number moves.
 
 ---
 

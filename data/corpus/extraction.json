@@ -1,0 +1,2268 @@
+{
+  "parameters": {
+    "sets": [
+      "generated",
+      "authored"
+    ],
+    "kinds": [
+      "delivery_window",
+      "eta",
+      "refund_sla",
+      "appointment_slot",
+      "guarantee",
+      "price_match",
+      "warranty"
+    ],
+    "messages": 120,
+    "received_at": "2026-10-05T16:00:00.000Z",
+    "utc_offset": "-07:00"
+  },
+  "size": 120,
+  "messages": [
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_1",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your order is on its way",
+        "body": "Your parcel will be delivered tomorrow between 1pm and 5pm."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T20:00:00.000Z",
+            "end": "2026-10-07T00:00:00.000Z"
+          }
+        }
+      ],
+      "note": "plain window, relative day"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_2",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Out for delivery",
+        "body": "Arriving Tuesday between 9 and 11am."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T16:00:00.000Z",
+            "end": "2026-10-06T18:00:00.000Z"
+          }
+        }
+      ],
+      "note": "bare start hour inherits am"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_3",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery booked",
+        "body": "We'll deliver on 8 October between 2pm and 6pm."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-08T21:00:00.000Z",
+            "end": "2026-10-09T01:00:00.000Z"
+          }
+        }
+      ],
+      "note": "day and month"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_4",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery update",
+        "body": "Your delivery window is 10am to 2pm today."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-05T17:00:00.000Z",
+            "end": "2026-10-05T21:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'window' stated outright"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_5",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Shipment scheduled",
+        "body": "The courier will drop off your package between 7am and 9am tomorrow."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T14:00:00.000Z",
+            "end": "2026-10-06T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "courier phrasing"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_6",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your parcel",
+        "body": "Expect your parcel Wednesday between noon and 4pm."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-07T19:00:00.000Z",
+            "end": "2026-10-07T23:00:00.000Z"
+          }
+        }
+      ],
+      "note": "noon as a clock time"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_7",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery confirmed",
+        "body": "Delivery is scheduled for October 9 between 8am and midday."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-09T15:00:00.000Z",
+            "end": "2026-10-09T19:00:00.000Z"
+          }
+        }
+      ],
+      "note": "American date order, midday"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_8",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "On the van",
+        "body": "Your order is out for delivery and will arrive between 3 and 7pm."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-05T22:00:00.000Z",
+            "end": "2026-10-06T02:00:00.000Z"
+          }
+        }
+      ],
+      "note": "no day named, so today"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_dw_9",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery",
+        "body": "DELIVERY BETWEEN 2PM AND 6PM TOMORROW"
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T21:00:00.000Z",
+            "end": "2026-10-07T01:00:00.000Z"
+          }
+        }
+      ],
+      "note": "shouting"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_1",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your driver is on the way",
+        "body": "Estimated arrival by 6:15pm."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-06T01:15:00.000Z"
+        }
+      ],
+      "note": "minutes on the clock"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_2",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "On its way",
+        "body": "Your ride will arrive by 9pm."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-06T04:00:00.000Z"
+        }
+      ],
+      "note": "ride"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_3",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Order shipped",
+        "body": "Your parcel will be delivered by 8pm tomorrow."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-07T03:00:00.000Z"
+        }
+      ],
+      "note": "single deadline, not a window"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_4",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Nearly there",
+        "body": "The driver should reach you by 7:45pm."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-06T02:45:00.000Z"
+        }
+      ],
+      "note": "'reach you'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_5",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery today",
+        "body": "Expected arrival before 5pm."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-06T00:00:00.000Z"
+        }
+      ],
+      "note": "'before'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_6",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your takeaway",
+        "body": "Estimated arrival no later than 8:30pm."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-06T03:30:00.000Z"
+        }
+      ],
+      "note": "'no later than'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_7",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "On the way",
+        "body": "Out for delivery, arriving by midday."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-05T19:00:00.000Z"
+        }
+      ],
+      "note": "midday deadline"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_8",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Pickup",
+        "body": "Your pick-up is confirmed and the driver will arrive by 10:05am."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-05T17:05:00.000Z"
+        }
+      ],
+      "note": "am with minutes"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_eta_9",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Arriving Thursday",
+        "body": "Your parcel will arrive by 11am on Thursday."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-08T18:00:00.000Z"
+        }
+      ],
+      "note": "named weekday"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_1",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund started",
+        "body": "Your refund will be credited within 7 days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-12T16:00:00.000Z"
+        }
+      ],
+      "note": "plain duration"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_2",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund on its way",
+        "body": "You'll see the money back in 3-5 business days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-10T16:00:00.000Z"
+        }
+      ],
+      "note": "range takes the outer bound"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_3",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Return accepted",
+        "body": "We'll refund you within 14 days of receiving the item."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-19T16:00:00.000Z"
+        }
+      ],
+      "note": "fortnight"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_4",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund",
+        "body": "Your refund will be processed within 10 working days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-15T16:00:00.000Z"
+        }
+      ],
+      "note": "working days"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_5",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Returns",
+        "body": "You can return anything within 30 days for a full refund."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-11-04T16:00:00.000Z"
+        }
+      ],
+      "note": "return window as a refund promise"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_6",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Money back",
+        "body": "Reimbursement will reach your account in 21 days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-26T16:00:00.000Z"
+        }
+      ],
+      "note": "'reimbursement'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_7",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Cancelled order",
+        "body": "A credit will be applied within 5 days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-10T16:00:00.000Z"
+        }
+      ],
+      "note": "'credit'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_8",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund confirmed",
+        "body": "The refund is due back within 2 weeks."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-19T16:00:00.000Z"
+        }
+      ],
+      "note": "weeks"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_ref_9",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund",
+        "body": "Your money back within 28 days, no questions asked."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-11-02T16:00:00.000Z"
+        }
+      ],
+      "note": "'money back'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_1",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Engineer visit",
+        "body": "Our technician will call between 2 and 4pm on Thursday."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-08T21:00:00.000Z",
+            "end": "2026-10-08T23:00:00.000Z"
+          }
+        }
+      ],
+      "note": "technician"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_2",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Installation booked",
+        "body": "Your installation is booked for Friday between 8am and midday."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-09T15:00:00.000Z",
+            "end": "2026-10-09T19:00:00.000Z"
+          }
+        }
+      ],
+      "note": "installer"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_3",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Appointment confirmed",
+        "body": "Your appointment is tomorrow between 9am and 11am."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-06T16:00:00.000Z",
+            "end": "2026-10-06T18:00:00.000Z"
+          }
+        }
+      ],
+      "note": "the word itself"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_4",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Survey",
+        "body": "The surveyor will visit on 7 October between 1pm and 3pm."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-07T20:00:00.000Z",
+            "end": "2026-10-07T22:00:00.000Z"
+          }
+        }
+      ],
+      "note": "survey visit"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_5",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Boiler service",
+        "body": "Our engineer will arrive between 10am and 2pm on Wednesday."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-07T17:00:00.000Z",
+            "end": "2026-10-07T21:00:00.000Z"
+          }
+        }
+      ],
+      "note": "engineer"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_6",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Plumber booked",
+        "body": "The plumber is due between 4 and 6pm today."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-05T23:00:00.000Z",
+            "end": "2026-10-06T01:00:00.000Z"
+          }
+        }
+      ],
+      "note": "plumber, bare start hour"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_7",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Service call",
+        "body": "Your service call is scheduled between 7am and 10am tomorrow."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-06T14:00:00.000Z",
+            "end": "2026-10-06T17:00:00.000Z"
+          }
+        }
+      ],
+      "note": "service call"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_8",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Fitting",
+        "body": "The fitter will come between 11am and 1pm on Friday."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-09T18:00:00.000Z",
+            "end": "2026-10-09T20:00:00.000Z"
+          }
+        }
+      ],
+      "note": "crosses midday"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_app_9",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Electrician",
+        "body": "Your electrician will visit between 8 and 10am on 9 October."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-09T15:00:00.000Z",
+            "end": "2026-10-09T17:00:00.000Z"
+          }
+        }
+      ],
+      "note": "electrician with a date"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_gua_1",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "On-time guarantee",
+        "body": "Guaranteed to arrive by 8pm or your delivery is free."
+      },
+      "expected": [
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-06T03:00:00.000Z"
+        }
+      ],
+      "note": "classic on-time guarantee"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_gua_2",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Promise",
+        "body": "We guarantee delivery by 6pm or it's free."
+      },
+      "expected": [
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-06T01:00:00.000Z"
+        }
+      ],
+      "note": "'or it's free'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_gua_3",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Guaranteed",
+        "body": "Guaranteed before 9pm or we'll refund the delivery fee."
+      },
+      "expected": [
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-06T04:00:00.000Z"
+        }
+      ],
+      "note": "'or we'll refund'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_gua_4",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery promise",
+        "body": "Delivered between 1 and 5pm, guaranteed or your money back."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-05T20:00:00.000Z",
+            "end": "2026-10-06T00:00:00.000Z"
+          }
+        },
+        {
+          "kind": "guarantee",
+          "window": {
+            "start": "2026-10-05T20:00:00.000Z",
+            "end": "2026-10-06T00:00:00.000Z"
+          }
+        }
+      ],
+      "note": "guarantee with no clock of its own"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_gua_5",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Guaranteed slot",
+        "body": "Your appointment is guaranteed between 9am and 11am tomorrow or the visit is free."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-06T16:00:00.000Z",
+            "end": "2026-10-06T18:00:00.000Z"
+          }
+        },
+        {
+          "kind": "guarantee",
+          "window": {
+            "start": "2026-10-06T16:00:00.000Z",
+            "end": "2026-10-06T18:00:00.000Z"
+          }
+        }
+      ],
+      "note": "guarantee over an appointment"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_gua_6",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Next day promise",
+        "body": "We guarantee your parcel by midday tomorrow or your money back."
+      },
+      "expected": [
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-06T19:00:00.000Z"
+        }
+      ],
+      "note": "midday tomorrow"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_gua_7",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Late and it's free",
+        "body": "Guaranteed by 7:30pm or the order is free."
+      },
+      "expected": [
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-06T02:30:00.000Z"
+        }
+      ],
+      "note": "'the order is free'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_gua_8",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Our promise",
+        "body": "Arriving by 4pm. Guaranteed or we'll credit you."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-05T23:00:00.000Z"
+        },
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-05T23:00:00.000Z"
+        }
+      ],
+      "note": "guarantee borrows the eta"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_pm_1",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Price promise",
+        "body": "If the price drops within 14 days we'll refund the difference."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-10-19T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "price drop"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_pm_2",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Price match",
+        "body": "Price match guarantee for 30 days from purchase."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-11-04T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'price match guarantee'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_pm_3",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Price protection",
+        "body": "Price protection applies within 21 days."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-10-26T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'price protection'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_pm_4",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Bought it cheaper?",
+        "body": "Found it cheaper elsewhere within 7 days? We'll match the price."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-10-12T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'cheaper elsewhere'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_pm_5",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Our price promise",
+        "body": "Our price promise covers you for 60 days."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-12-04T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'price promise'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_pm_6",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "If it gets cheaper",
+        "body": "If the price goes down in 10 days we'll credit you the difference."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-10-15T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'price goes down'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_pm_7",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Price match",
+        "body": "We'll match the price if it falls within 2 weeks."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-10-19T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "weeks"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_pm_8",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Price drop refund",
+        "body": "Price drop refunds available within 45 days."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-11-19T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "both refund and price words"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_war_1",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your purchase",
+        "body": "Covered by a 2 year warranty."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2028-10-04T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "years"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_war_2",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Warranty",
+        "body": "This item comes with a 12 month warranty."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2027-09-30T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "months"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_war_3",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Cover",
+        "body": "Your warranty runs for 3 years from today."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2029-10-04T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'runs for'"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_war_4",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Registered",
+        "body": "Warranty registered: 24 months of cover."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2028-09-24T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "24 months"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_war_5",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Protected",
+        "body": "Your appliance is under warranty for 5 years."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2031-10-04T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "5 years"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_war_6",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Warranty card",
+        "body": "Manufacturer warranty: 18 months."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2028-03-28T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "colon form"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_war_7",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Extended cover",
+        "body": "Your extended warranty adds 36 months of protection."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2029-09-19T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "extended warranty"
+    },
+    {
+      "set": "generated",
+      "input": {
+        "id": "g_war_8",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Guarantee card",
+        "body": "Warranty cover lasts 1 year."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2027-10-05T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "singular year"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_01",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your Thursday delivery",
+        "body": "Hi Sam,\n\nGood news — your order #8841-2 has left our depot. The driver expects to be with you on Thursday between 2pm and 6pm. You don't need to be in; we'll leave it in the porch if you're out.\n\nThanks for shopping with us."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-08T21:00:00.000Z",
+            "end": "2026-10-09T01:00:00.000Z"
+          }
+        }
+      ],
+      "note": "order number near the window"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_02",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Sorry about the wait",
+        "body": "We're really sorry your order was delayed. It's now on the van and should reach you by 7pm this evening. If it doesn't, reply to this email and we'll sort it out."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-06T02:00:00.000Z"
+        }
+      ],
+      "note": "apology wrapper"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_03",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund confirmation",
+        "body": "We've received your return and started the refund. Depending on your bank it can take up to 10 working days to appear on your statement."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-15T16:00:00.000Z"
+        }
+      ],
+      "note": "'up to' hedging"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_04",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Engineer booking",
+        "body": "Your boiler service is booked in. Our engineer Dave will be with you on Wednesday between 10am and 2pm. He'll call ahead about 20 minutes before he arrives."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-07T17:00:00.000Z",
+            "end": "2026-10-07T21:00:00.000Z"
+          }
+        }
+      ],
+      "note": "a second, irrelevant duration in the same message"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_05",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Order 44921 confirmed",
+        "body": "Thanks for your order. It's covered by a 2 year warranty, and if the price drops within 30 days we'll refund you the difference."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2028-10-04T16:00:00.000Z"
+          }
+        },
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-11-04T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "two promises, different kinds"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_06",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Out for delivery",
+        "body": "Your parcel is out for delivery today. Estimated arrival between 11am and 3pm. Track it any time from your account."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-05T18:00:00.000Z",
+            "end": "2026-10-05T22:00:00.000Z"
+          }
+        }
+      ],
+      "note": "window under an 'estimated arrival' heading"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_07",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "We missed you",
+        "body": "We tried to deliver today but nobody was home. We'll try again tomorrow between 9am and 1pm."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T16:00:00.000Z",
+            "end": "2026-10-06T20:00:00.000Z"
+          }
+        }
+      ],
+      "note": "a failed attempt and a fresh promise"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_08",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your appointment",
+        "body": "This is a reminder that your fitting is on Friday 9 October, between 8am and midday. Please clear the area beforehand."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-09T15:00:00.000Z",
+            "end": "2026-10-09T19:00:00.000Z"
+          }
+        }
+      ],
+      "note": "date and window separated by a comma"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_09",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund processed",
+        "body": "Your refund of $42.50 has been approved and will be back with you within 5 working days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-10T16:00:00.000Z"
+        }
+      ],
+      "note": "an amount to pick up"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_10",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery guarantee",
+        "body": "Your order is guaranteed to arrive by 8pm tomorrow. If it's late, the delivery is free."
+      },
+      "expected": [
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-07T03:00:00.000Z"
+        }
+      ],
+      "note": "remedy in a separate sentence"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_11",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Booking confirmed",
+        "body": "Thanks for booking. The surveyor will visit between 1 and 3pm on 7 October. Allow about an hour."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-07T20:00:00.000Z",
+            "end": "2026-10-07T22:00:00.000Z"
+          }
+        }
+      ],
+      "note": "bare start hour, then a vague duration"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_12",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your extended cover",
+        "body": "You're now covered for 36 months from the date of purchase. Keep this email for your records."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2029-09-19T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'covered for' without the word warranty"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_13",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Price promise",
+        "body": "Bought something and seen it cheaper? Tell us within 14 days and we'll match the price."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-10-19T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "question phrasing"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_14",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your ride",
+        "body": "Your driver Amara is 4 minutes away and should arrive by 9:12pm."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-06T04:12:00.000Z"
+        }
+      ],
+      "note": "a duration and a deadline in one line"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_15",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery scheduled",
+        "body": "We'll deliver your sofa on 9 October between 7am and 11am. Please make sure someone over 18 is home."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-09T14:00:00.000Z",
+            "end": "2026-10-09T18:00:00.000Z"
+          }
+        }
+      ],
+      "note": "an age that is not a time"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_16",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Returns",
+        "body": "Changed your mind? You have 28 days to send it back for a full refund."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-11-02T16:00:00.000Z"
+        }
+      ],
+      "note": "'you have N days'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_17",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Two things",
+        "body": "Your parcel will be with you by 6pm today, and your refund for the cancelled item will be processed within 7 days."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-06T01:00:00.000Z"
+        },
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-12T16:00:00.000Z"
+        }
+      ],
+      "note": "two promises in one sentence"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_18",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Installation",
+        "body": "Your installation slot is Wednesday, 10am to 2pm. Our team will need access to the meter cupboard."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-07T17:00:00.000Z",
+            "end": "2026-10-07T21:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'slot is' without 'between'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_19",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "On its way",
+        "body": "Dispatched! Expect it between 3 and 7pm tomorrow."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T22:00:00.000Z",
+            "end": "2026-10-07T02:00:00.000Z"
+          }
+        }
+      ],
+      "note": "two words of context around the window"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_20",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Warranty registration",
+        "body": "Your appliance is registered. Cover runs for 5 years and includes parts and labour."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2031-10-04T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'cover runs for'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_21",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery tomorrow",
+        "body": "Hello! Just to confirm, delivery is tomorrow between 12 and 4pm. Our driver will send a text when he's 10 minutes away."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T19:00:00.000Z",
+            "end": "2026-10-06T23:00:00.000Z"
+          }
+        }
+      ],
+      "note": "bare 12 in a range"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_22",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Sorry, delayed",
+        "body": "Your appointment has moved. The engineer will now come between 3pm and 5pm on Thursday instead."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-08T22:00:00.000Z",
+            "end": "2026-10-09T00:00:00.000Z"
+          }
+        }
+      ],
+      "note": "a rescheduled slot"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_23",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund started",
+        "body": "We've issued your refund. It should land in 3-5 business days, though some banks are slower."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-10T16:00:00.000Z"
+        }
+      ],
+      "note": "range in business days with a hedge"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_24",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your order",
+        "body": "This order qualifies for our price promise: if it gets cheaper in the next 21 days, we'll credit the difference automatically."
+      },
+      "expected": [
+        {
+          "kind": "price_match",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2026-10-26T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'in the next N days'"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_25",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Nearly there",
+        "body": "Out for delivery. Arriving by 2:45pm."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-05T21:45:00.000Z"
+        }
+      ],
+      "note": "short and precise"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_26",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Service visit",
+        "body": "Your annual service is booked for Friday between 9 and 11am."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-09T16:00:00.000Z",
+            "end": "2026-10-09T18:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'annual' is not a duration promise"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_27",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Guaranteed",
+        "body": "We guarantee your parcel arrives between 1pm and 5pm today, or we'll refund the postage."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-05T20:00:00.000Z",
+            "end": "2026-10-06T00:00:00.000Z"
+          }
+        },
+        {
+          "kind": "guarantee",
+          "window": {
+            "start": "2026-10-05T20:00:00.000Z",
+            "end": "2026-10-06T00:00:00.000Z"
+          }
+        }
+      ],
+      "note": "window and guarantee in one sentence"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_28",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your refund",
+        "body": "Cancelled as requested. The money will be back in your account within 2 weeks."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-10-19T16:00:00.000Z"
+        }
+      ],
+      "note": "weeks in prose"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_29",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery window",
+        "body": "Tomorrow, 8am to 10am. See you then!"
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-06T15:00:00.000Z",
+            "end": "2026-10-06T17:00:00.000Z"
+          }
+        }
+      ],
+      "note": "subject carries the only cue"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_30",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Late delivery guarantee",
+        "body": "If your order doesn't arrive by 9pm we'll refund the delivery charge. That's our guarantee."
+      },
+      "expected": [
+        {
+          "kind": "guarantee",
+          "deadline": "2026-10-06T04:00:00.000Z"
+        }
+      ],
+      "note": "remedy stated before the word guarantee"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_31",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Warranty",
+        "body": "Every product we sell carries 12 months of manufacturer cover as standard."
+      },
+      "expected": [
+        {
+          "kind": "warranty",
+          "window": {
+            "start": "2026-10-05T16:00:00.000Z",
+            "end": "2027-09-30T16:00:00.000Z"
+          }
+        }
+      ],
+      "note": "no word 'warranty' at all"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_32",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your visit",
+        "body": "The electrician is booked for 6 October between 4 and 6pm."
+      },
+      "expected": [
+        {
+          "kind": "appointment_slot",
+          "window": {
+            "start": "2026-10-06T23:00:00.000Z",
+            "end": "2026-10-07T01:00:00.000Z"
+          }
+        }
+      ],
+      "note": "date before window"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_33",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Refund",
+        "body": "Approved. Expect it within 30 days."
+      },
+      "expected": [
+        {
+          "kind": "refund_sla",
+          "deadline": "2026-11-04T16:00:00.000Z"
+        }
+      ],
+      "note": "one-word context"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_34",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery confirmed",
+        "body": "Great news — your order lands Wednesday between 11am and 1pm."
+      },
+      "expected": [
+        {
+          "kind": "delivery_window",
+          "window": {
+            "start": "2026-10-07T18:00:00.000Z",
+            "end": "2026-10-07T20:00:00.000Z"
+          }
+        }
+      ],
+      "note": "'lands' instead of arrives"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_35",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Arriving soon",
+        "body": "Your package will be delivered by 4pm on Thursday. No signature needed."
+      },
+      "expected": [
+        {
+          "kind": "eta",
+          "deadline": "2026-10-08T23:00:00.000Z"
+        }
+      ],
+      "note": "deadline with a named day"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n01",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Weekend sale!",
+        "body": "Up to 50% off everything this weekend. Our stores are open 9am to 5pm all weekend. Sale ends in 3 days."
+      },
+      "expected": [],
+      "note": "opening hours and a countdown, neither a promise"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n02",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your receipt",
+        "body": "Thanks for shopping with us. Order total $42.50. VAT included."
+      },
+      "expected": [],
+      "note": "a receipt: money, but nothing promised"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n03",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Password reset",
+        "body": "Someone asked to reset your password. If that wasn't you, ignore this email. The link expires in 24 hours."
+      },
+      "expected": [],
+      "note": "an expiring link is not a promise to the household"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n04",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Order received",
+        "body": "We've got your order and we're packing it now. We'll email you when it ships."
+      },
+      "expected": [],
+      "note": "no commitment at all"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n05",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "We missed you",
+        "body": "We tried to deliver at 2:15pm today but nobody was in. Your parcel is at the depot."
+      },
+      "expected": [],
+      "note": "a past event, not a future promise"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n06",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Newsletter",
+        "body": "Five ways to make your kitchen feel bigger. Read our guide, and see what's new in store."
+      },
+      "expected": [],
+      "note": "marketing with no times or commitments"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n07",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your order shipped",
+        "body": "Tracking number GB8841229. Your parcel has left our warehouse."
+      },
+      "expected": [],
+      "note": "a long number and no commitment"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n08",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Survey",
+        "body": "How did we do? Tell us in 2 minutes and get 10% off your next order."
+      },
+      "expected": [],
+      "note": "a duration about the reader, not the merchant"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n09",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Back in stock",
+        "body": "The item you wanted is back. Only 4 left — order before they go."
+      },
+      "expected": [],
+      "note": "urgency without a time"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n10",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivered",
+        "body": "Your parcel was delivered at 3:42pm and left with a neighbour at number 12."
+      },
+      "expected": [],
+      "note": "past tense delivery"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n11",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Card expiring",
+        "body": "The card ending 4417 expires in 2 months. Update it to avoid interruption."
+      },
+      "expected": [],
+      "note": "a duration about a card"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n12",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Membership",
+        "body": "Your membership renews on 5 November. You'll be charged $9.99."
+      },
+      "expected": [],
+      "note": "a charge, not a promise to the household"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n13",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Store hours",
+        "body": "We're open 8am to 8pm Monday to Saturday, and 10am to 4pm on Sundays."
+      },
+      "expected": [],
+      "note": "two time ranges, no promise"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n14",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Thanks for your review",
+        "body": "Your review is live. Reviews usually appear within 48 hours of being written."
+      },
+      "expected": [],
+      "note": "a duration about the merchant's website, not a commitment to this household"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n15",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Guaranteed fresh",
+        "body": "All our produce is guaranteed fresh. Shop the range now."
+      },
+      "expected": [],
+      "note": "a guarantee with nothing behind it"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n16",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Satisfaction guaranteed",
+        "body": "Satisfaction guaranteed on every order. Browse now."
+      },
+      "expected": [],
+      "note": "guarantee with no remedy and no clock"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n17",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Your account",
+        "body": "You have 3 unread messages and 2 saved baskets waiting."
+      },
+      "expected": [],
+      "note": "counts that are not durations"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n18",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Delivery options",
+        "body": "Choose standard, next day or nominated day delivery at checkout."
+      },
+      "expected": [],
+      "note": "options offered, nothing promised yet"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n19",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Price drop alert",
+        "body": "An item on your wishlist is now cheaper. Have a look before it goes."
+      },
+      "expected": [],
+      "note": "a price drop that is not a price promise"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n20",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Invitation",
+        "body": "Join us at 7pm on Thursday for the launch of our autumn range."
+      },
+      "expected": [],
+      "note": "an invitation to an event"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n21",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Order cancelled",
+        "body": "Your order has been cancelled as requested. Nothing has been charged."
+      },
+      "expected": [],
+      "note": "cancellation with no refund clock"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n22",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Warranty claim received",
+        "body": "We've received your claim and someone will look at it. Reference WC-2291."
+      },
+      "expected": [],
+      "note": "no timescale given"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n23",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Referral",
+        "body": "Give a friend 20% off and get $10 when they spend $40 in their first 30 days."
+      },
+      "expected": [],
+      "note": "a promotion with a duration about the friend"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n24",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "App update",
+        "body": "Version 4.2 is out. Faster search, and delivery tracking in 1 tap."
+      },
+      "expected": [],
+      "note": "release notes"
+    },
+    {
+      "set": "authored",
+      "input": {
+        "id": "a_n25",
+        "merchant": "Corpus Merchant",
+        "received_at": "2026-10-05T16:00:00.000Z",
+        "utc_offset": "-07:00",
+        "subject": "Out of stock",
+        "body": "Sorry, one item is out of stock and has been removed from your order."
+      },
+      "expected": [],
+      "note": "bad news with no promise"
+    }
+  ]
+}

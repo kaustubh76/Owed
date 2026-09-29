@@ -5,6 +5,9 @@
       "path": "packages/domain"
     },
     {
+      "path": "packages/extractor"
+    },
+    {
       "path": "packages/recourse-protocol"
     },
     {

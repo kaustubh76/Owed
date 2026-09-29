@@ -15,13 +15,15 @@
     "build": "tsc -b",
     "recourse": "node dist/bin/recourse.js",
     "learning": "node dist/bin/learning.js",
-    "breach": "node dist/bin/breach.js"
+    "breach": "node dist/bin/breach.js",
+    "extraction": "node dist/bin/extraction.js"
   },
   "dependencies": {
     "@owed/core": "workspace:*",
     "@owed/domain": "workspace:*",
     "@owed/merchant-agents": "workspace:*",
     "@owed/policy-library": "workspace:*",
-    "@owed/recourse-protocol": "workspace:*"
+    "@owed/recourse-protocol": "workspace:*",
+    "@owed/extractor": "workspace:*"
   }
 }
