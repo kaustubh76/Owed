@@ -1,4 +1,3 @@
-import type { Server } from "node:http";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps/server";
 import { ClaimViewSchema, EvidenceViewSchema, LedgerSummaryViewSchema, usd } from "@owed/domain";

@@ -7,12 +7,11 @@ import {
   type LedgerEvent,
   type Money,
   normalizeInstant,
-  type ObservationWindow,
   type OwedPromise,
   type PromiseKind,
   usd,
 } from "@owed/domain";
-import { arcEvents, createIdGen, DOORBELL_SOURCE, sortByOccurrence } from "./build.js";
+import { arcEvents, createIdGen, sortByOccurrence } from "./build.js";
 import type { ArcSpec } from "./types.js";
 
 export const HOUSEHOLD_ID = "hh_demo";

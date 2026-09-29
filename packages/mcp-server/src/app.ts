@@ -67,7 +67,7 @@ export function createOwedApp({
     // Auth runs ahead of the MCP handler: the conformance probe sends no `Accept`
     // header, and a server that validated `Accept` first would answer 406 where the
     // check demands exactly 401.
-    app.all("/mcp", requireOwedAuth({ config: auth.config, clock }), forward(node));
+    app.all("/mcp", requireOwedAuth({ config: auth.config }), forward(node));
   } else {
     app.all("/mcp", forward(node));
   }

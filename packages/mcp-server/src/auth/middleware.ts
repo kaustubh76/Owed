@@ -1,5 +1,3 @@
-import type { Clock } from "@owed/core";
-import { toEpochMs } from "@owed/domain";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { AuthConfig } from "./config.js";
 import { verifyToken } from "./tokens.js";
@@ -46,7 +44,6 @@ function unauthorized(res: Response, description: string): void {
 
 export interface OwedAuthOptions {
   config: AuthConfig;
-  clock: Clock;
   requiredScopes?: string[];
 }
 
@@ -57,11 +54,7 @@ export interface OwedAuthOptions {
  * `Accept` header, and a server that validated `Accept` first would answer 406 where
  * the check demands 401.
  */
-export function requireOwedAuth({
-  config,
-  clock,
-  requiredScopes = [],
-}: OwedAuthOptions): RequestHandler {
+export function requireOwedAuth({ config, requiredScopes = [] }: OwedAuthOptions): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     const header = req.headers.authorization;
     if (typeof header !== "string" || !header.toLowerCase().startsWith("bearer ")) {
@@ -95,11 +88,6 @@ export function requireOwedAuth({
         unauthorized(res, "The access token is expired or not valid for this resource."),
       );
   };
-}
-
-/** Wall-clock seconds, read through the injected clock rather than ambiently. */
-export function nowSeconds(clock: Clock): number {
-  return Math.floor(toEpochMs(clock.now()) / 1000);
 }
 
 /**
