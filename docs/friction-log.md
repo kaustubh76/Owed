@@ -208,7 +208,94 @@ component, and point library users at the session/brain API directly.
 
 ---
 
-## 10. Express handler parameters lose their types through `createMcpExpressApp()`
+## 10. The recommended stateless serving cannot elicit on the era Amazon documents
+
+**Tool:** MCP TypeScript SDK v2 · **Severity: high**
+
+**Task.** Ask the household to confirm before filing a claim — MCP elicitation, and a named
+feature of our v1.
+
+**Expected.** `inputRequired.elicit()` works wherever the tool runs. The SDK presents it as a
+write-once idiom spanning both protocol eras via a legacy shim.
+
+**Actual.** On a 2025-era connection served by `createMcpHandler` the question never reaches
+anyone, and the result is an error:
+
+> *Cannot request input 'confirm' (elicitation/create): the client on this 2025-era connection
+> did not declare the required capability (no client capabilities are available on this
+> connection — **per-request legacy serving cannot receive server-to-client requests**).*
+
+2025-era elicitation is a server-to-client request and needs a session. `createMcpHandler`'s
+`legacy` option accepts only `'stateless' | 'reject'` — there is no stateful setting — so on
+the SDK's own recommended posture, elicitation is unavailable on the revision Amazon's Alexa+
+documentation names. It works on 2026-07-28, where the request rides in the result and the
+client retries.
+
+**Credit where due:** that error message is the best in any SDK we used. It named the exact
+constraint and saved what would otherwise have been hours.
+
+**Workaround.** Elicit only where the connection can carry it — the 2026-07-28 era, or a
+client that has declared the capability — and fall back to an explicit `confirm` argument
+everywhere else. Both paths are tested.
+
+**Suggestion.** Say this in the elicitation guide, next to the write-once idiom: the idiom is
+write-once, but it is not *run-anywhere*. Better still, offer a sessionful option on
+`createMcpHandler` so the two decisions are not coupled.
+
+---
+
+## 11. The documented elicitation example loops forever when the user declines
+
+**Tool:** MCP TypeScript SDK v2 · **Severity: high**
+
+**Task.** Handle "no" as well as "yes".
+
+**Actual.** `acceptedContent()` returns `undefined` for a **declined** elicitation — exactly
+as it does for one that was never asked. The worked example in the type documentation branches
+on that single value:
+
+```ts
+const confirmed = acceptedContent(ctx.mcpReq.inputResponses, 'confirm');
+if (!confirmed) { return inputRequired({ /* ask again */ }); }
+```
+
+Decline it and the server asks again, and again, until the client's driver gives up:
+`Multi-round-trip request 'tools/call' still required input after 10 rounds`. We shipped that
+exact shape and a test caught it.
+
+`inputResponse()` is the right tool — it returns a discriminated view covering decline and
+cancel — and its doc comment says so. But the example everybody will copy uses the other one.
+
+**Workaround.** Read `inputResponse(responses, key)` and branch on `action`.
+
+**Suggestion.** Fix the worked example to handle decline, or make `acceptedContent` harder to
+misuse. A user saying "no" being read as "not asked yet" is the single most predictable way
+this API gets used wrongly.
+
+---
+
+## 12. A view's CSP lands on the listing, not on the thing a host reads
+
+**Tool:** `@modelcontextprotocol/ext-apps` · **Severity: medium**
+
+**Task.** Declare a deny-by-default content security policy for each `ui://` view.
+
+**Actual.** `registerAppResource(server, name, uri, { _meta: { ui: { csp } } }, read)` puts the
+policy on the `resources/list` entry. A host that reads the resource — which is what it must do
+to render it — receives content items with no `_meta` at all. Our own contract test failed on
+exactly this, and we had believed the policy was in force for weeks.
+
+The docs do say the listing value is a "fallback" and the content item takes precedence. They
+do not say that supplying only the config value means most hosts never see one.
+
+**Workaround.** Repeat `_meta.ui` on every content item returned by the read callback.
+
+**Suggestion.** Have `registerAppResource` copy the config's `_meta.ui` onto returned content
+items unless the callback sets its own. The current split is a trap with a silent failure mode.
+
+---
+
+## 13. Express handler parameters lose their types through `createMcpExpressApp()`
 
 **Tool:** `@modelcontextprotocol/express` · **Severity: low**
 

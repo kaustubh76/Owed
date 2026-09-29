@@ -194,7 +194,16 @@ All tool results carry `content[]` (text fallback for voice-only devices), `stru
 Views are sandboxed iframes with CSP; they call back only via `postMessage` (host bridge), never fetch directly.
 
 ### 6.4 Elicitation
-Form-mode, flat primitives only (boolean / enum), `relatedRequestId` set so the question travels on the open `tools/call` stream (bridge requirement). Two prompts in v1: *file it?* and *attach doorbell evidence?*
+Form-mode, flat primitives only — which is the whole of what the spec permits. Both of v1's
+questions (*file it?* and *attach the doorbell evidence?*) are asked in **one round** rather
+than serially; being asked twice about one claim is worse, not better.
+
+Elicitation runs **only where the connection can carry it.** On the 2026-07-28 revision the
+request rides in the result and the client retries, so it works under per-request serving. On
+the 2025-11-25 revision it is a server-to-client request that needs a session, and per-request
+serving cannot make one — so there `claim_file` proposes in words and waits for `confirm`.
+Both paths are tested, including decline. See docs/friction-log.md §10–11; the second is an SDK
+bug we shipped from its own worked example before a test caught it.
 
 ---
 
@@ -353,6 +362,17 @@ detectors, the recourse protocol and merchant agents, the promise extractor, and
 evaluation harnesses.
 
 ## 13. Real vs. simulated (mirrored in the submission)
+
+**What "conformance passes" does and does not mean.** Alexa+ for Builders is partner-gated, so
+**none of this has run against the real Alexa+ client** — not one tool call, not one card. Every
+green check below is against the *documented* contract and the community conformance CLI. The
+contract suite asserts what Amazon publishes: every advertised tool invocable, one text block
+per result, nothing internal ever spoken, every `ui://` view readable and self-contained under a
+deny-by-default CSP, elicitation flat and primitive. Measured: **p95 4.7–35 ms** against a
+documented 500 ms target, and **worst-case text contrast 6.36:1** against a required 4.5:1.
+
+Those are real measurements of a real server. They are not evidence that it works on Alexa+, and
+nothing in this submission should be read as claiming otherwise.
 
 | Real | Simulated (labelled in UI and README) |
 |---|---|
