@@ -418,7 +418,8 @@ green) → all four evaluations run and write their results.
 Open http://127.0.0.1:5173 and ask *"Alexa, what am I owed?"*.
 
 ```bash
-pnpm verify         # build + lint + typecheck + tests (the gate CI runs)
+pnpm verify         # build + lint + 240 tests + the conformance probe
+                    # the same sequence .github/workflows/verify.yml runs on every push
 pnpm test           # unit, property, storyboard golden, and tool-contract tests
 ```
 
