@@ -52,6 +52,8 @@ export const ClaimViewSchema = z.object({
   merchant: z.string(),
   state: ClaimStateSchema,
   ask: MoneySchema,
+  /** What the merchant published, and therefore what is actually at stake. */
+  expected: MoneySchema,
   settled_amount: MoneySchema.optional(),
   recovered_amount: MoneySchema.optional(),
   rounds: z.array(ClaimRoundSchema),
@@ -63,6 +65,7 @@ export type ClaimView = z.infer<typeof ClaimViewSchema>;
 export const EvidenceViewSchema = z.object({
   promise_id: z.string(),
   merchant: z.string(),
+  kind: PromiseKindSchema,
   status: PromiseStatusSchema,
   verdict: z.enum(["Kept", "Suspected", "Breached", "Undetermined"]).optional(),
   coverage: CoverageSchema.optional(),

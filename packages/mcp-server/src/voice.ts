@@ -1,5 +1,7 @@
 import {
+  type ClaimView,
   coveragePercent,
+  type EvidenceView,
   isZeroMoney,
   type LedgerSummaryView,
   numberToWords,
@@ -74,7 +76,20 @@ export function speakLedgerSummary(view: LedgerSummaryView): string {
         ? "One promise was kept"
         : `${capitalize(numberToWords(view.kept))} promises were kept`;
 
-  return assertSpeakable(joinSpoken([money, kept, speakDeclined(view)]));
+  return assertSpeakable(joinSpoken([money, kept, speakDeclined(view), speakReadyToFile(view)]));
+}
+
+/**
+ * The claim waiting on a yes.
+ *
+ * Said last, because it is the only part of the summary that asks for anything.
+ */
+function speakReadyToFile(view: LedgerSummaryView): string {
+  const ready = view.items.filter((item) => item.status === "Breached").length;
+  if (ready === 0) return "";
+  return ready === 1
+    ? "There's one more I can file"
+    : `There are ${numberToWords(ready)} more I can file`;
 }
 
 /**
@@ -101,4 +116,141 @@ function speakDeclined(view: LedgerSummaryView): string {
 
 function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+const KIND_SPOKEN: Readonly<Record<string, string>> = {
+  delivery_window: "delivery",
+  eta: "arrival time",
+  refund_sla: "refund",
+  appointment_slot: "appointment",
+  guarantee: "guarantee",
+  price_match: "price match",
+  warranty: "warranty",
+};
+
+function plural(count: number, one: string, many: string): string {
+  return count === 1 ? one : many;
+}
+
+export interface PromisesListFilter {
+  status?: string | undefined;
+  merchant?: string | undefined;
+}
+
+export function speakPromisesList(view: LedgerSummaryView, filter: PromisesListFilter): string {
+  const count = view.items.length;
+  if (count === 0) {
+    return assertSpeakable(
+      filter.merchant === undefined
+        ? "I'm not watching anything that matches."
+        : `I'm not watching anything from ${filter.merchant} that matches.`,
+    );
+  }
+
+  const from = filter.merchant === undefined ? "" : ` from ${filter.merchant}`;
+  const head = `I'm watching ${numberToWords(count)} ${plural(count, "promise", "promises")}${from}`;
+
+  const ready = view.items.filter((item) => item.status === "Breached").length;
+  const tail =
+    ready === 0
+      ? ""
+      : ready === 1
+        ? "One is ready to file"
+        : `${capitalize(numberToWords(ready))} are ready to file`;
+
+  return assertSpeakable(joinSpoken([head, tail]));
+}
+
+/**
+ * What the engine concluded about one promise.
+ *
+ * The `Suspected` branch is the one that matters: it says what was *not* seen, out loud,
+ * rather than quietly declining to act.
+ */
+export function speakPromiseCheck(view: EvidenceView): string {
+  const subject = `the ${view.merchant} ${KIND_SPOKEN[view.kind] ?? "promise"}`;
+  const watched =
+    view.coverage === undefined
+      ? ""
+      : `I watched ${numberToWords(coveragePercent(view.coverage))} percent of the window`;
+
+  if (view.verdict === "Suspected") {
+    return assertSpeakable(
+      joinSpoken([`I'm not claiming ${subject}`, watched, "That isn't enough to be sure"]),
+    );
+  }
+  if (view.verdict === "Kept") {
+    return assertSpeakable(joinSpoken([`They kept ${subject}`]));
+  }
+  if (view.verdict === "Breached") {
+    return assertSpeakable(joinSpoken([`${capitalize(subject)} was broken`, watched]));
+  }
+  return assertSpeakable(joinSpoken([`I'm still watching ${subject}`]));
+}
+
+export function speakEvidence(view: EvidenceView): string {
+  const count = view.items.length;
+  if (count === 0) {
+    return assertSpeakable(`I have nothing on file for the ${view.merchant} promise.`);
+  }
+  const kinds = new Set(view.items.map((item) => item.kind.replace(/_/g, " ")));
+  return assertSpeakable(
+    joinSpoken([
+      `I have ${numberToWords(count)} ${plural(count, "piece", "pieces")} of evidence for ${view.merchant}`,
+      `${capitalize([...kinds].join(", "))}`,
+    ]),
+  );
+}
+
+const CLAIM_STATE_SPOKEN: Readonly<Record<string, string>> = {
+  Proposed: "waiting on your say-so",
+  Filed: "filed",
+  Negotiating: "still being argued",
+  Settled: "settled",
+  Escalated: "escalated",
+  Recovered: "settled and paid",
+  WrittenOff: "written off",
+};
+
+export function speakClaim(view: ClaimView): string {
+  const rounds =
+    view.round_count === 0
+      ? ""
+      : `in ${numberToWords(view.round_count)} ${plural(view.round_count, "round", "rounds")}`;
+
+  if (view.state === "Recovered" && view.recovered_amount) {
+    return assertSpeakable(
+      joinSpoken([`${view.merchant} paid ${speakMoney(view.recovered_amount)} ${rounds}`.trim()]),
+    );
+  }
+  if (view.state === "Settled" && view.settled_amount) {
+    return assertSpeakable(
+      joinSpoken([
+        `${view.merchant} settled at ${speakMoney(view.settled_amount)} ${rounds}`.trim(),
+        "I'll tell you when the credit lands",
+      ]),
+    );
+  }
+  if (view.state === "Escalated") {
+    return assertSpeakable(
+      joinSpoken([
+        `${view.merchant} declined, so I've escalated it`,
+        `${speakMoney(view.expected)} is still open`,
+      ]),
+    );
+  }
+  if (view.state === "Proposed") {
+    return assertSpeakable(
+      joinSpoken([
+        `${view.merchant} owes you ${speakMoney(view.expected)} under their own policy`,
+        "Shall I file it",
+      ]),
+    );
+  }
+  return assertSpeakable(
+    joinSpoken([
+      `The ${view.merchant} claim is ${CLAIM_STATE_SPOKEN[view.state] ?? "open"}`,
+      `${speakMoney(view.expected)} is at stake`,
+    ]),
+  );
 }
