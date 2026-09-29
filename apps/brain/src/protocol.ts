@@ -1,5 +1,7 @@
 /** Messages on the single WebSocket between the brain and the simulated home. */
 
+import type { CommitmentEvent } from "@owed/mcp-server";
+
 export interface UtteranceMessage {
   type: "utterance";
   text: string;
@@ -32,22 +34,42 @@ export interface TurnMessage {
 /**
  * A real JSON-RPC frame, captured on the wire for the protocol inspector.
  *
- * Two channels: `mcp` is this brain talking to the add-on, `recourse` is the add-on
- * talking to a merchant's agent. The second is traffic the brain never sees itself — the
- * server records it and hands it over, so the pane stays a recording either way.
+ * Three channels: `mcp` is this brain talking to the add-on, `recourse` is the add-on
+ * talking to a merchant's agent, and `proactive` is the add-on speaking first. The
+ * second is traffic the brain never sees itself — the server records it and hands it
+ * over, so the pane stays a recording either way. The third is a channel Alexa+ does
+ * not have, shown on the wire precisely so the shape of the request is legible.
  */
 export interface FrameMessage {
   type: "frame";
-  channel: "mcp" | "recourse";
+  channel: "mcp" | "recourse" | "proactive";
   merchant?: string;
   direction: "out" | "in";
   at: string;
   message: unknown;
 }
 
+/**
+ * Owed speaking first.
+ *
+ * Alexa+ has no channel for this, so the home is told plainly that it is simulated and
+ * badges it as such. `event` is carried whole rather than flattened, because the point
+ * of the beat is that a judge can read the shape Amazon would have to emit.
+ */
+export interface ProactiveMessage {
+  type: "proactive";
+  event: CommitmentEvent;
+  /** What the device says. The announcement's own line, not a tool's. */
+  reply: string;
+  view?: { uri: string; html: string; result: unknown };
+}
+
 export interface ClockMessage {
   type: "clock";
   now: string;
+  /** The span the scrubber may move within, published by the server. */
+  start?: string;
+  end?: string;
 }
 
 export interface ErrorMessage {
@@ -55,4 +77,9 @@ export interface ErrorMessage {
   message: string;
 }
 
-export type BrainToHome = TurnMessage | FrameMessage | ClockMessage | ErrorMessage;
+export type BrainToHome =
+  | TurnMessage
+  | ProactiveMessage
+  | FrameMessage
+  | ClockMessage
+  | ErrorMessage;

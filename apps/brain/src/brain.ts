@@ -1,6 +1,7 @@
 import type { Client } from "@modelcontextprotocol/client";
+import type { CommitmentEvent } from "@owed/mcp-server";
 import { routeUtterance } from "./intents.js";
-import type { ToolTrace, TurnMessage } from "./protocol.js";
+import type { ProactiveMessage, ToolTrace, TurnMessage } from "./protocol.js";
 
 /** What Owed says when it has no tool for what was asked. */
 const FALLBACK =
@@ -75,6 +76,38 @@ export class OwedBrain {
     return turn;
   }
 
+  /**
+   * Speak first, about something nobody asked about.
+   *
+   * The spoken line is the announcement's own, never a tool's: a tool answers a
+   * question, and this is an interruption, which has to carry its own reason for
+   * happening. The card is fetched afterwards purely so a screen has something to show.
+   *
+   * Fetching it also leaves the promise in focus, which is what makes the next thing
+   * the household says work: after "Northwind Parcel missed the delivery window, shall
+   * I file it?", "file it" has to mean that one.
+   */
+  async announce(event: CommitmentEvent): Promise<ProactiveMessage> {
+    const message: ProactiveMessage = { type: "proactive", event, reply: event.spoken };
+
+    const call = cardCallFor(event);
+    if (call === undefined) return message;
+
+    try {
+      const result = await this.#client.callTool(call);
+      this.#rememberFocus(result);
+
+      const uri = readResourceUri(result);
+      if (uri === undefined) return message;
+      const html = await this.#viewHtml(uri);
+      if (html !== undefined) message.view = { uri, html, result };
+    } catch {
+      // A card that cannot be drawn must never silence the announcement. Voice is the
+      // surface that always exists.
+    }
+    return message;
+  }
+
   async #viewHtml(uri: string): Promise<string | undefined> {
     const cached = this.#viewCache.get(uri);
     if (cached !== undefined) return cached;
@@ -121,6 +154,19 @@ export class OwedBrain {
     const declined = withStatus("Suspected");
     if (declined !== undefined) this.#declined = declined.promise_id;
   }
+}
+
+/** The read that draws the card for an announcement. Voice-only events have none. */
+function cardCallFor(
+  event: CommitmentEvent,
+): { name: string; arguments: Record<string, unknown> } | undefined {
+  if (event.kind === "promise_breached") {
+    return { name: "promise_check", arguments: { promise_id: event.subject.promise_id } };
+  }
+  if (event.subject.claim_id !== undefined) {
+    return { name: "claim_status", arguments: { claim_id: event.subject.claim_id } };
+  }
+  return undefined;
 }
 
 const NOTHING_IN_MIND =
