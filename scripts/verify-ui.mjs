@@ -26,6 +26,96 @@ const EXPECTED = {
   utterance: "Alexa, what am I owed?",
 };
 
+
+/**
+ * Accessibility, computed rather than eyeballed.
+ *
+ * Contrast and target size are certification gates *and* sit under the judged design
+ * criterion, so a quiet failure costs twice. Runs inside the card's own document, over
+ * the colours the browser actually resolved.
+ */
+async function auditAccessibility(frame, label) {
+  return frame.locator("body").evaluate((body) => {
+    const doc = body.ownerDocument;
+    const view = doc.defaultView;
+    const problems = [];
+
+    const parse = (value) => {
+      const parts = value.match(/[\d.]+/g);
+      if (!parts) return null;
+      const [r, g, b, a = "1"] = parts;
+      return { r: +r, g: +g, b: +b, a: +a };
+    };
+    const channel = (c) => {
+      const s = c / 255;
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    };
+    const luminance = ({ r, g, b }) =>
+      0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+    const over = (fg, bg) => ({
+      r: fg.r * fg.a + bg.r * (1 - fg.a),
+      g: fg.g * fg.a + bg.g * (1 - fg.a),
+      b: fg.b * fg.a + bg.b * (1 - fg.a),
+      a: 1,
+    });
+
+    const backgroundOf = (element) => {
+      let node = element;
+      while (node && node !== doc.documentElement) {
+        const colour = parse(view.getComputedStyle(node).backgroundColor);
+        if (colour && colour.a > 0.95) return colour;
+        node = node.parentElement;
+      }
+      return { r: 0, g: 0, b: 0, a: 1 };
+    };
+
+    for (const element of doc.querySelectorAll("*")) {
+      const text = [...element.childNodes]
+        .filter((node) => node.nodeType === 3)
+        .map((node) => node.textContent?.trim() ?? "")
+        .join("");
+      if (text.length === 0) continue;
+
+      const style = view.getComputedStyle(element);
+      const size = Number.parseFloat(style.fontSize);
+      const weight = Number.parseInt(style.fontWeight, 10) || 400;
+      const foreground = parse(style.color);
+      if (!foreground) continue;
+
+      const background = backgroundOf(element);
+      const composited = foreground.a < 1 ? over(foreground, background) : foreground;
+      const a = luminance(composited);
+      const b = luminance(background);
+      const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+      // 3:1 is permitted for large or bold text; everything else needs 4.5:1.
+      const large = size >= 24 || (size >= 18.66 && weight >= 700);
+      const required = large ? 3 : 4.5;
+      if (ratio + 0.01 < required) {
+        problems.push(
+          `contrast ${ratio.toFixed(2)}:1 (needs ${required}:1) on "${text.slice(0, 40)}"`,
+        );
+      }
+    }
+
+    for (const control of doc.querySelectorAll("button, a, input, select, [role=button]")) {
+      const box = control.getBoundingClientRect();
+      if (box.width === 0 && box.height === 0) continue;
+      if (box.width < 48 || box.height < 48) {
+        problems.push(`target ${Math.round(box.width)}x${Math.round(box.height)} under 48x48`);
+      }
+    }
+
+    for (const image of doc.querySelectorAll("img")) {
+      const alt = image.getAttribute("alt");
+      if (alt === null) problems.push("image with no alt text");
+      else if (alt.length > 125) problems.push(`alt text ${alt.length} characters, over 125`);
+    }
+
+    return problems;
+  });
+}
+
 const children = [];
 function start(name, command, args, env = {}) {
   const child = spawn(command, args, { env: { ...process.env, ...env }, stdio: "ignore" });
@@ -162,6 +252,14 @@ try {
     (await page.locator(".inspector__channel").first().textContent())?.trim(),
     "Northwind Parcel",
   );
+
+  const claimProblems = await auditAccessibility(card(), "claim card");
+  check("claim card accessibility", claimProblems.join(" | ") || "clean", "clean");
+
+  await page.getByRole("button", { name: "Alexa, what am I owed?" }).click();
+  await cardText(".ledger__amount");
+  const ledgerProblems = await auditAccessibility(card(), "ledger card");
+  check("ledger card accessibility", ledgerProblems.join(" | ") || "clean", "clean");
 
   check("console clean", consoleErrors.length, 0);
   if (consoleErrors.length > 0) process.stdout.write(`${consoleErrors.join("\n")}\n`);
