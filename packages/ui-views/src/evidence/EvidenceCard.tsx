@@ -80,6 +80,20 @@ export function EvidenceCard({ evidence }: { evidence: EvidenceView }) {
 
       {evidence.explanation ? <p className="evidence__why">{evidence.explanation}</p> : null}
 
+      {/*
+        The merchant's own sentence.
+
+        Everything else on this card is Owed's reading of what happened. This is the one
+        line that is not: it is what they wrote, quoted, so a household can check the
+        promise rather than take it on trust.
+      */}
+      {evidence.promised_in ? (
+        <blockquote className="evidence__quote">
+          <span className="evidence__quote-label">They wrote</span>
+          {`\u201c${evidence.promised_in}\u201d`}
+        </blockquote>
+      ) : null}
+
       {evidence.gaps.length > 0 ? (
         <p className="evidence__gaps">
           Not watched:{" "}

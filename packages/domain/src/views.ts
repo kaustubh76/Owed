@@ -72,6 +72,8 @@ export const EvidenceViewSchema = z.object({
   evaluation_interval: IntervalSchema.optional(),
   /** The stretches nobody was watching, stated rather than glossed over. */
   gaps: z.array(IntervalSchema),
+  /** The merchant's own sentence the promise was read out of, where there is one. */
+  promised_in: z.string().optional(),
   explanation: z.string().optional(),
   items: z.array(
     z.object({

@@ -75,6 +75,7 @@ export function evidenceViewFor(
           explanation: assessment.explanation,
         }),
     gaps,
+    ...(view.promise.source_quote === undefined ? {} : { promised_in: view.promise.source_quote }),
     items,
   };
 }

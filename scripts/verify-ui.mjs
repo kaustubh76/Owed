@@ -231,6 +231,18 @@ try {
   check("evidence card names the gaps", (await cardText(".evidence__gaps")).startsWith("Not watched:"), true);
   check("evidence card gives the verdict", await cardText(".evidence__verdict"), "not enough to claim");
 
+  // The provenance beat: the one line on the card Owed did not write.
+  const quoted = await cardText(".evidence__quote");
+  check("evidence card quotes the merchant", quoted.startsWith("They wrote"), true);
+  check(
+    "the quote is the sentence the promise was read from",
+    quoted.includes("delivered tomorrow between 2 and 6pm"),
+    true,
+  );
+
+  const evidenceProblems = await auditAccessibility(card(), "evidence card");
+  check("evidence card accessibility", evidenceProblems.join(" | ") || "clean", "clean");
+
   // --- the scrubber: move the household through its week -------------------
   const slider = page.locator(".scrub__range");
   await slider.waitFor({ state: "visible", timeout: 20_000 });

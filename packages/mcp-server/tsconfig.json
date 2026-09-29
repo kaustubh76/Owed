@@ -23,6 +23,9 @@
     },
     {
       "path": "../merchant-agents"
+    },
+    {
+      "path": "../extractor"
     }
   ]
 }

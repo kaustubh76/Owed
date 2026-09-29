@@ -237,7 +237,13 @@ type Promise = {
   amount_at_stake?: number; currency: string; policy_ref?: string; confidence: number;
 };
 ```
-Bedrock (Nova 2 Lite) with a strict JSON schema and a rule pass for dates/amounts. Evaluated on a labelled set of 120 seeded messages (precision / recall published in `eval/README.md`).
+**Rules, not a model** — `packages/extractor`, no network and no AWS. It finds time expressions first and classifies each by the words around it, rather than running seven regexes at the text: "between 1 and 5" is a delivery window, an engineer's visit or a shop's opening hours depending entirely on its neighbours. A cue before the clock beats one after it, and a word that can only mean one thing (engineer, warranty, price match) outranks a generic verb sitting nearer.
+
+Every extraction carries the sentence it was read from. That is not decoration: **the evidence card quotes it**, under "they wrote", so a household can check the promise against the merchant's own words rather than take Owed's reading on trust.
+
+The storyboard's promises stay authored, so the demo is deterministic whatever the extractor does next — but each one now has the message it claims to come from, and [`extraction.test.ts`](packages/mcp-server/src/seed/extraction.test.ts) runs the real extractor over that message and asserts it recovers the promise **to the minute**. The `source_ref` on every promise used to point at nothing.
+
+Measured on 120 labelled messages and, separately, on 40 held out — see §10 and `eval/README.md`. The held-out number is the one that means anything.
 
 ### 8.2 Breach engine
 `breach = f(promise, evidence[])` → `{kind, confidence, coverage, evidence_ids, explanation}`.

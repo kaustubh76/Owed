@@ -11,6 +11,7 @@ import {
   type PromiseKind,
   usd,
 } from "@owed/domain";
+import { extractPromises } from "@owed/extractor";
 import { arcEvents, createIdGen, sortByOccurrence } from "./build.js";
 import type { ArcSpec } from "./types.js";
 
@@ -52,6 +53,7 @@ function promise(
   made_at: Instant,
   extra: Partial<OwedPromise> = {},
 ): OwedPromise {
+  const quote = quoteFor(id, merchant, kind, made_at);
   return {
     id,
     household_id: HOUSEHOLD_ID,
@@ -62,9 +64,98 @@ function promise(
     currency: CURRENCY,
     confidence: 0.96,
     status: "Watching",
+    ...(quote === undefined ? {} : { source_quote: quote }),
     ...extra,
   };
 }
+
+/**
+ * The sentence the extractor actually read this promise out of.
+ *
+ * Taken from the real extractor rather than written out by hand, so the words on the
+ * card are the words the rules matched. If the extractor stops finding the promise in
+ * its own source message, the quote disappears and the test beside this file goes red
+ * rather than the card quietly showing something nothing was read from.
+ */
+function quoteFor(
+  id: string,
+  merchant: string,
+  kind: PromiseKind,
+  made_at: Instant,
+): string | undefined {
+  const message = SOURCE_MESSAGES[id];
+  if (message === undefined) return undefined;
+
+  const read = extractPromises({
+    id: `msg_${id}`,
+    merchant,
+    received_at: made_at,
+    utc_offset: "-07:00",
+    subject: message.subject,
+    body: message.body,
+  });
+  return read.find((item) => item.kind === kind)?.evidence_text;
+}
+
+/**
+ * The merchant message each promise was read out of.
+ *
+ * Every seeded promise carries `source_ref: msg_<id>`, and until now there was nothing
+ * on the other end of that reference — the provenance chain claimed a message that did
+ * not exist. These are those messages, and `storyboard.extraction.test.ts` runs the
+ * real extractor over each one and asserts it recovers the promise beside it, to the
+ * minute.
+ *
+ * The seeded promises stay authored rather than extracted, so the demo is deterministic
+ * whatever the extractor does next. What the test buys is that they *could* have been
+ * read from these words, which is the claim the product makes.
+ */
+export const SOURCE_MESSAGES: Readonly<Record<string, { subject: string; body: string }>> = {
+  prm_001: {
+    subject: "Your ride is on the way",
+    body: "Ada is 3 minutes away in a grey Prius. Estimated arrival by 8:20am.",
+  },
+  prm_002: {
+    subject: "Your order is out for delivery tomorrow",
+    body: "Good news — order 8841-2 leaves our depot tonight. Your parcel will be delivered tomorrow between 12 and 4pm. You don't need to be in.",
+  },
+  prm_003: {
+    subject: "Your engineer visit is booked",
+    body: "Thanks for booking. Our engineer will call on Wednesday between 1 and 3pm. Please make sure someone over 18 is home.",
+  },
+  prm_004: {
+    subject: "Your return has been accepted",
+    body: "We've received the item back. Your refund will be credited within 7 days.",
+  },
+  prm_005: {
+    subject: "Your price promise",
+    body: "This order is covered by our price promise. If the price drops within 14 days we'll refund you the difference.",
+  },
+  prm_006: {
+    subject: "Delivery tomorrow",
+    body: "Your parcel is on the van. It will be delivered tomorrow between 9am and 1pm.",
+  },
+  prm_007: {
+    subject: "Your ride is arriving",
+    body: "Kai is nearly with you. Estimated arrival by 11:25am.",
+  },
+  prm_008: {
+    subject: "Out for delivery tomorrow",
+    body: "Your order has left the warehouse and will be delivered tomorrow between 10am and 2pm.",
+  },
+  prm_009: {
+    subject: "Your appointment is confirmed",
+    body: "Your annual service is booked. The engineer will arrive on Friday between 8 and 10am.",
+  },
+  prm_010: {
+    subject: "Your parcel arrives tomorrow",
+    body: "Your parcel will be delivered tomorrow between 2 and 6pm. We'll leave it in the porch if you're out.",
+  },
+  prm_011: {
+    subject: "Delivery scheduled",
+    body: "Your order is out for delivery and will arrive tomorrow between 1 and 5pm.",
+  },
+};
 
 // --- evidence helpers ------------------------------------------------------
 

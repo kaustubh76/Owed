@@ -30,7 +30,8 @@
     "jose": "^6.2.12",
     "@owed/policy-library": "workspace:*",
     "@owed/merchant-agents": "workspace:*",
-    "@owed/recourse-protocol": "workspace:*"
+    "@owed/recourse-protocol": "workspace:*",
+    "@owed/extractor": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.23.15",

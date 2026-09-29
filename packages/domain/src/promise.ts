@@ -42,6 +42,15 @@ export const PromiseSchema = z.object({
   household_id: HouseholdIdSchema,
   merchant: z.string().min(1),
   source_ref: z.string().min(1),
+  /**
+   * The merchant's own words this promise was read out of.
+   *
+   * Carried on the promise rather than looked up, because it has to survive into the
+   * ledger: a card telling a household "they promised one to five" is worth nothing
+   * unless it can also show them the sentence somebody wrote. Absent for a promise
+   * captured some other way, and the card simply says less.
+   */
+  source_quote: z.string().min(1).optional(),
   kind: PromiseKindSchema,
   made_at: InstantSchema,
   window: IntervalSchema.optional(),

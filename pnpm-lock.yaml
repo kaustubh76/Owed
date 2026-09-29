@@ -163,6 +163,9 @@ importers:
       '@owed/domain':
         specifier: workspace:*
         version: link:../domain
+      '@owed/extractor':
+        specifier: workspace:*
+        version: link:../extractor
       '@owed/merchant-agents':
         specifier: workspace:*
         version: link:../merchant-agents
