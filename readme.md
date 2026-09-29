@@ -23,84 +23,93 @@ Businesses price in the fact that almost nobody claims. Owed removes the effort,
 
 ## 2. What the judge sees (90-second storyboard)
 
+*Every beat below is asserted by [`scripts/verify-ui.mjs`](scripts/verify-ui.mjs), which
+drives this exact sequence in a real Chrome and checks the numbers on the cards. The
+figures here are the figures it reads.*
+
 | t | Surface | What happens |
 |---|---|---|
-| 0:00 | Echo Show (kitchen, Tue 18:40) | Owed **speaks first**: "Your parcel was scanned *delivered* at 14:12. Nobody came to the door between 13:42 and 14:42." Two doorbell snapshots slide onto the card. "File it?" — "Yes." |
-| 0:20 | Protocol inspector | `tools/call claim.file` → recourse protocol opens with the merchant agent. Card: *Offer ₹50 · Counter (Delivery Guarantee §4.2, coverage 82%) · Settled ₹75 · 2 rounds · 9 s.* |
-| 0:40 | Fire TV (Thu, show playing) | Overlay, no interruption: "Your refund promised in 5–7 days is on day 11. I've escalated." |
-| 0:55 | Echo Show (Sun) | "Alexa, what am I owed?" → **Recovered this week ₹1,340 · Open ₹420.** |
-| 1:05 | Echo Dot (voice-only) | Same query, text-fallback answer — proves the voice-only mode. |
-| 1:15 | Timeline scrubber | Judge drags across the week; promises captured, breaches detected, settlements landing. |
-| 1:25 | Close | "Alexa+ has hundreds of add-ons that sell to you. This is the one that represents you." |
+| 0:00 | Echo Show (Sun 19:30) | *"Alexa, what am I owed?"* → **Recovered this week $47.00 · Still open $8.00 · 2 kept.** Spoken: "You've recovered forty-seven dollars this week, and eight dollars is still open. Two promises were kept. There's one I'm not claiming, because I only watched twenty percent of the window. There's one more I can file." |
+| 0:15 | Echo Show | *"Why aren't you claiming that?"* → the evidence card. A coverage bar with the unwatched stretches **cut out where they actually fell**, the verdict *not enough to claim*, and — quoted under **they wrote** — the merchant's own sentence the promise was read out of. |
+| 0:30 | Timeline scrubber | The judge drags back to Monday and forward across the week. Every tool answers for the clock, so the ledger empties and refills as they scrub. |
+| 0:45 | Echo Show | Crossing Sunday evening, **Owed speaks first**, badged `simulated proactive`: "Northwind Parcel missed the delivery window they promised. They owe you eight dollars under their own policy. Shall I file it?" The inspector shows the `CommitmentEvent` on its own channel — the shape Alexa+ would have to emit, because it has no such channel today. |
+| 1:00 | Echo Show | *"File it."* → **Asked · They offered · Countered · Settled**, at **$8.00**. The counter cites **Delivery Guarantee 4.1** — the merchant's own published clause. |
+| 1:10 | Protocol inspector | The argument itself, on the wire: `tools/call claim_file`, then the recourse exchange with Northwind Parcel's agent nested inside it, then the result that argument produced. Sorted into causal order, not arrival order. |
+| 1:20 | Echo Dot | Same questions, **no screen at all**. The answers still stand on their own, which is the only honest way to show voice-only parity. |
+| 1:30 | Close | "Alexa+ will have hundreds of add-ons that sell to you. This is the one that represents you." |
 
 ---
 
 ## 3. System architecture
 
+*This is what exists. Everything the ideation proposed and we did not build is listed in
+§13, by name.*
+
 ```mermaid
 flowchart LR
-    subgraph HOUSEHOLD["Household surfaces (simulated home)"]
-        ES[Echo Show frame<br/>768×480, Alexa tokens]
-        FTV[Fire TV overlay]
-        DOT[Echo Dot<br/>voice-only]
-        PH[Phone rail]
-        TL[Timeline scrubber<br/>week-in-the-life]
-        INS[Protocol inspector<br/>live JSON-RPC]
+    subgraph HOUSEHOLD["Simulated household (apps/home)"]
+        ES[Echo Show frame<br/>768×480, sandboxed iframe]
+        DOT[Echo Dot<br/>no screen at all]
+        TL[Timeline scrubber<br/>the seeded week]
+        INS[Protocol inspector<br/>live JSON-RPC, three channels]
     end
 
-    subgraph STANDIN["Alexa+ stand-ins"]
-        SIM[mcp-voice-simulator<br/>OAuth 2.1+PKCE · tools/list · MCP Apps]
-        BRIDGE[alexa-skill-mcp-bridge<br/>real Echo via Alexa Skill + AgentCore]
-        BRAIN[Owed brain<br/>tool routing · proactive scheduler]
+    subgraph STANDIN["Alexa+ stand-in (apps/brain)"]
+        BRAIN[Owed brain<br/>account linking · utterance routing<br/>proactive polling]
     end
 
-    subgraph OWED["Owed MCP server (real) — Streamable HTTP, spec 2025-11-25"]
-        AUTH[Account linking<br/>OAuth 2.1 + PKCE<br/>RFC 9728/8414/7591]
-        TOOLS[Tools<br/>promises.list · promise.check<br/>claim.file · claim.status<br/>ledger.summary · evidence.get]
+    subgraph OWED["Owed MCP server (real) — Streamable HTTP, SDK v2"]
+        AUTH[Account linking<br/>OAuth 2.1 + PKCE S256<br/>RFC 9728 · RFC 8414 · RFC 8707<br/>static clients, no DCR]
+        TOOLS[Six tools<br/>promises_list · promise_check<br/>claim_file · claim_status<br/>ledger_summary · evidence_get]
         UI[MCP Apps<br/>ui://owed/ledger · ui://owed/claim<br/>ui://owed/evidence]
-        ELIC[Elicitation<br/>"File it?" · "Use the doorbell clip?"]
+        ELIC[Elicitation<br/>file it? · attach the evidence?<br/>where the connection can carry it]
+        CME[/control/commitments<br/>the proactive channel Alexa+ lacks/]
     end
 
     subgraph CORE["Core engines"]
-        EXT[Promise extractor<br/>Bedrock → typed Promise]
-        BRE[Breach engine<br/>promise × evidence → breach + confidence + coverage]
-        NEG[Recourse negotiator<br/>claim→offer→counter→settle]
-        LED[(Ledger<br/>event-sourced, per household)]
-        POL[(Recourse policy library<br/>per-merchant rules, open source)]
+        EXT[Promise extractor<br/>rules, no model, no network]
+        BRE[Breach engine<br/>promise × evidence → verdict<br/>+ confidence + coverage]
+        NEG[Recourse negotiator<br/>claim → offer → counter → settle]
+        LED[(Ledger<br/>event-sourced, replayable to any instant)]
+        POL[(Policy library<br/>per-merchant rules, open source)]
     end
 
-    subgraph SOURCES["Evidence & promise sources"]
-        INBOX[Linked inbox<br/>receipts, confirmations, ETAs]
-        RING[Ring Partner API<br/>doorbell events, snapshots<br/>emulator fallback]
-        CLOCK[Timestamps / carrier scans]
+    subgraph SOURCES["Seeded sources"]
+        MSG[Merchant messages<br/>eleven, one per promise]
+        DOOR[Doorbell events, snapshots<br/>and camera uptime]
+        CLOCK[Timestamps · carrier scans · prices]
     end
 
-    subgraph MERCH["Merchant agents (simulated, open protocol)"]
-        M1[Cooperative]
-        M2[Stingy]
-        M3[Stonewalling]
+    subgraph MERCH["Merchant agents (separate process, open protocol)"]
+        M1[Northwind Parcel]
+        M2[Meridian Rides]
+        M3[Alder Home Services]
     end
 
-    ES & FTV & DOT & PH --> SIM
-    TL --> BRAIN
-    SIM --> BRAIN
-    BRIDGE --> TOOLS
+    ES & DOT & TL --> BRAIN
     BRAIN --> AUTH --> TOOLS
+    CME -.polled by.-> BRAIN
     TOOLS --> UI
     TOOLS --> ELIC
     TOOLS --> BRE & LED
-    INBOX --> EXT --> LED
-    RING & CLOCK --> BRE
+    MSG --> EXT --> LED
+    DOOR & CLOCK --> BRE
     BRE --> LED
     TOOLS --> NEG
-    NEG <-->|recourse protocol| M1 & M2 & M3
+    NEG <-->|recourse protocol over MCP| M1 & M2 & M3
     NEG --> POL
     NEG --> LED
-    INS -.observes.- SIM & TOOLS & NEG
+    INS -.observes.- BRAIN & NEG & CME
 ```
 
-**Real:** everything in `OWED`, `CORE`, and `SOURCES` (inbox is a seeded test inbox; Ring via emulator unless API access lands).
-**Simulated and labelled:** the Alexa+ orchestrator and voice pipeline, proactive delivery to devices, device frames, merchant agents, speaker identity.
+**Real:** the MCP server and everything under it — Streamable HTTP, the OAuth authorization
+server, the six tools, the three `ui://` views, elicitation, the event-sourced ledger, the
+breach engine, the rule extractor, the negotiator, and the merchant agents, which run in
+their own process and are argued with over HTTP rather than called in-process.
+
+**Simulated, and labelled as such wherever it appears:** the Alexa+ orchestrator, NLU and
+voice pipeline; proactive delivery, because Alexa+ add-ons have no such channel; the device
+frames; and the household's evidence sources, which are seeded rather than live.
 
 ---
 
@@ -139,7 +148,7 @@ sequenceDiagram
     participant Inbox as Linked inbox
     participant EXT as Promise extractor
     participant LED as Ledger
-    participant Ring as Ring events
+    participant Door as Doorbell events
     participant BRE as Breach engine
     participant Brain as Owed brain (Alexa+ stand-in)
     participant Echo as Echo Show
@@ -149,7 +158,7 @@ sequenceDiagram
     Inbox->>EXT: "Your order will arrive Tue 12:00–16:00"
     EXT->>LED: Promise{kind: delivery_window, window, order_id, merchant}
     Inbox->>LED: carrier scan "delivered 14:12"
-    Ring->>BRE: events 13:42–14:42 (no human, no package placed), coverage 82%
+    Door->>BRE: events 13:42–14:42 (no human, no package placed), coverage 82%
     BRE->>LED: Breach{kind: phantom_delivery, confidence 0.91, coverage 0.82, evidence[2 snapshots]}
     Brain->>Echo: proactive: "Scanned delivered at 14:12, nobody came. File it?"
     Echo->>Brain: "Yes"
@@ -172,7 +181,9 @@ sequenceDiagram
 Server: TypeScript, `@modelcontextprotocol/server` 2.x, **Streamable HTTP**, protocol **2025-11-25**, stateless request handling with ledger-backed state. Target tool latency < 500 ms (breach detection runs async; tools read state).
 
 ### 6.1 Account linking
-OAuth 2.1 + PKCE (S256) with discovery via RFC 9728 (protected resource metadata) and RFC 8414 (AS metadata); RFC 7591 dynamic client registration supported so the simulator links without pre-config. Owed's own authorization server issues the token; the Owed account in turn holds the linked inbox grant. Must pass `npx mcp-voice-simulator-conformance`.
+OAuth 2.1 + PKCE (S256), discovery via RFC 9728 (protected resource metadata) and RFC 8414 (AS metadata), audience binding via RFC 8707, loopback redirects per RFC 8252. Owed runs **its own authorization server** — the MCP SDK ships none — and the brain walks the real authorization-code flow rather than being handed a token out of band.
+
+**Static clients, no dynamic registration.** Amazon's documentation says Alexa+ does not support RFC 7591, so the server does not offer it: a client is configured in advance or it does not link. Passes `npx mcp-voice-simulator-conformance` on every documented check (run inside `pnpm verify`).
 
 ### 6.2 Tools
 
@@ -252,7 +263,9 @@ Measured on 120 labelled messages and, separately, on 40 held out — see §10 a
 - Evidence kinds v1: `timestamp`, `carrier_scan`, `doorbell_event`, `doorbell_snapshot`, `refund_observed`.
 
 ### 8.3 Ledger
-Event-sourced (`PromiseCaptured`, `EvidenceAttached`, `BreachDetected`, `ClaimFiled`, `OfferReceived`, `CounterSent`, `Settled`, `Recovered`, …), DynamoDB in cloud / SQLite locally. Projections: ledger summary, per-merchant scorecards, "recovered this week".
+Append-only and event-sourced (`PromiseCaptured`, `EvidenceObserved`, `PromiseAssessed`, `ClaimProposed`, `ClaimFiled`, `Settled`, `Recovered`, …). Every event carries both `occurred_at`, when the thing happened in the household's week, and `recorded_at`, when Owed learned of it — so the ledger replays to any instant and every tool answers for the clock rather than for now. That is what makes the timeline scrubber truthful rather than cosmetic.
+
+**In memory.** Restarting the server reseeds the same week, which is right for a demo and wrong for a product; there is no persistent store, and §13 says so.
 
 ### 8.4 Speaking first (`CommitmentEvent`)
 Alexa+ add-ons are strictly reactive: a tool runs because somebody said something. For most add-ons that is a limitation; for Owed it removes the product, because Owed exists to notice what the household did *not* ask about.
@@ -273,7 +286,7 @@ React + Vite. One page:
 - **Voice**: browser SpeechRecognition in, TTS out (browser default; ElevenLabs optional), barge-in supported.
 - **Protocol inspector**: live JSON-RPC from simulator → Owed, and the recourse exchange with merchant agents. Every card on the Echo is traceable to a `_meta.ui.resourceUri` in the pane.
 
-The home embeds `mcp-voice-simulator` as the MCP client (account linking, tools/list, MCP Apps sandbox) with a custom **Owed brain** (`src/brains/owed-brain.ts`) that routes utterances to tools and runs the proactive scheduler.
+The home talks to one thing: a WebSocket to the **Owed brain** (`apps/brain`), which is the Alexa+ stand-in. The brain links its own account over the real OAuth flow, holds an MCP client against the server, routes utterances to tools deterministically (`apps/brain/src/intents.ts` — a model would be the obvious choice and the wrong one for a demo that has to produce the same call every run), polls for anything Owed would say unprompted, and forwards every JSON-RPC frame it sees to the inspector.
 
 ---
 
@@ -342,36 +355,40 @@ of simulated merchants being deterministic rather than a claim about the algorit
 ```
 owed/
 ├─ apps/
-│  ├─ home/                 # simulated household (React) + embedded mcp-voice-simulator
-│  └─ bridge/               # config + generated interaction model for alexa-skill-mcp-bridge
+│  ├─ home/                 # simulated household: Echo Show + Echo Dot, scrubber, inspector
+│  └─ brain/                # Alexa+ stand-in: account linking, utterance routing, proactive polling
 ├─ packages/
-│  ├─ mcp-server/           # Owed MCP server (Streamable HTTP, OAuth 2.1, tools, ui:// views)
-│  ├─ core/                 # extractor, breach engine, ledger, negotiator
-│  ├─ recourse-protocol/    # open spec + TS types + conformance tests   (Open Source mini-challenge)
-│  ├─ merchant-agents/      # 3 policy agents implementing the protocol
-│  ├─ policy-library/       # per-merchant recourse rules (JSON), open source
-│  └─ ui-views/             # MCP Apps views (ledger, claim, evidence) built with @modelcontextprotocol/ext-apps
+│  ├─ domain/               # schemas and value objects — Money, Instant, Interval, Promise, Breach, Claim
+│  ├─ core/                 # breach engine, coverage accounting, ledger projections, negotiator
+│  ├─ extractor/            # rule-based promise extraction from merchant messages
+│  ├─ mcp-server/           # the add-on: Streamable HTTP, OAuth AS, six tools, ui:// views, proactive
+│  ├─ recourse-protocol/    # open spec + types + conformance tests        (Open Source mini-challenge)
+│  ├─ merchant-agents/      # three merchant agents, served over MCP in their own process
+│  ├─ policy-library/       # per-merchant remedy rules, open source
+│  └─ ui-views/             # the three MCP Apps views, bundled to single-file HTML
 ├─ data/
-│  ├─ inbox-seed/           # seeded receipts/confirmations for the test inbox
-│  ├─ ring-scenarios/       # doorbell event timelines for the emulator
-│  └─ scenario-week.json    # the 7-day storyboard the scrubber replays
-├─ eval/                    # extraction / breach / recourse / latency harnesses + results
-├─ infra/                   # CDK: DynamoDB ledger, Lambda/App Runner for MCP server, Bedrock access
+│  ├─ corpus/               # pre-registered: breach.json, extraction.json, extraction-heldout.json
+│  └─ policies/             # the pre-registered 270-merchant negotiation grid
+├─ eval/                    # H1, H2 and H3 harnesses; results written to eval/results/
+├─ scripts/
+│  ├─ preflight.mjs         # can this machine run it?
+│  ├─ conformance.mjs       # the published-requirements check
+│  └─ verify-ui.mjs         # drives the whole storyboard in a real browser
 ├─ docs/
-│  ├─ architecture.md       # this README's diagrams, expanded
-│  ├─ real-vs-simulated.md  # honest map, mirrored in the submission
-│  ├─ friction-log.md       # per-tool friction entries (10% judging bonus)
-│  └─ feature-requests.md   # CommitmentEvent + proactive channel proposals
+│  ├─ contract-v1.md        # the frozen v1 contract, with its amendments recorded
+│  ├─ proactive.md          # the one primitive Alexa+ is missing, written as a schema
+│  ├─ friction-log.md       # per-tool friction, fourteen entries
+│  └─ policies/             # the merchant policy documents the claims are argued from
 ├─ LICENSE                  # Apache-2.0
-└─ README.md
+└─ readme.md
 ```
 
 ---
 
 ## 12. Local setup
 
-Everything runs offline. There are no cloud prerequisites: no AWS account, no Bedrock,
-no Ring access, no API keys.
+Everything runs offline. There are no cloud prerequisites and no keys of any kind: no AWS
+account, no model API, no doorbell vendor, nothing to sign up for.
 
 ```bash
 # prerequisites: Node 20+ (repo is pinned to 26 via .nvmrc) and pnpm
@@ -430,40 +447,52 @@ documented 500 ms target, and **worst-case text contrast 6.36:1** against a requ
 Those are real measurements of a real server. They are not evidence that it works on Alexa+, and
 nothing in this submission should be read as claiming otherwise.
 
-| Real | Simulated (labelled in UI and README) |
+| Real — runs, and you can watch it on the wire | Simulated, or not built |
 |---|---|
-| MCP server, tools, MCP Apps views, elicitation, account linking, conformance | Alexa+ orchestrator, NLU and voice pipeline |
-| The `CommitmentEvent` schema and the scheduler that derives it | **Proactive delivery itself — Alexa+ has no such channel.** Badged `simulated proactive` in the UI; see [docs/proactive.md](docs/proactive.md) |
-| Promise extraction from seeded inbox (published P/R) | Proactive delivery to devices |
-| Breach engine with coverage accounting | Merchant agents (three policies, open protocol) |
-| Recourse protocol, negotiator, 20-policy eval | Speaker identity / household roles |
-| Event-sourced ledger, cross-session state | Ring events unless Partner API access is granted (emulator otherwise) |
+| MCP server over Streamable HTTP, SDK v2, spec-current | The Alexa+ orchestrator, NLU and voice pipeline. There is no Alexa here |
+| Its own OAuth 2.1 authorization server — PKCE S256, RFC 9728, 8414, 8707, 8252 — walked for real by the brain at startup | **Proactive delivery. Alexa+ add-ons have no such channel**; the shape we would need is a schema and the home badges every announcement `simulated proactive`. See [docs/proactive.md](docs/proactive.md) |
+| Six tools, three `ui://` MCP Apps views in sandboxed opaque-origin iframes, elicitation where the connection can carry it | The device frames. An Echo Show 8 at its documented canvas and an Echo Dot with no screen, drawn in a browser |
+| The breach engine, coverage accounting, and the refusal to claim below the gates | The household's evidence. Doorbell events, snapshots, camera uptime, carrier scans and prices are seeded, not live |
+| The rule extractor, and eleven merchant messages every seeded promise is provably readable from | The eleven promises themselves are authored rather than extracted, so the demo is deterministic. A test proves the extractor recovers each one to the minute |
+| Merchant agents in **their own process**, argued with over MCP. The inspector shows that traffic | Their policies and their willingness to settle. Three merchants, plus a 270-merchant grid for the evaluation |
+| The event-sourced ledger, replayable to any instant — which is what makes the scrubber truthful | **Persistence.** It is in memory. Restarting reseeds the same week |
+| H1, H2 and H3 measured against pre-registered corpora, reported met or not | Speaker identity and household roles. Not built |
+| — | A real Echo. The bridge was cut early; nothing here has run on a device |
+| — | Fire TV overlay and phone rail. First on the cut list, never built |
+| — | AWS. No Bedrock, no DynamoDB, no CDK — a deliberate choice to keep the whole thing offline and inspectable |
 
 ---
 
-## 14. Four-week plan (deadline Oct 23, 12:00 PDT = Oct 24, 00:30 IST; submit Oct 22 IST)
+## 14. Where this actually got to
 
-| Week | Deliverable | Exit criterion |
-|---|---|---|
-| **W1** (to Oct 2) | `core`: Promise schema, extractor, breach engine, ledger; `mcp-server` with 6 tools; conformance passing | extraction & breach P/R numbers exist; `tools/call ledger.summary` returns a card |
-| **W2** (to Oct 9) | `recourse-protocol` spec, negotiator, 3 merchant agents, eval harness; `ui-views` at 768×480 | recovery-rate number exists; claim card renders in simulator |
-| **W3** (to Oct 16) | `apps/home`: surfaces, scrubber, voice, inspector, proactive badge; bridge deployed for a real-Echo shot | full 90-s storyboard runs end-to-end without a cut |
-| **W4** (to Oct 22) | video (<3 min, best 20 s first), README numbers, friction log, feature requests, open-source packages, private-repo collaborators added at submit time | submitted |
+| Stage | State |
+|---|---|
+| Domain, ledger, breach engine, coverage accounting | done — property-tested, including the invariant that coverage and the gaps a card draws can never disagree |
+| MCP server: Streamable HTTP, own OAuth AS, six tools, three views | done — conformance green on every documented check |
+| Recourse protocol, negotiator, merchant agents over HTTP | done — published as `recourse-protocol`; the inspector shows the argument |
+| Alexa+ contract suite, elicitation, accessibility | done — 13 contract tests, p95 4.7–35 ms, worst-case contrast 6.36:1 |
+| Proactive `CommitmentEvent`, timeline scrubber, Echo Dot | done — 33 browser checks, including the beat where Owed speaks first |
+| H1 extraction, H2 breach, H3 recourse | done — all three measured, **all three reported met or not** |
+| Clean-clone install → verify → demo → browser gate | done — run, not asserted (§12) |
+| Persistence, Docker, moderated walkthroughs (H4) | **not done** |
+| Real Echo, Fire TV, phone rail, AWS | **cut** |
 
-Cut order if slipping: bridge/real-Echo shot → Fire TV overlay → phone rail. Never cut: the numbers, the claim card, the inspector.
+**Never cut, and not cut:** the three numbers on the ledger card, the claim card, the
+protocol inspector, the storyboard golden test, the contract suite, the friction log, and
+saying plainly when a hypothesis was not met.
 
 ---
 
 ## 15. Submission checklist
 
-- [ ] Primary track: Alexa+ · Mini: AWS Builder (Bedrock extraction, DynamoDB ledger, AgentCore via bridge) · Open Source (`recourse-protocol`, `policy-library`)
-- [ ] Repo calls MCP in code (server entry point, `_meta.ui`, elicitation) — not just README
+- [x] Primary track: **Alexa+**. Mini-challenge: **Open Source** (`recourse-protocol`, `policy-library`, `extractor`). *Not entering AWS Builder — there is no AWS in this project, by choice.*
+- [x] The repo calls MCP in code — server entry point, `_meta.ui` on every tool, elicitation, `ui://` resources — not just in this README
+- [x] Product feedback for every tool used: **[docs/friction-log.md](docs/friction-log.md)**, fourteen entries with task, expected, actual, severity, workaround and suggestion
+- [x] Feature request, written as a schema rather than a paragraph: **[docs/proactive.md](docs/proactive.md)** — `CommitmentEvent` and the proactive channel Alexa+ add-ons do not have
+- [x] Real-vs-simulated map (§13), and the statement that **none of this has run against the real Alexa+ client** because it is partner-gated
+- [x] Numbers published met or not: H1 **met on the corpus it was tuned against, missed on held-out data**; H2 **not met**; H3 **not met**
 - [ ] Demo video: public YouTube, English, < 3 min, no third-party trademarks or music
-- [ ] Product feedback for every tool used: MCP SDK, ext-apps, mcp-voice-simulator, bridge, Bedrock, Ring API/emulator
-- [ ] Friction log entries (task, steps, expected vs actual, severity, workaround, suggestion)
-- [ ] Feature requests: `CommitmentEvent` from Alexa+ to add-ons; proactive channel for add-ons; speaker identity passthrough
-- [ ] Private repo → add `chris-trag knmeiss giolaq anishamalde mosesroth emersonsklar` + `testing@devpost.com` at submit time (invites expire in 7 days)
-- [ ] `docs/real-vs-simulated.md` linked from the submission text
+- [ ] Repo access for judges at submit time — invites expire in 7 days, so this is done last
 
 ---
 
