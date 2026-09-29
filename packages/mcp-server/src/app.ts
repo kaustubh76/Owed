@@ -2,6 +2,7 @@ import { createMcpExpressApp } from "@modelcontextprotocol/express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { type Clock, type FixedClock, project, SystemClock } from "@owed/core";
+import type { Instant } from "@owed/domain";
 import type { Express, Request, Response } from "express";
 import type { AuthConfig } from "./auth/config.js";
 import { householdFromAuth, requireOwedAuth, stripWwwAuthenticate } from "./auth/middleware.js";
@@ -30,6 +31,13 @@ export interface OwedAppOptions {
   };
   /** Exposed so the timeline scrubber can move scenario time. */
   scrubbableClock?: FixedClock;
+  /**
+   * The span the scrubber may move within.
+   *
+   * Published rather than assumed, so the home holds no knowledge of the scenario:
+   * it draws whatever week it is handed.
+   */
+  scrubberRange?: { start: Instant; end: Instant };
   /** Exposed so the protocol inspector can show the recourse exchange. */
   recourseLog?: RecourseLog;
 }
@@ -44,6 +52,7 @@ export function createOwedApp({
   deps,
   auth,
   scrubbableClock,
+  scrubberRange,
   recourseLog,
 }: OwedAppOptions): Express {
   const app = createOwedExpressApp();
@@ -74,7 +83,7 @@ export function createOwedApp({
   }
 
   if (scrubbableClock) {
-    mountScrubberControls(app, scrubbableClock);
+    mountScrubberControls(app, scrubbableClock, scrubberRange);
   }
 
   /**
@@ -124,9 +133,13 @@ function createOwedExpressApp(): Express {
  * Scrubber control, deliberately outside the MCP surface: moving scenario time is a
  * property of the simulated home, not something a real add-on may expose.
  */
-function mountScrubberControls(app: Express, clock: FixedClock): void {
+function mountScrubberControls(
+  app: Express,
+  clock: FixedClock,
+  range?: { start: Instant; end: Instant },
+): void {
   app.get("/control/clock", (_req: Request, res: Response) => {
-    res.json({ now: clock.now() });
+    res.json({ now: clock.now(), ...range });
   });
 
   app.post("/control/clock", (req: Request, res: Response) => {

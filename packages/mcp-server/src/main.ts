@@ -8,7 +8,9 @@ import { RecourseLog } from "./merchants/log.js";
 import {
   CURRENCY,
   HOUSEHOLD_ID,
+  STORYBOARD_END,
   STORYBOARD_QUERY_AT,
+  STORYBOARD_START,
   storyboardEvents,
 } from "./seed/storyboard.js";
 
@@ -59,6 +61,7 @@ createOwedApp({
   deps,
   auth: { config: defaultAuthConfig(BASE_URL, AUTH_SECRET) },
   scrubbableClock: clock,
+  scrubberRange: { start: STORYBOARD_START, end: STORYBOARD_END },
   recourseLog,
 }).listen(PORT, "127.0.0.1", () => {
   process.stdout.write(
