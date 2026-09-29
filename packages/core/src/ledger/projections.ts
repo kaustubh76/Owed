@@ -98,7 +98,12 @@ export function apply(state: LedgerState, event: StoredLedgerEvent): LedgerState
     case "ClaimFiled":
       withClaim(state, event.claim_id, (claim) => {
         claim.state = "Filed";
-        claim.rounds.push({ type: "CLAIM", at: event.occurred_at, amount: claim.ask });
+        claim.rounds.push({
+          seq: claim.rounds.length,
+          type: "CLAIM",
+          at: event.occurred_at,
+          amount: claim.ask,
+        });
       });
       setPromiseStatus(state, event.promise_id, "Filed");
       break;
@@ -107,6 +112,7 @@ export function apply(state: LedgerState, event: StoredLedgerEvent): LedgerState
       withClaim(state, event.claim_id, (claim) => {
         claim.state = "Negotiating";
         claim.rounds.push({
+          seq: claim.rounds.length,
           type: "OFFER",
           at: event.occurred_at,
           amount: event.amount,
@@ -121,6 +127,7 @@ export function apply(state: LedgerState, event: StoredLedgerEvent): LedgerState
       withClaim(state, event.claim_id, (claim) => {
         claim.state = "Negotiating";
         claim.rounds.push({
+          seq: claim.rounds.length,
           type: "COUNTER",
           at: event.occurred_at,
           amount: event.amount,
@@ -136,6 +143,7 @@ export function apply(state: LedgerState, event: StoredLedgerEvent): LedgerState
         claim.settled_at = event.occurred_at;
         claim.round_count = event.rounds;
         claim.rounds.push({
+          seq: claim.rounds.length,
           type: "SETTLE",
           at: event.occurred_at,
           amount: event.amount,
@@ -150,6 +158,7 @@ export function apply(state: LedgerState, event: StoredLedgerEvent): LedgerState
       withClaim(state, event.claim_id, (claim) => {
         claim.state = "Escalated";
         claim.rounds.push({
+          seq: claim.rounds.length,
           type: "DECLINE",
           at: event.occurred_at,
           reason: event.reason,

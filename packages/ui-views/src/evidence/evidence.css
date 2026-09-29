@@ -1,0 +1,61 @@
+.evidence { display: flex; flex-direction: column; gap: var(--space-md); }
+
+.evidence__headline { display: flex; align-items: baseline; gap: var(--space-sm); }
+.evidence__merchant { font-size: var(--text-display-4); font-weight: 700; }
+
+.evidence__verdict {
+  font-size: var(--text-body-1);
+  padding: var(--space-4xs) var(--space-sm);
+  border-radius: var(--radius-circle);
+  border: 1px solid currentColor;
+}
+
+.evidence__verdict--breached { color: var(--accent-open); }
+.evidence__verdict--kept { color: var(--accent-positive); }
+.evidence__verdict--suspected { color: var(--accent-quiet); }
+
+.evidence__coverage { display: flex; flex-direction: column; gap: var(--space-2xs); }
+
+/* The whole evaluated window, coloured as watched. */
+.evidence__bar {
+  position: relative;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-positive) 55%, transparent);
+  overflow: hidden;
+}
+
+/* The stretches nobody was watching, cut out where they actually fell. */
+.evidence__bar-gap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--surface-nested);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 5px,
+    color-mix(in srgb, var(--accent-open) 60%, transparent) 5px 10px
+  );
+}
+
+.evidence__coverage-label { margin: 0; font-size: var(--text-body-2); color: var(--fg-muted); }
+.evidence__why { margin: 0; font-size: var(--text-body-1); }
+.evidence__gaps { margin: 0; font-size: var(--text-body-2); color: var(--accent-open); }
+
+.evidence__items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+
+.evidence__item {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  align-items: center;
+  gap: var(--space-md);
+  min-height: 48px;
+  padding: var(--space-2xs) var(--space-md);
+  background: var(--surface-nested);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-2);
+}
+
+.evidence__item-kind { color: var(--fg-muted); }
+.evidence__item-time { font-variant-numeric: tabular-nums; color: var(--fg-muted); }
+.evidence__status { font-size: var(--text-headline-1); color: var(--fg-muted); }

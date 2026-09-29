@@ -14,7 +14,7 @@
     "./views/*": "./dist/views/*"
   },
   "scripts": {
-    "build": "vite build"
+    "build": "node scripts/build-views.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "2.0.3",

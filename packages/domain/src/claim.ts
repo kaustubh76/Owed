@@ -30,6 +30,13 @@ export type Justification = z.infer<typeof JustificationSchema>;
 
 /** One message in a negotiation transcript, as recorded on the claim. */
 export const ClaimRoundSchema = z.object({
+  /**
+   * Position in the transcript.
+   *
+   * Part of a round's identity, not decoration: a live exchange concludes in a single
+   * instant, so timestamps alone cannot tell two messages apart.
+   */
+  seq: z.number().int().nonnegative(),
   type: RecourseMessageTypeSchema,
   at: InstantSchema,
   amount: MoneySchema.optional(),
