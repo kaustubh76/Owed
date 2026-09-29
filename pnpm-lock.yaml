@@ -151,6 +151,15 @@ importers:
       '@owed/domain':
         specifier: workspace:*
         version: link:../domain
+      '@owed/merchant-agents':
+        specifier: workspace:*
+        version: link:../merchant-agents
+      '@owed/policy-library':
+        specifier: workspace:*
+        version: link:../policy-library
+      '@owed/recourse-protocol':
+        specifier: workspace:*
+        version: link:../recourse-protocol
       '@owed/ui-views':
         specifier: workspace:*
         version: link:../ui-views
@@ -176,15 +185,37 @@ importers:
 
   packages/merchant-agents:
     dependencies:
+      '@modelcontextprotocol/core':
+        specifier: 2.1.0
+        version: 2.1.0
+      '@modelcontextprotocol/express':
+        specifier: 2.0.1
+        version: 2.0.1(@modelcontextprotocol/server@2.1.0)(express@5.2.1)
+      '@modelcontextprotocol/node':
+        specifier: 2.1.0
+        version: 2.1.0(@modelcontextprotocol/server@2.1.0)(hono@4.13.10)
+      '@modelcontextprotocol/server':
+        specifier: 2.1.0
+        version: 2.1.0
       '@owed/policy-library':
         specifier: workspace:*
         version: link:../policy-library
       '@owed/recourse-protocol':
         specifier: workspace:*
         version: link:../recourse-protocol
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
       zod:
         specifier: ^4.6.5
         version: 4.6.5
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.4
+        version: 5.0.6
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
 
   packages/policy-library:
     dependencies:
