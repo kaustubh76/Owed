@@ -248,16 +248,22 @@ Bedrock (Nova 2 Lite) with a strict JSON schema and a rule pass for dates/amount
 ### 8.3 Ledger
 Event-sourced (`PromiseCaptured`, `EvidenceAttached`, `BreachDetected`, `ClaimFiled`, `OfferReceived`, `CounterSent`, `Settled`, `Recovered`, …), DynamoDB in cloud / SQLite locally. Projections: ledger summary, per-merchant scorecards, "recovered this week".
 
-### 8.4 Proactive scheduler (stand-in)
-Alexa+ has no proactive channel for add-ons. The brain runs a scheduler that surfaces the next `Breached` item on the next user turn *and*, in the simulated home, delivers it proactively with a labelled "simulated proactive" badge. The protocol inspector shows the `CommitmentEvent` shape Amazon would need to emit — this is the feature request.
+### 8.4 Speaking first (`CommitmentEvent`)
+Alexa+ add-ons are strictly reactive: a tool runs because somebody said something. For most add-ons that is a limitation; for Owed it removes the product, because Owed exists to notice what the household did *not* ask about.
+
+So the one primitive we need is the one that does not exist, and we wrote it down as a schema rather than a paragraph in a feedback form: **`CommitmentEvent`**, carrying `expires_at` (proactive speech has to be allowed to go stale), `urgency` (only the add-on knows whether money is about to stop being recoverable) and `offer` (without it, an announcement is a dead end).
+
+The server exposes everything Owed would say unprompted as a **projection of the ledger**, not a queue — so scrubbing the week backwards takes an announcement away again instead of replaying it. The brain polls, announces what has newly fallen due, and the home badges every one `simulated proactive`. The inspector shows each event on its own channel.
+
+Full write-up and the rules the scheduler keeps: **[docs/proactive.md](docs/proactive.md)**.
 
 ---
 
 ## 9. Simulated home (`apps/home`)
 
-React + Vite. One page, four regions:
-- **Surfaces**: Echo Show frame (768×480 canvas, scaled), Fire TV overlay, Echo Dot (audio-only), phone rail. Display mode switches per surface; same `ui://` view renders in each.
-- **Timeline scrubber**: 7-day seeded scenario (`data/scenario-week.json`). Scrubbing replays the ledger to that instant; the brain answers truthfully for that time.
+React + Vite. One page:
+- **Surfaces**: an Echo Show 8 at its documented 768×480 base canvas, and an **Echo Dot with no screen at all**. The Dot is a proof rather than a decoration — voice-only parity is a certification requirement and the easiest thing to fake, so the only honest test is to take the card away and run the storyboard again. If a beat stops making sense there, the spoken line was a caption for a picture, which is a bug in the add-on. *(Fire TV overlay and phone rail: not built — first on the cut list, §16.)*
+- **Timeline scrubber**: drag through the seeded week. The clock moves, the ledger is replayed to that instant, and every tool answers for it without any tool knowing a scrubber exists — including whether it has anything to say unprompted. Dragging onto Sunday evening is what makes the proactive beat happen.
 - **Voice**: browser SpeechRecognition in, TTS out (browser default; ElevenLabs optional), barge-in supported.
 - **Protocol inspector**: live JSON-RPC from simulator → Owed, and the recourse exchange with merchant agents. Every card on the Echo is traceable to a `_meta.ui.resourceUri` in the pane.
 
@@ -377,6 +383,7 @@ nothing in this submission should be read as claiming otherwise.
 | Real | Simulated (labelled in UI and README) |
 |---|---|
 | MCP server, tools, MCP Apps views, elicitation, account linking, conformance | Alexa+ orchestrator, NLU and voice pipeline |
+| The `CommitmentEvent` schema and the scheduler that derives it | **Proactive delivery itself — Alexa+ has no such channel.** Badged `simulated proactive` in the UI; see [docs/proactive.md](docs/proactive.md) |
 | Promise extraction from seeded inbox (published P/R) | Proactive delivery to devices |
 | Breach engine with coverage accounting | Merchant agents (three policies, open protocol) |
 | Recourse protocol, negotiator, 20-policy eval | Speaker identity / household roles |

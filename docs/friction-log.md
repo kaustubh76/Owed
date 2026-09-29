@@ -307,3 +307,41 @@ correctly, but `app.all("/mcp", (req, res) => …)` still produces `TS7006: impl
 
 **Suggestion.** Worth a line in the Express serving guide; every strict-mode TypeScript user
 will hit it in their first five minutes.
+
+---
+
+## 14. An add-on cannot say anything first
+
+**Surface:** Alexa+ add-on model · **Severity: high** — this one is a feature request, not a bug.
+
+**Task.** Tell the household a parcel never arrived.
+
+**Actual.** There is no way to. Alexa+ add-ons are strictly reactive: a tool runs because
+somebody said something. No scheduled wake, no event channel, nothing that reaches a
+device unless a person started the exchange.
+
+For most add-ons that is a limitation. For this one it removes the product. Owed exists
+to notice what the household did *not* ask about, and the moment that only works if
+somebody thinks to ask is the moment it is worth nothing — people do not wake up
+wondering whether a courier honoured a delivery guarantee eleven days ago. That is
+exactly the work they wanted handed off.
+
+**Workaround.** The server derives everything Owed would say unprompted as a projection
+of the ledger and serves it outside the MCP surface; the simulated home's host polls it
+and badges every announcement `simulated proactive`. Honest, and not shippable.
+
+**Suggestion.** We have written the shape we would need as a schema rather than asking
+for "proactive support" in the abstract — `CommitmentEvent`, with the three fields we
+think are easy to leave out and expensive to add later:
+
+- `expires_at`, because proactive speech has to be allowed to go stale. Being told on
+  Friday about a parcel that failed on Sunday is worse than silence.
+- `urgency`, because only the add-on knows whether money is about to stop being
+  recoverable, and only the host knows whether now is a reasonable moment to interrupt.
+  Neither can decide alone.
+- `offer`, the utterance and tool the household can respond with. Without it an
+  announcement is a dead end: somebody hears that something is wrong and has to work out
+  for themselves how to ask for it to be fixed.
+
+The schema, the rules a scheduler should keep, and a working implementation behind all of
+it: **docs/proactive.md**.
