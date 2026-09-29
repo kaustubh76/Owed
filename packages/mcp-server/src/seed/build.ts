@@ -91,6 +91,11 @@ export async function arcEvents(
   household_id: string,
   arc: ArcSpec,
   idGen: IdGen,
+  /**
+   * The whole doorbell timeline for the household. Coverage is what the camera was
+   * actually doing, not what one promise would like it to have been doing.
+   */
+  householdUptime: readonly ObservationWindow[] = observationWindows(household_id, arc),
 ): Promise<LedgerEvent[]> {
   const uptime = observationWindows(household_id, arc);
   const evidence = arc.evidence ?? [];
@@ -108,7 +113,8 @@ export async function arcEvents(
   const detection = assessPromise({
     promise: arc.promise,
     evidence,
-    uptime,
+    // Only what the camera had already recorded by the time the engine ran.
+    uptime: householdUptime.filter((window) => window.interval.start <= arc.assessed_at),
     now: arc.assessed_at,
   });
   if (detection === undefined) {

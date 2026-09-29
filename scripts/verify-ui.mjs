@@ -88,27 +88,59 @@ try {
   // The brain only reports connected once account linking has completed.
   await page.waitForSelector(".app__status--on", { timeout: 20_000 });
 
+  /**
+   * The card lives in a sandboxed iframe that is replaced whenever the view changes, so
+   * every read re-resolves the frame rather than holding a handle across turns.
+   */
+  const card = () => page.frameLocator("iframe.echo__screen");
+  const cardText = async (selector) => {
+    const locator = card().locator(selector);
+    await locator.waitFor({ state: "visible", timeout: 20_000 });
+    return (await locator.textContent())?.trim() ?? "";
+  };
+
+  // --- the ledger ---------------------------------------------------------
   await page.getByRole("button", { name: EXPECTED.utterance }).click();
 
-  const frame = await page.waitForSelector("iframe.echo__screen", { timeout: 20_000 });
-  const card = await frame.contentFrame();
-  await card.waitForSelector(".ledger__amount", { timeout: 20_000 });
+  check("recovered", await cardText(".ledger__amount"), EXPECTED.recovered);
+  check("open", await cardText(".ledger__stat-value--open"), EXPECTED.open);
+  check(
+    "kept",
+    await cardText(".ledger__stat-value:not(.ledger__stat-value--open)"),
+    EXPECTED.kept,
+  );
 
-  check("recovered", (await card.textContent(".ledger__amount"))?.trim(), EXPECTED.recovered);
-  check("open", (await card.textContent(".ledger__stat-value--open"))?.trim(), EXPECTED.open);
-  check("kept", (await card.textContent(".ledger__stat-value:not(.ledger__stat-value--open)"))?.trim(), EXPECTED.kept);
-
-  const box = await frame.boundingBox();
+  const box = await page.locator("iframe.echo__screen").boundingBox();
   check("canvas width", Math.round(box?.width ?? 0), EXPECTED.canvas.width);
   check("canvas height", Math.round(box?.height ?? 0), EXPECTED.canvas.height);
 
-  const overflows = await card.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  );
+  const overflows = await card()
+    .locator("body")
+    .evaluate((body) => body.ownerDocument.documentElement.scrollWidth > body.clientWidth);
   check("no horizontal overflow", overflows, false);
 
   const spoken = (await page.textContent(".voice__reply")) ?? "";
   check("spoken line has no digits", /[0-9]/.test(spoken), false);
+  check("spoken line offers the waiting claim", spoken.includes("one more I can file"), true);
+
+  // --- the trust beat: what Owed did not see ------------------------------
+  await page.getByRole("button", { name: "Why aren't you claiming that?" }).click();
+
+  check("evidence card states the coverage", (await cardText(".evidence__coverage-label")).includes("20%"), true);
+  check("evidence card names the gaps", (await cardText(".evidence__gaps")).startsWith("Not watched:"), true);
+  check("evidence card gives the verdict", await cardText(".evidence__verdict"), "not enough to claim");
+
+  // --- the hero interaction: say yes, and watch it settle -----------------
+  await page.getByRole("button", { name: "File it" }).click();
+
+  check("claim settles", await cardText(".claim__amount"), "$8.00");
+  const steps = await card().locator(".claim__step-label").allTextContents();
+  check("claim shows the exchange", steps.map((step) => step.trim()).join(" "), "Asked They offered Countered Settled");
+  check(
+    "counter cites the merchant's own clause",
+    await cardText(".claim__step-clause"),
+    "Delivery Guarantee 4.1",
+  );
 
   check("console clean", consoleErrors.length, 0);
   if (consoleErrors.length > 0) process.stdout.write(`${consoleErrors.join("\n")}\n`);

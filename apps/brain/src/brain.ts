@@ -9,9 +9,22 @@ const FALLBACK =
 export class OwedBrain {
   readonly #client: Client;
   readonly #viewCache = new Map<string, string>();
+  /**
+   * The promise currently under discussion.
+   *
+   * "File it" is meaningless on its own; it means the thing just mentioned. The brain
+   * keeps that reference so the household can speak the way people actually do.
+   */
+  #focus: string | undefined;
+  /** The promise Owed decided not to claim, which is a different question. */
+  #declined: string | undefined;
 
   constructor(client: Client) {
     this.#client = client;
+  }
+
+  get focus(): string | undefined {
+    return this.#focus;
   }
 
   async turn(utterance: string): Promise<TurnMessage> {
@@ -20,15 +33,25 @@ export class OwedBrain {
       return { type: "turn", utterance, reply: FALLBACK, trace: [] };
     }
 
+    const args = { ...intent.args };
+    if (intent.needsFocus !== undefined) {
+      const subject = intent.needsFocus === "declined" ? this.#declined : this.#focus;
+      if (subject === undefined) {
+        return { type: "turn", utterance, reply: NOTHING_IN_MIND, trace: [] };
+      }
+      args.promise_id = subject;
+    }
+
     const started = performance.now();
-    const result = await this.#client.callTool({ name: intent.tool, arguments: intent.args });
+    const result = await this.#client.callTool({ name: intent.tool, arguments: args });
     const ms = Math.round(performance.now() - started);
+    this.#rememberFocus(result);
 
     const resourceUri = readResourceUri(result);
     const trace: ToolTrace[] = [
       {
         tool: intent.tool,
-        args: intent.args,
+        args,
         ms,
         isError: result.isError === true,
         ...(resourceUri === undefined ? {} : { resourceUri }),
@@ -63,7 +86,45 @@ export class OwedBrain {
     this.#viewCache.set(uri, first.text);
     return first.text;
   }
+
+  /**
+   * Keep hold of whichever promise the household is most likely to mean next.
+   *
+   * A claim or an evidence card is about one promise. A ledger summary is about many, so
+   * the one worth remembering is the one waiting on an answer.
+   */
+  #rememberFocus(result: unknown): void {
+    const data = (result as { structuredContent?: Record<string, unknown> }).structuredContent;
+    if (data === undefined) return;
+
+    // A card about one promise says which slot it belongs in. Explaining why something
+    // was *not* claimed must never make it the thing "file it" then tries to file.
+    if (typeof data.promise_id === "string" && typeof data.status === "string") {
+      if (data.status === "Breached") this.#focus = data.promise_id;
+      else if (data.status === "Suspected") this.#declined = data.promise_id;
+      return;
+    }
+    if (typeof data.promise_id === "string") return;
+
+    const items = data.items;
+    if (!Array.isArray(items)) return;
+    const withStatus = (status: string) =>
+      items.find(
+        (item): item is { promise_id: string } =>
+          typeof item === "object" &&
+          item !== null &&
+          (item as { status?: unknown }).status === status,
+      );
+
+    const waiting = withStatus("Breached");
+    if (waiting !== undefined) this.#focus = waiting.promise_id;
+    const declined = withStatus("Suspected");
+    if (declined !== undefined) this.#declined = declined.promise_id;
+  }
 }
+
+const NOTHING_IN_MIND =
+  "Tell me which promise you mean, or ask me what you're owed and I'll bring one up.";
 
 function readSpokenText(result: unknown): string | undefined {
   const content = (result as { content?: Array<{ type?: string; text?: string }> }).content;

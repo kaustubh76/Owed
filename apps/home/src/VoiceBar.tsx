@@ -7,7 +7,7 @@ import { useState } from "react";
  * buttons carry the storyboard's exact lines and the demo is never hostage to a
  * microphone (plan §8).
  */
-const SCRIPT = ["Alexa, what am I owed?", "What came back this month?"] as const;
+const SCRIPT = ["Alexa, what am I owed?", "Why aren't you claiming that?", "File it"] as const;
 
 export interface VoiceBarProps {
   onSpeak: (text: string) => void;

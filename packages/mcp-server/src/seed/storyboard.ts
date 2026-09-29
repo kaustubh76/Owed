@@ -1,3 +1,4 @@
+import type { IdGen } from "@owed/core";
 import {
   type Evidence,
   type Instant,
@@ -6,11 +7,12 @@ import {
   type LedgerEvent,
   type Money,
   normalizeInstant,
+  type ObservationWindow,
   type OwedPromise,
   type PromiseKind,
   usd,
 } from "@owed/domain";
-import { arcEvents, createIdGen, sortByOccurrence } from "./build.js";
+import { arcEvents, createIdGen, DOORBELL_SOURCE, sortByOccurrence } from "./build.js";
 import type { ArcSpec } from "./types.js";
 
 export const HOUSEHOLD_ID = "hh_demo";
@@ -306,6 +308,20 @@ export function buildArcs(): ArcSpec[] {
       assessed_at: at("fri", "10:00"),
     },
 
+    // 11 — Sunday evening, and nothing came. Breached, and deliberately left unfiled:
+    // this is what the household is asked about, and what claim_file actually acts on.
+    {
+      promise: promise("prm_011", MERCHANTS.parcel, "delivery_window", at("sat", "21:15"), {
+        window: interval(at("sun", "13:00"), at("sun", "17:00")),
+        amount_at_stake: usd(54.0),
+        policy_ref: "northwind/delivery-guarantee#4.1",
+      }),
+      // Settled by the carrier's own log rather than the camera, so this makes no claim
+      // about where the doorbell was pointing on an evening another promise depends on.
+      evidence: [carrierScan("prm_011", at("sun", "18:20"))],
+      assessed_at: at("sun", "18:25"),
+    },
+
     // 10 — the trust beat. Same story as Tuesday, but the camera was barely on.
     {
       promise: promise("prm_010", MERCHANTS.parcel, "delivery_window", at("sat", "20:00"), {
@@ -328,8 +344,7 @@ export const ARCS: ArcSpec[] = buildArcs();
  * Asynchronous because the negotiations genuinely run: each claim is argued out against
  * a merchant agent rather than replayed from a script.
  */
-export async function storyboardEvents(): Promise<LedgerEvent[]> {
-  const idGen = createIdGen();
+export async function storyboardEvents(idGen: IdGen = createIdGen()): Promise<LedgerEvent[]> {
   const arcs = buildArcs();
   const events: LedgerEvent[] = [];
   for (const arc of arcs) {
