@@ -1,8 +1,10 @@
-import { FixedClock, MemoryEventStore, SeededIdGen } from "@owed/core";
+import { FixedClock, MemoryEventStore, SeededIdGen, SystemClock } from "@owed/core";
 import { createOwedApp } from "./app.js";
 import { defaultAuthConfig } from "./auth/config.js";
 import type { OwedDeps } from "./deps.js";
+import { httpMerchants } from "./merchants/http.js";
 import { inProcessMerchants } from "./merchants/inProcess.js";
+import { RecourseLog } from "./merchants/log.js";
 import {
   CURRENCY,
   HOUSEHOLD_ID,
@@ -31,21 +33,38 @@ const store = new MemoryEventStore();
 await store.append(await storyboardEvents(idGen));
 
 const clock = new FixedClock(process.env.OWED_NOW ?? STORYBOARD_QUERY_AT);
+/**
+ * Where merchant agents are found, decided once.
+ *
+ * Deliberately not a per-call fallback: quietly answering from in-process agents when the
+ * real ones are unreachable would turn the demo path into a mock without saying so.
+ */
+const merchantsUrl = process.env.OWED_MERCHANTS_URL;
+const recourseLog = new RecourseLog(new SystemClock());
+const merchants =
+  merchantsUrl === undefined
+    ? inProcessMerchants()
+    : httpMerchants({ baseUrl: new URL(merchantsUrl), log: recourseLog });
+
 const deps: OwedDeps = {
   store,
   clock,
   householdId: HOUSEHOLD_ID,
   currency: CURRENCY,
   idGen,
-  merchants: inProcessMerchants(),
+  merchants,
 };
 
 createOwedApp({
   deps,
   auth: { config: defaultAuthConfig(BASE_URL, AUTH_SECRET) },
   scrubbableClock: clock,
+  recourseLog,
 }).listen(PORT, "127.0.0.1", () => {
   process.stdout.write(
     `Owed MCP server on ${BASE_URL.origin}/mcp (now: ${clock.now()}, account linking on)\n`,
+  );
+  process.stdout.write(
+    `  merchants: ${merchantsUrl === undefined ? "in-process" : merchantsUrl}\n`,
   );
 });

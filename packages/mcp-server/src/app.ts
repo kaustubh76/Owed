@@ -7,6 +7,7 @@ import type { AuthConfig } from "./auth/config.js";
 import { householdFromAuth, requireOwedAuth, stripWwwAuthenticate } from "./auth/middleware.js";
 import { createAuthRouter } from "./auth/router.js";
 import type { OwedDeps } from "./deps.js";
+import type { RecourseLog } from "./merchants/log.js";
 import { createOwedServer } from "./server.js";
 
 export interface OwedAppOptions {
@@ -28,6 +29,8 @@ export interface OwedAppOptions {
   };
   /** Exposed so the timeline scrubber can move scenario time. */
   scrubbableClock?: FixedClock;
+  /** Exposed so the protocol inspector can show the recourse exchange. */
+  recourseLog?: RecourseLog;
 }
 
 /**
@@ -36,7 +39,12 @@ export interface OwedAppOptions {
  * `createMcpExpressApp` binds to localhost and validates `Host`/`Origin` before
  * anything else, which is the DNS-rebinding protection the spec requires.
  */
-export function createOwedApp({ deps, auth, scrubbableClock }: OwedAppOptions): Express {
+export function createOwedApp({
+  deps,
+  auth,
+  scrubbableClock,
+  recourseLog,
+}: OwedAppOptions): Express {
   const app = createOwedExpressApp();
 
   if (auth?.sendWwwAuthenticate !== true) {
@@ -66,6 +74,15 @@ export function createOwedApp({ deps, auth, scrubbableClock }: OwedAppOptions): 
 
   if (scrubbableClock) {
     mountScrubberControls(app, scrubbableClock);
+  }
+
+  if (recourseLog) {
+    // An observation window, not part of the add-on contract — the same place the
+    // scrubber's clock control lives, and for the same reason.
+    app.get("/control/recourse", (req: Request, res: Response) => {
+      const since = Number.parseInt(String(req.query.since ?? "0"), 10);
+      res.json(recourseLog.since(Number.isFinite(since) ? since : 0));
+    });
   }
 
   return app;
