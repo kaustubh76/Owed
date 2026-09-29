@@ -1,4 +1,3 @@
-import type { PromiseKind } from "@owed/domain";
 import { type Extraction, extractPromises } from "@owed/extractor";
 import { EXTRACTION_PARAMETERS, type LabelledMessage } from "./corpus.js";
 
