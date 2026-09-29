@@ -81,8 +81,58 @@ Every one is a boundary, and they fall into three groups.
    opened. The detector looks in a ±30 minute window and anything outside it does not exist.
 
 The first two are plainly wrong and were fixed. The third is a declared parameter rather
-than a defect, and moving it to make a number go up would be marking our own homework —
-it stays, and it stays reported. See the next section.
+than a defect, and moving it to make a number go up would be marking our own homework.
+
+### Results — after fixing the two defects
+
+| kind | precision | recall | kept FPR | held back |
+|---|---|---|---|---|
+| late_eta | 100.0% | 100.0% | 0.0% | — |
+| missed_window | 100.0% | 100.0% | 0.0% | 2/2 |
+| phantom_delivery | 80.0% | 100.0% | 33.3% | 3/3 |
+| no_show | 75.0% | 100.0% | 25.0% | 3/3 |
+| late_refund | 100.0% | 100.0% | 0.0% | — |
+| price_drop | 100.0% | 100.0% | 0.0% | — |
+| **overall** | **93.5%** | **100.0%** | **8.7%** | **100%** |
+
+Two changes, both in `packages/core/src/breach/detectors.ts` and both defensible without
+reference to any number:
+
+- **`withinWindow`**, a containment check that counts the closing instant, used wherever
+  the question is whether a promise was honoured. `containsInstant` stays half-open and
+  stays in use for coverage arithmetic, where adjacent intervals must not double-count.
+  "Delivered by five" includes five.
+- **A partial refund is a broken promise.** The refund detector now compares what came
+  back against what the promise named, where it named one and the currencies agree.
+  Telling somebody their refund arrived when half of it did is the one answer they would
+  call a lie.
+
+**H2 is still not met.** Two kinds remain below the 0.9 precision bar and the
+false-positive rate on kept scenarios is 8.7% against a limit of 5%.
+
+Both remaining failures are the same thing: **evidence one minute outside the ±30 minute
+tolerance is discarded entirely.** A parcel placed 31 minutes after the scan reads as a
+phantom delivery; somebody turning up 29 minutes before an appointment slot opened reads
+as a no-show. In both cases the household got what they were promised and Owed would file
+a claim saying otherwise.
+
+That is a real defect and we are naming it rather than fixing it in the same sitting that
+found it. Fixing it means deciding what a tolerance is *for* — clock skew between a
+carrier and a camera, or the window in which a sighting counts as the same event — and
+that is a design decision, not a threshold to nudge. The ideation's own pivot trigger is
+"H1 or H2 below threshold **after two iterations**". This is the first.
+
+### What this does not show
+
+The corpus is ours. Sixty timelines written by the same people who wrote the engine is
+weaker evidence than sixty drawn from the world, however carefully the labels were set by
+construction and however deliberately the cases were placed on the boundaries. The first
+draft scored 100% on everything, which is exactly what a corpus written to confirm an
+engine looks like, and the only reason this one says anything is that it was rebuilt to
+try to break it.
+
+It also says nothing about extraction: every promise here is handed to the engine already
+parsed. That is H1, and it is not measured yet.
 
 ---
 

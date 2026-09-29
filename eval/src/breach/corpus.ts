@@ -74,7 +74,10 @@ const watching = (from: number, to: number): ObservationWindow => ({
 });
 
 let seq = 0;
-const evidenceId = (prefix: string) => `evd_${prefix}_${String((seq += 1)).padStart(3, "0")}`;
+function evidenceId(prefix: string): string {
+  seq += 1;
+  return `evd_${prefix}_${String(seq).padStart(3, "0")}`;
+}
 
 const evidenceBase = (promise_id: string, source_id: string, ms: number) => ({
   household_id: HOUSEHOLD,

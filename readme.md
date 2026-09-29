@@ -276,9 +276,28 @@ The home embeds `mcp-voice-simulator` as the MCP client (account linking, tools/
 | Metric | Method | Where |
 |---|---|---|
 | Promise extraction P/R | 120 labelled seeded messages, 7 promise kinds | `eval/extraction/` |
-| Breach detection P/R by kind | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/breach/` |
+| Breach detection P/R by kind | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/src/breach/` |
 | Recovery rate & rounds | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
 | Tool latency p95 | k6 against Streamable HTTP endpoint | `eval/latency/` |
+
+**Measured so far (breach detection, `eval/README.md`):** over sixty pre-registered
+timelines the engine reaches **93.5% precision** and **100% recall** on the cases it could
+see enough of, with an **8.7% false-positive rate** on promises that were actually kept.
+**H2 is not met** — it asks for 0.9 precision *per kind* and under 5% false positives, and
+two kinds sit at 80% and 75%.
+
+Every remaining failure is one thing: evidence a minute outside the ±30 minute tolerance
+is discarded entirely, so a parcel placed 31 minutes after the carrier scanned it still
+reads as a phantom delivery. That is a real defect, named rather than quietly fixed in the
+same sitting that found it, because fixing it means deciding what a tolerance is *for*.
+
+The number that did come out clean is the one the product rests on: **every** case where a
+promise was broken but the camera had been starved was **held back rather than claimed**.
+
+Two defects the corpus did find were fixed, both defensible without reference to any
+number: a promise window now counts its closing instant ("delivered by five" includes
+five), and a partial refund is a broken promise rather than a kept one. The corpus was
+committed *before* either change, and the git history shows that order.
 
 **Measured so far (recourse, `eval/README.md`):** across 1,620 negotiations the negotiator
 recovers **33.9%** of what the merchants' own policies say they owe, against **30.8%** for

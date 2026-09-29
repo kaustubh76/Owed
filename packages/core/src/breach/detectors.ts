@@ -14,6 +14,7 @@ import {
   isRefundObserved,
   MINUTE_MS,
   toEpochMs,
+  withinWindow,
 } from "@owed/domain";
 import { coverageGaps, measureCoverage } from "../evidence/coverage.js";
 import {
@@ -145,7 +146,7 @@ export const missedWindow: Detector = {
     const coverage = measureCoverage(observed, window);
 
     if (fulfilment !== undefined) {
-      const inside = containsInstant(window, fulfilment.captured_at);
+      const inside = withinWindow(window, fulfilment.captured_at);
       const lateByMs = toEpochMs(fulfilment.captured_at) - toEpochMs(window.end);
       return conclude({
         promise,
@@ -262,7 +263,7 @@ export const noShow: Detector = {
         confidence: 0.97,
         evidence_ids: ids(sightings),
         explanation: "Somebody arrived for the appointment.",
-        outcome: containsInstant(slot, first.captured_at) ? "kept" : "broken",
+        outcome: withinWindow(slot, first.captured_at) ? "kept" : "broken",
         decidable: true,
       });
     }
@@ -302,6 +303,21 @@ export const lateRefund: Detector = {
       const daysLate = Math.round(
         (toEpochMs(refund.captured_at) - toEpochMs(deadline)) / (24 * 60 * MINUTE_MS),
       );
+
+      /**
+       * Half the money is not the money.
+       *
+       * Asking only whether *something* arrived reads a partial refund as a refund
+       * kept, which is the one answer a household would call a lie. Compared only when
+       * the promise named a figure and the currencies agree; where either is missing,
+       * arriving on time is all this detector can honestly claim to know.
+       */
+      const owed = promise.amount_at_stake;
+      const short =
+        owed !== undefined &&
+        refund.amount.currency === owed.currency &&
+        refund.amount.minor < owed.minor;
+
       const refunded = interval(promise.made_at, refund.captured_at);
       return conclude({
         promise,
@@ -310,10 +326,12 @@ export const lateRefund: Detector = {
         observed: [refunded],
         confidence: 1,
         evidence_ids: [refund.id],
-        explanation: late
-          ? `The refund arrived ${daysLate} days after it was promised.`
-          : "The refund arrived when it was promised.",
-        outcome: late ? "broken" : "kept",
+        explanation: short
+          ? `Only ${formatMoney(refund.amount)} of the ${formatMoney(owed)} came back.`
+          : late
+            ? `The refund arrived ${daysLate} days after it was promised.`
+            : "The refund arrived when it was promised.",
+        outcome: late || short ? "broken" : "kept",
         decidable: true,
       });
     }
@@ -353,7 +371,7 @@ export const priceDrop: Detector = {
 
     const observations = sorted(evidence)
       .filter(isPriceObserved)
-      .filter((e) => containsInstant(window, e.captured_at));
+      .filter((e) => withinWindow(window, e.captured_at));
 
     const cheapest = observations.reduce<(typeof observations)[number] | undefined>(
       (lowest, current) =>

@@ -87,6 +87,21 @@ export function containsInstant(i: Interval, at: Instant): boolean {
   return ms >= toEpochMs(i.start) && ms < toEpochMs(i.end);
 }
 
+/**
+ * Whether something landed inside a promised window, counting the closing instant.
+ *
+ * `containsInstant` is half-open so that adjacent intervals do not double-count, which
+ * is what coverage arithmetic needs. A promise is not arithmetic: "delivered by five"
+ * includes five, and a parcel scanned at 17:00:00.000 against a window closing at
+ * 17:00 has not been delivered late. Use this wherever the question is whether a
+ * promise was honoured, and the half-open one wherever the question is how much time
+ * was covered.
+ */
+export function withinWindow(i: Interval, at: Instant): boolean {
+  const ms = toEpochMs(at);
+  return ms >= toEpochMs(i.start) && ms <= toEpochMs(i.end);
+}
+
 export function overlaps(a: Interval, b: Interval): boolean {
   return toEpochMs(a.start) < toEpochMs(b.end) && toEpochMs(b.start) < toEpochMs(a.end);
 }

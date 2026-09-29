@@ -31,12 +31,12 @@
       "kind": "missed_window",
       "observable_cases": 8,
       "true_positive": 5,
-      "false_positive": 1,
+      "false_positive": 0,
       "false_negative": 0,
-      "precision": 0.8333333333333334,
+      "precision": 1,
       "recall": 1,
       "kept_cases": 3,
-      "kept_false_positive_rate": 0.3333333333333333,
+      "kept_false_positive_rate": 0,
       "held_back": 2,
       "held_back_cases": 2,
       "kind_agreement": 1
@@ -72,11 +72,11 @@
     {
       "kind": "late_refund",
       "observable_cases": 10,
-      "true_positive": 5,
+      "true_positive": 6,
       "false_positive": 0,
-      "false_negative": 1,
+      "false_negative": 0,
       "precision": 1,
-      "recall": 0.8333333333333334,
+      "recall": 1,
       "kept_cases": 4,
       "kept_false_positive_rate": 0,
       "held_back": 0,
@@ -86,11 +86,11 @@
     {
       "kind": "price_drop",
       "observable_cases": 10,
-      "true_positive": 5,
+      "true_positive": 6,
       "false_positive": 0,
-      "false_negative": 1,
+      "false_negative": 0,
       "precision": 1,
-      "recall": 0.8333333333333334,
+      "recall": 1,
       "kept_cases": 4,
       "kept_false_positive_rate": 0,
       "held_back": 0,
@@ -99,9 +99,9 @@
     }
   ],
   "overall": {
-    "precision": 0.9,
-    "recall": 0.9310344827586207,
-    "kept_false_positive_rate": 0.13043478260869565,
+    "precision": 0.9354838709677419,
+    "recall": 1,
+    "kept_false_positive_rate": 0.08695652173913043,
     "held_back_share": 1
   },
   "mislabelled": [],
@@ -264,8 +264,8 @@
       "target": "missed_window",
       "label": "kept",
       "observable": true,
-      "verdict": "Breached",
-      "detected_kind": "missed_window",
+      "verdict": "Kept",
+      "detected_kind": "phantom_delivery",
       "coverage": 1
     },
     {
@@ -516,7 +516,7 @@
       "target": "late_refund",
       "label": "broken",
       "observable": true,
-      "verdict": "Kept",
+      "verdict": "Breached",
       "detected_kind": "late_refund",
       "coverage": 1
     },
@@ -606,7 +606,7 @@
       "target": "price_drop",
       "label": "broken",
       "observable": true,
-      "verdict": "Kept",
+      "verdict": "Breached",
       "detected_kind": "price_drop",
       "coverage": 1
     },
