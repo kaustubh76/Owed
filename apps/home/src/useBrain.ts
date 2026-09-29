@@ -3,8 +3,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export interface Frame {
   /** Assigned on arrival so each row has a stable identity as the list grows. */
   id: number;
-  /** `mcp` is the brain talking to the add-on; `recourse` is the add-on and a merchant. */
-  channel: "mcp" | "recourse";
+  /**
+   * `mcp` is the brain talking to the add-on, `recourse` is the add-on and a merchant,
+   * and `proactive` is the add-on speaking first over a channel Alexa+ does not have.
+   */
+  channel: "mcp" | "recourse" | "proactive";
   merchant?: string;
   direction: "out" | "in";
   at: string;
@@ -17,11 +20,30 @@ export interface ViewPayload {
   result: unknown;
 }
 
+/**
+ * Owed speaking first, which Alexa+ cannot do.
+ *
+ * Carried on the turn rather than beside it because that is what it is: a turn nobody
+ * started. The home badges it so a judge is never left guessing which part is real.
+ */
+export interface Announcement {
+  kind: string;
+  urgency: string;
+  expires_at: string;
+}
+
 export interface Turn {
   utterance: string;
   reply: string;
   trace: Array<{ tool: string; ms: number; isError: boolean; resourceUri?: string }>;
   view?: ViewPayload;
+  proactive?: Announcement;
+}
+
+/** The span of scenario time the scrubber may move within, published by the server. */
+export interface ScenarioRange {
+  start: string;
+  end: string;
 }
 
 export interface BrainState {
@@ -29,6 +51,7 @@ export interface BrainState {
   turn: Turn | null;
   frames: Frame[];
   now: string | null;
+  range: ScenarioRange | null;
   speak: (text: string) => void;
   scrub: (instant: string) => void;
 }
@@ -44,6 +67,7 @@ export function useBrain(): BrainState {
   const [turn, setTurn] = useState<Turn | null>(null);
   const [frames, setFrames] = useState<Frame[]>([]);
   const [now, setNow] = useState<string | null>(null);
+  const [range, setRange] = useState<ScenarioRange | null>(null);
 
   useEffect(() => {
     const socket = new WebSocket(BRAIN_URL);
@@ -66,8 +90,21 @@ export function useBrain(): BrainState {
         );
       } else if (message.type === "turn") {
         setTurn(message as unknown as Turn);
+      } else if (message.type === "proactive") {
+        const event = message.event as Announcement;
+        // Rendered as a turn with no utterance, because that is exactly what it is.
+        setTurn({
+          utterance: "",
+          reply: message.reply as string,
+          trace: [],
+          ...(message.view ? { view: message.view as ViewPayload } : {}),
+          proactive: { kind: event.kind, urgency: event.urgency, expires_at: event.expires_at },
+        });
       } else if (message.type === "clock") {
         setNow(message.now as string);
+        if (typeof message.start === "string" && typeof message.end === "string") {
+          setRange({ start: message.start, end: message.end });
+        }
       }
     });
 
@@ -84,6 +121,7 @@ export function useBrain(): BrainState {
     turn,
     frames,
     now,
+    range,
     speak: useCallback((text: string) => send({ type: "utterance", text }), [send]),
     scrub: useCallback((instant: string) => send({ type: "scrub", instant }), [send]),
   };

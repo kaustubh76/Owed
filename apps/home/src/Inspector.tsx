@@ -7,8 +7,13 @@ function describe(message: unknown): string {
     id?: number | string;
     error?: unknown;
     result?: unknown;
+    event_id?: string;
+    kind?: string;
   };
   if (typeof record.method === "string") return record.method;
+  // A commitment event is not JSON-RPC: it is the shape Alexa+ would have to emit, and
+  // naming it by kind is what makes the pane readable as a feature request.
+  if (typeof record.event_id === "string") return `commitment/${record.kind ?? "event"}`;
   if (record.error !== undefined) return "error";
   if (record.result !== undefined) return `result #${String(record.id ?? "")}`;
   return "message";
@@ -21,6 +26,7 @@ function describe(message: unknown): string {
 export function Inspector({ frames }: { frames: readonly Frame[] }) {
   const [open, setOpen] = useState<number | null>(null);
   const recourse = frames.filter((frame) => frame.channel === "recourse").length;
+  const proactive = frames.filter((frame) => frame.channel === "proactive").length;
 
   return (
     <aside className="inspector">
@@ -29,6 +35,7 @@ export function Inspector({ frames }: { frames: readonly Frame[] }) {
         <span className="inspector__count">
           {frames.length} frames
           {recourse > 0 ? ` · ${recourse} recourse` : ""}
+          {proactive > 0 ? ` · ${proactive} proactive` : ""}
         </span>
       </header>
 
@@ -51,6 +58,9 @@ export function Inspector({ frames }: { frames: readonly Frame[] }) {
               <span className="inspector__method">{describe(frame.message)}</span>
               {frame.channel === "recourse" ? (
                 <span className="inspector__channel">{frame.merchant}</span>
+              ) : null}
+              {frame.channel === "proactive" ? (
+                <span className="inspector__channel">simulated</span>
               ) : null}
             </button>
             {open === frame.id ? (

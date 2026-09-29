@@ -231,3 +231,155 @@ body {
   .app__stage { grid-template-columns: minmax(0, 1fr); }
   .inspector { position: static; max-height: 420px; }
 }
+
+/* --- surfaces ------------------------------------------------------------ */
+
+.app__surfaces { display: flex; gap: 4px; }
+
+.app__surface {
+  min-height: 48px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg-muted);
+  background: transparent;
+  border: 1px solid var(--panel-edge);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.app__surface--on { color: var(--fg); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.app__surface:hover { color: var(--fg); }
+
+/* --- Owed speaking first -------------------------------------------------- */
+
+.app__proactive {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent-out) 8%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent-out) 35%, transparent);
+  border-radius: var(--radius);
+}
+
+.app__proactive--high { border-color: color-mix(in srgb, var(--accent-out) 70%, transparent); }
+
+.app__proactive-badge {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--accent-out);
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* --- timeline scrubber ---------------------------------------------------- */
+
+.scrub {
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius);
+}
+
+.scrub__head { display: flex; align-items: baseline; justify-content: space-between; }
+.scrub__label { font-size: 13px; color: var(--fg-muted); }
+.scrub__at { font-size: 13px; color: var(--fg); font-variant-numeric: tabular-nums; }
+
+.scrub__range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 48px;
+  margin: 2px 0 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.scrub__range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--panel-edge);
+}
+
+.scrub__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+
+.scrub__range:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.scrub__days {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+/* --- Echo Dot: the surface with no screen --------------------------------- */
+
+.dot { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+.dot__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  min-height: 300px;
+  padding: 32px;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius);
+}
+
+.dot__ring {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #1b2029 58%, transparent 59%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-in) 55%, transparent);
+}
+
+.dot__body--live .dot__ring { box-shadow: 0 0 0 3px var(--accent-in), 0 0 26px color-mix(in srgb, var(--accent-in) 40%, transparent); }
+
+.dot__speech {
+  margin: 0;
+  max-width: 44ch;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.dot__label { margin: 0; font-size: 12px; color: var(--fg-muted); }
+
+/* The channel Alexa+ does not have, marked as distinctly as the one it does. */
+.inspector__line--proactive { border-left: 2px solid var(--accent-out); padding-left: 6px; }
+
+.app__surfaces { display: flex; gap: 4px; margin: 0; padding: 0; border: 0; }
+
+/* Named for a screen reader, absent for everyone else: the buttons say it themselves. */
+.app__surfaces-legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
