@@ -1,13 +1,14 @@
 import { createMcpExpressApp } from "@modelcontextprotocol/express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
-import { type Clock, type FixedClock, SystemClock } from "@owed/core";
+import { type Clock, type FixedClock, project, SystemClock } from "@owed/core";
 import type { Express, Request, Response } from "express";
 import type { AuthConfig } from "./auth/config.js";
 import { householdFromAuth, requireOwedAuth, stripWwwAuthenticate } from "./auth/middleware.js";
 import { createAuthRouter } from "./auth/router.js";
 import type { OwedDeps } from "./deps.js";
 import type { RecourseLog } from "./merchants/log.js";
+import { commitmentsDue } from "./proactive/scheduler.js";
 import { createOwedServer } from "./server.js";
 
 export interface OwedAppOptions {
@@ -75,6 +76,27 @@ export function createOwedApp({
   if (scrubbableClock) {
     mountScrubberControls(app, scrubbableClock);
   }
+
+  /**
+   * The channel Alexa+ does not have.
+   *
+   * An add-on can only answer; it can never speak first. Owed's premise is noticing
+   * what nobody asked about, so this endpoint stands in for the missing primitive and
+   * hands the host everything Owed would say unprompted at the current instant. It is
+   * a projection, not a queue: polling it twice is free, and moving the clock
+   * backwards takes announcements away again.
+   *
+   * Deliberately outside the MCP surface, because it is not part of the add-on
+   * contract — it is the shape of the request we are making of it. See
+   * docs/proactive.md and src/proactive/commitment.ts.
+   */
+  app.get("/control/commitments", (_req: Request, res: Response) => {
+    void (async () => {
+      const now = deps.clock.now();
+      const state = project(await deps.store.read(deps.householdId, now));
+      res.json({ now, events: commitmentsDue(state, now, deps.householdId) });
+    })();
+  });
 
   if (recourseLog) {
     // An observation window, not part of the add-on contract — the same place the

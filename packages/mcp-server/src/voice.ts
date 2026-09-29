@@ -243,7 +243,7 @@ export function speakClaim(view: ClaimView): string {
     return assertSpeakable(
       joinSpoken([
         `${view.merchant} owes you ${speakMoney(view.expected)} under their own policy`,
-        "Shall I file it",
+        "Shall I file it?",
       ]),
     );
   }
