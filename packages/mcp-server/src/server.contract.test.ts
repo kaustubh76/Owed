@@ -1,7 +1,7 @@
 import type { Server } from "node:http";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps/server";
-import { LedgerSummaryViewSchema, usd } from "@owed/domain";
+import { ClaimViewSchema, EvidenceViewSchema, LedgerSummaryViewSchema, usd } from "@owed/domain";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, startHarness } from "./testing/harness.js";
 import { VIEW_URIS } from "./views.js";
@@ -36,7 +36,16 @@ describe("tools/list", () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
 
-    expect(names).toEqual(["ledger_summary"]);
+    // Frozen at D0. Alexa+ locks tool signatures at certification, and the storyboard
+    // asserts against them. docs/contract-v1.md §3.
+    expect(names).toEqual([
+      "claim_file",
+      "claim_status",
+      "evidence_get",
+      "ledger_summary",
+      "promise_check",
+      "promises_list",
+    ]);
   });
 
   it("gives every tool a description and an input schema", async () => {
@@ -120,5 +129,63 @@ describe("resources/read", () => {
     expect(content?.mimeType).toBe(RESOURCE_MIME_TYPE);
     expect(content?.text ?? "").toContain("<!doctype html>");
     expect(content?.text ?? "").not.toMatch(/<script[^>]+src=/);
+  });
+});
+
+describe("the read tools", () => {
+  it("lists promises, and says how many are waiting on a yes", async () => {
+    const result = await client.callTool({ name: "promises_list", arguments: {} });
+    const spoken = (result.content as Array<{ text?: string }>)[0]?.text ?? "";
+
+    expect(spoken).toContain("I'm watching");
+    expect(spoken).toContain("ready to file");
+  });
+
+  it("narrows to one merchant", async () => {
+    const result = await client.callTool({
+      name: "promises_list",
+      arguments: { merchant: "Calder & Co." },
+    });
+    const view = LedgerSummaryViewSchema.parse(result.structuredContent);
+
+    expect(view.items.length).toBeGreaterThan(0);
+    expect(view.items.every((item) => item.merchant === "Calder & Co.")).toBe(true);
+  });
+
+  /** The trust beat, from the tool that has to carry it. */
+  it("explains a declined promise by naming what it did not see", async () => {
+    const result = await client.callTool({
+      name: "promise_check",
+      arguments: { promise_id: "prm_010" },
+    });
+    const view = EvidenceViewSchema.parse(result.structuredContent);
+    const spoken = (result.content as Array<{ text?: string }>)[0]?.text ?? "";
+
+    expect(view.verdict).toBe("Suspected");
+    expect(view.gaps.length).toBeGreaterThan(0);
+    expect(spoken).toContain("not claiming");
+    expect(spoken).toContain("twenty percent");
+  });
+
+  it("shows a claim as an exchange, not a status", async () => {
+    const result = await client.callTool({
+      name: "claim_status",
+      arguments: { claim_id: "clm_002" },
+    });
+    const view = ClaimViewSchema.parse(result.structuredContent);
+
+    expect(view.rounds.map((round) => round.type)).toEqual(["CLAIM", "OFFER", "COUNTER", "SETTLE"]);
+    expect(view.round_count).toBe(2);
+    expect(view.settled_amount).toEqual(usd(12));
+  });
+
+  it("says so rather than throwing when something is not there", async () => {
+    const result = await client.callTool({
+      name: "claim_status",
+      arguments: { claim_id: "clm_nonexistent" },
+    });
+
+    expect(result.isError).toBe(true);
+    expect((result.content as Array<{ text?: string }>)[0]?.text).toContain("don't have");
   });
 });

@@ -1,10 +1,11 @@
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { FixedClock, MemoryEventStore } from "@owed/core";
+import { FixedClock, MemoryEventStore, SeededIdGen } from "@owed/core";
 import { createOwedApp } from "../app.js";
 import { type AuthConfig, defaultAuthConfig } from "../auth/config.js";
 import { linkAccount } from "../auth/link.js";
 import type { OwedDeps } from "../deps.js";
+import { inProcessMerchants } from "../merchants/inProcess.js";
 import {
   CURRENCY,
   HOUSEHOLD_ID,
@@ -37,11 +38,19 @@ export interface HarnessOptions {
  * so anything a host would hit — middleware order, headers, status codes — is covered.
  */
 export async function startHarness(options: HarnessOptions = {}): Promise<Harness> {
+  const idGen = new SeededIdGen();
   const store = new MemoryEventStore();
-  await store.append(await storyboardEvents());
+  await store.append(await storyboardEvents(idGen));
 
   const clock = new FixedClock(options.now ?? STORYBOARD_QUERY_AT);
-  const deps: OwedDeps = { store, clock, householdId: HOUSEHOLD_ID, currency: CURRENCY };
+  const deps: OwedDeps = {
+    store,
+    clock,
+    householdId: HOUSEHOLD_ID,
+    currency: CURRENCY,
+    idGen,
+    merchants: inProcessMerchants(),
+  };
 
   // The port is only known after listen, so bind first and build the config against it.
   const placeholder = new URL("http://127.0.0.1:0");

@@ -1,7 +1,8 @@
-import { FixedClock, MemoryEventStore } from "@owed/core";
+import { FixedClock, MemoryEventStore, SeededIdGen } from "@owed/core";
 import { createOwedApp } from "./app.js";
 import { defaultAuthConfig } from "./auth/config.js";
 import type { OwedDeps } from "./deps.js";
+import { inProcessMerchants } from "./merchants/inProcess.js";
 import {
   CURRENCY,
   HOUSEHOLD_ID,
@@ -23,11 +24,21 @@ const AUTH_SECRET = process.env.OWED_AUTH_SECRET ?? "owed-development-secret-not
  * scrubber moves it, and every tool answers truthfully for wherever it has been moved.
  * Token lifetimes deliberately do not use this clock.
  */
+// One id generator for the seeded week and everything filed live after it, so ids
+// continue rather than collide.
+const idGen = new SeededIdGen();
 const store = new MemoryEventStore();
-await store.append(await storyboardEvents());
+await store.append(await storyboardEvents(idGen));
 
 const clock = new FixedClock(process.env.OWED_NOW ?? STORYBOARD_QUERY_AT);
-const deps: OwedDeps = { store, clock, householdId: HOUSEHOLD_ID, currency: CURRENCY };
+const deps: OwedDeps = {
+  store,
+  clock,
+  householdId: HOUSEHOLD_ID,
+  currency: CURRENCY,
+  idGen,
+  merchants: inProcessMerchants(),
+};
 
 createOwedApp({
   deps,
