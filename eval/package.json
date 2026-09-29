@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc -b",
     "recourse": "node dist/bin/recourse.js",
-    "learning": "node dist/bin/learning.js"
+    "learning": "node dist/bin/learning.js",
+    "breach": "node dist/bin/breach.js"
   },
   "dependencies": {
     "@owed/core": "workspace:*",

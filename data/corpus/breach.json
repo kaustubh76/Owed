@@ -1,0 +1,2659 @@
+{
+  "parameters": {
+    "cases_per_kind": 10,
+    "kinds": [
+      "late_eta",
+      "missed_window",
+      "phantom_delivery",
+      "no_show",
+      "late_refund",
+      "price_drop"
+    ],
+    "observable_coverage_min": 0.7
+  },
+  "size": 60,
+  "cases": [
+    {
+      "id": "eta_01",
+      "target": "late_eta",
+      "label": "broken",
+      "observable": true,
+      "note": "arrived 1 minutes late",
+      "promise": {
+        "id": "eta_01",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_01",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_001",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_01",
+          "captured_at": "2026-11-02T17:01:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T18:01:00.000Z"
+    },
+    {
+      "id": "eta_02",
+      "target": "late_eta",
+      "label": "broken",
+      "observable": true,
+      "note": "arrived 20 minutes late",
+      "promise": {
+        "id": "eta_02",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_02",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_002",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_02",
+          "captured_at": "2026-11-02T17:20:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T18:20:00.000Z"
+    },
+    {
+      "id": "eta_03",
+      "target": "late_eta",
+      "label": "broken",
+      "observable": true,
+      "note": "arrived 90 minutes late",
+      "promise": {
+        "id": "eta_03",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_03",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_003",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_03",
+          "captured_at": "2026-11-02T18:30:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T19:30:00.000Z"
+    },
+    {
+      "id": "eta_04",
+      "target": "late_eta",
+      "label": "broken",
+      "observable": true,
+      "note": "arrived 240 minutes late",
+      "promise": {
+        "id": "eta_04",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_04",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_004",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_04",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T22:00:00.000Z"
+    },
+    {
+      "id": "eta_05",
+      "target": "late_eta",
+      "label": "broken",
+      "observable": true,
+      "note": "arrived 480 minutes late, reported by the carrier",
+      "promise": {
+        "id": "eta_05",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_05",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_005",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "eta_05",
+          "captured_at": "2026-11-03T01:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-03T02:00:00.000Z"
+    },
+    {
+      "id": "eta_06",
+      "target": "late_eta",
+      "label": "kept",
+      "observable": true,
+      "note": "arrived 60 minutes early",
+      "promise": {
+        "id": "eta_06",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_06",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_006",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_06",
+          "captured_at": "2026-11-02T16:00:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T17:00:00.000Z"
+    },
+    {
+      "id": "eta_07",
+      "target": "late_eta",
+      "label": "kept",
+      "observable": true,
+      "note": "arrived 30 minutes early",
+      "promise": {
+        "id": "eta_07",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_07",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_007",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_07",
+          "captured_at": "2026-11-02T16:30:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T17:30:00.000Z"
+    },
+    {
+      "id": "eta_08",
+      "target": "late_eta",
+      "label": "kept",
+      "observable": true,
+      "note": "arrived 10 minutes early",
+      "promise": {
+        "id": "eta_08",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_08",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_008",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_08",
+          "captured_at": "2026-11-02T16:50:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T17:50:00.000Z"
+    },
+    {
+      "id": "eta_09",
+      "target": "late_eta",
+      "label": "kept",
+      "observable": true,
+      "note": "arrived 2 minutes early",
+      "promise": {
+        "id": "eta_09",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_09",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_009",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_09",
+          "captured_at": "2026-11-02T16:58:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T17:58:00.000Z"
+    },
+    {
+      "id": "eta_10",
+      "target": "late_eta",
+      "label": "kept",
+      "observable": true,
+      "note": "arrived exactly on the promised time",
+      "promise": {
+        "id": "eta_10",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_eta_10",
+        "kind": "eta",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-02T17:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 2000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_time_010",
+          "household_id": "hh_corpus",
+          "source_id": "src_rides",
+          "promise_id": "eta_10",
+          "captured_at": "2026-11-02T17:00:00.000Z",
+          "kind": "timestamp",
+          "label": "arrived"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-02T18:00:00.000Z"
+    },
+    {
+      "id": "window_01",
+      "target": "missed_window",
+      "label": "broken",
+      "observable": true,
+      "note": "carrier scanned it 1 minutes after the window closed",
+      "promise": {
+        "id": "window_01",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_01",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_011",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "window_01",
+          "captured_at": "2026-11-02T23:01:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_012",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "window_01",
+          "captured_at": "2026-11-02T23:01:00.000Z",
+          "kind": "doorbell_event",
+          "event": "package_placed"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T18:00:00.000Z",
+            "end": "2026-11-03T01:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T02:00:00.000Z"
+    },
+    {
+      "id": "window_02",
+      "target": "missed_window",
+      "label": "broken",
+      "observable": true,
+      "note": "carrier scanned it 45 minutes after the window closed",
+      "promise": {
+        "id": "window_02",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_02",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_013",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "window_02",
+          "captured_at": "2026-11-02T23:45:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_014",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "window_02",
+          "captured_at": "2026-11-02T23:45:00.000Z",
+          "kind": "doorbell_event",
+          "event": "package_placed"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T18:00:00.000Z",
+            "end": "2026-11-03T01:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T02:00:00.000Z"
+    },
+    {
+      "id": "window_03",
+      "target": "missed_window",
+      "label": "broken",
+      "observable": true,
+      "note": "carrier scanned it 300 minutes after the window closed",
+      "promise": {
+        "id": "window_03",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_03",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_015",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "window_03",
+          "captured_at": "2026-11-03T04:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_016",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "window_03",
+          "captured_at": "2026-11-03T04:00:00.000Z",
+          "kind": "doorbell_event",
+          "event": "package_placed"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T18:00:00.000Z",
+            "end": "2026-11-03T05:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T06:00:00.000Z"
+    },
+    {
+      "id": "window_04",
+      "target": "missed_window",
+      "label": "broken",
+      "observable": true,
+      "note": "nothing arrived; the door was watched for 240 of 240 minutes",
+      "promise": {
+        "id": "window_04",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_04",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:00:00.000Z",
+            "end": "2026-11-02T23:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "window_05",
+      "target": "missed_window",
+      "label": "broken",
+      "observable": true,
+      "note": "nothing arrived; the door was watched for 168 of 240 minutes",
+      "promise": {
+        "id": "window_05",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_05",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:00:00.000Z",
+            "end": "2026-11-02T21:48:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "window_06",
+      "target": "missed_window",
+      "label": "kept",
+      "observable": true,
+      "note": "carrier scanned it 200 minutes before the window closed",
+      "promise": {
+        "id": "window_06",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_06",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_017",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "window_06",
+          "captured_at": "2026-11-02T19:40:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_018",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "window_06",
+          "captured_at": "2026-11-02T19:40:00.000Z",
+          "kind": "doorbell_event",
+          "event": "package_placed"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T18:00:00.000Z",
+            "end": "2026-11-03T01:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T02:00:00.000Z"
+    },
+    {
+      "id": "window_07",
+      "target": "missed_window",
+      "label": "kept",
+      "observable": true,
+      "note": "carrier scanned it 1 minutes before the window closed",
+      "promise": {
+        "id": "window_07",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_07",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_019",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "window_07",
+          "captured_at": "2026-11-02T22:59:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_020",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "window_07",
+          "captured_at": "2026-11-02T22:59:00.000Z",
+          "kind": "doorbell_event",
+          "event": "package_placed"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T18:00:00.000Z",
+            "end": "2026-11-03T01:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T02:00:00.000Z"
+    },
+    {
+      "id": "window_08",
+      "target": "missed_window",
+      "label": "kept",
+      "observable": true,
+      "note": "carrier scanned it at the exact instant the window closed",
+      "promise": {
+        "id": "window_08",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_08",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_021",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "window_08",
+          "captured_at": "2026-11-02T23:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_022",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "window_08",
+          "captured_at": "2026-11-02T23:00:00.000Z",
+          "kind": "doorbell_event",
+          "event": "package_placed"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T18:00:00.000Z",
+            "end": "2026-11-03T01:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T02:00:00.000Z"
+    },
+    {
+      "id": "window_09",
+      "target": "missed_window",
+      "label": "broken",
+      "observable": false,
+      "note": "nothing arrived; the door was watched for 167 of 240 minutes",
+      "promise": {
+        "id": "window_09",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_09",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:00:00.000Z",
+            "end": "2026-11-02T21:47:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "window_10",
+      "target": "missed_window",
+      "label": "broken",
+      "observable": false,
+      "note": "nothing arrived; the door was watched for 36 of 240 minutes",
+      "promise": {
+        "id": "window_10",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_window_10",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:00:00.000Z",
+            "end": "2026-11-02T19:36:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_01",
+      "target": "phantom_delivery",
+      "label": "broken",
+      "observable": true,
+      "note": "scanned delivered; 60 of the 60 minutes around the scan were watched and nobody came",
+      "promise": {
+        "id": "phantom_01",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_01",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_023",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_01",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T21:30:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_02",
+      "target": "phantom_delivery",
+      "label": "broken",
+      "observable": true,
+      "note": "scanned delivered; 54 of the 60 minutes around the scan were watched and nobody came",
+      "promise": {
+        "id": "phantom_02",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_02",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_024",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_02",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T21:24:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_03",
+      "target": "phantom_delivery",
+      "label": "broken",
+      "observable": true,
+      "note": "scanned delivered; 44 of the 60 minutes around the scan were watched and nobody came",
+      "promise": {
+        "id": "phantom_03",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_03",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_025",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_03",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T21:14:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_04",
+      "target": "phantom_delivery",
+      "label": "broken",
+      "observable": true,
+      "note": "scanned delivered; 42 of the 60 minutes around the scan were watched and nobody came",
+      "promise": {
+        "id": "phantom_04",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_04",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_026",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_04",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T21:12:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_05",
+      "target": "phantom_delivery",
+      "label": "kept",
+      "observable": true,
+      "note": "scanned delivered and the door saw the parcel go down",
+      "promise": {
+        "id": "phantom_05",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_05",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_027",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_05",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_028",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "phantom_05",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "doorbell_event",
+          "event": "package_placed"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T22:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_06",
+      "target": "phantom_delivery",
+      "label": "kept",
+      "observable": true,
+      "note": "somebody was at the door 29 minutes after the scan",
+      "promise": {
+        "id": "phantom_06",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_06",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_029",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_06",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_030",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "phantom_06",
+          "captured_at": "2026-11-02T21:29:00.000Z",
+          "kind": "doorbell_event",
+          "event": "person_detected"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T22:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_07",
+      "target": "phantom_delivery",
+      "label": "kept",
+      "observable": true,
+      "note": "the parcel went down 31 minutes after the scan, just outside the tolerance",
+      "promise": {
+        "id": "phantom_07",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_07",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_031",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_07",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        },
+        {
+          "id": "evd_door_032",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "phantom_07",
+          "captured_at": "2026-11-02T21:31:00.000Z",
+          "kind": "doorbell_event",
+          "event": "package_placed"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T22:00:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_08",
+      "target": "phantom_delivery",
+      "label": "broken",
+      "observable": false,
+      "note": "scanned delivered; 41 of the 60 minutes around the scan were watched and nobody came",
+      "promise": {
+        "id": "phantom_08",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_08",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_033",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_08",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T21:11:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_09",
+      "target": "phantom_delivery",
+      "label": "broken",
+      "observable": false,
+      "note": "scanned delivered; 20 of the 60 minutes around the scan were watched and nobody came",
+      "promise": {
+        "id": "phantom_09",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_09",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_034",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_09",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T20:50:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "phantom_10",
+      "target": "phantom_delivery",
+      "label": "broken",
+      "observable": false,
+      "note": "scanned delivered; 6 of the 60 minutes around the scan were watched and nobody came",
+      "promise": {
+        "id": "phantom_10",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_phantom_10",
+        "kind": "delivery_window",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T19:00:00.000Z",
+          "end": "2026-11-02T23:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 3000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_scan_035",
+          "household_id": "hh_corpus",
+          "source_id": "src_carrier",
+          "promise_id": "phantom_10",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "carrier_scan",
+          "status": "delivered",
+          "carrier": "Corpus Merchant"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:30:00.000Z",
+            "end": "2026-11-02T20:36:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T01:00:00.000Z"
+    },
+    {
+      "id": "noshow_01",
+      "target": "no_show",
+      "label": "broken",
+      "observable": true,
+      "note": "nobody came; the door was watched for 180 of the 180 minutes judged",
+      "promise": {
+        "id": "noshow_01",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_01",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T20:00:00.000Z"
+          }
+        },
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:00:00.000Z",
+            "end": "2026-11-02T22:00:00.000Z"
+          }
+        },
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T22:00:00.000Z",
+            "end": "2026-11-02T22:30:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_02",
+      "target": "no_show",
+      "label": "broken",
+      "observable": true,
+      "note": "nobody came; the door was watched for 135 of the 180 minutes judged",
+      "promise": {
+        "id": "noshow_02",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_02",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T20:00:00.000Z"
+          }
+        },
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:00:00.000Z",
+            "end": "2026-11-02T21:45:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_03",
+      "target": "no_show",
+      "label": "broken",
+      "observable": true,
+      "note": "nobody came; the door was watched for 126 of the 180 minutes judged",
+      "promise": {
+        "id": "noshow_03",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_03",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T20:00:00.000Z"
+          }
+        },
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:00:00.000Z",
+            "end": "2026-11-02T21:06:00.000Z"
+          }
+        },
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T22:00:00.000Z",
+            "end": "2026-11-02T22:30:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_04",
+      "target": "no_show",
+      "label": "kept",
+      "observable": true,
+      "note": "arrived a minute into the slot",
+      "promise": {
+        "id": "noshow_04",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_04",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_door_036",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "noshow_04",
+          "captured_at": "2026-11-02T20:01:00.000Z",
+          "kind": "doorbell_event",
+          "event": "person_detected"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T22:30:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_05",
+      "target": "no_show",
+      "label": "kept",
+      "observable": true,
+      "note": "arrived in the middle of the slot",
+      "promise": {
+        "id": "noshow_05",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_05",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_door_037",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "noshow_05",
+          "captured_at": "2026-11-02T21:00:00.000Z",
+          "kind": "doorbell_event",
+          "event": "person_detected"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T22:30:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_06",
+      "target": "no_show",
+      "label": "kept",
+      "observable": true,
+      "note": "arrived with a minute of the slot left",
+      "promise": {
+        "id": "noshow_06",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_06",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_door_038",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "noshow_06",
+          "captured_at": "2026-11-02T21:59:00.000Z",
+          "kind": "doorbell_event",
+          "event": "person_detected"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T22:30:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_07",
+      "target": "no_show",
+      "label": "kept",
+      "observable": true,
+      "note": "turned up 29 minutes before the slot opened",
+      "promise": {
+        "id": "noshow_07",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_07",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_door_039",
+          "household_id": "hh_corpus",
+          "source_id": "src_doorbell",
+          "promise_id": "noshow_07",
+          "captured_at": "2026-11-02T19:31:00.000Z",
+          "kind": "doorbell_event",
+          "event": "person_detected"
+        }
+      ],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T22:30:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_08",
+      "target": "no_show",
+      "label": "broken",
+      "observable": false,
+      "note": "nobody came; the door was watched for 125 of the 180 minutes judged",
+      "promise": {
+        "id": "noshow_08",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_08",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T20:00:00.000Z"
+          }
+        },
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:00:00.000Z",
+            "end": "2026-11-02T21:05:00.000Z"
+          }
+        },
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T22:00:00.000Z",
+            "end": "2026-11-02T22:30:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_09",
+      "target": "no_show",
+      "label": "broken",
+      "observable": false,
+      "note": "nobody came; the door was watched for 54 of the 180 minutes judged",
+      "promise": {
+        "id": "noshow_09",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_09",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T19:30:00.000Z",
+            "end": "2026-11-02T20:00:00.000Z"
+          }
+        },
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:00:00.000Z",
+            "end": "2026-11-02T20:24:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "noshow_10",
+      "target": "no_show",
+      "label": "broken",
+      "observable": false,
+      "note": "nobody came; the door was watched for 18 of the 180 minutes judged",
+      "promise": {
+        "id": "noshow_10",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_noshow_10",
+        "kind": "appointment_slot",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T20:00:00.000Z",
+          "end": "2026-11-02T22:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 2500,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [
+        {
+          "source_id": "src_doorbell",
+          "household_id": "hh_corpus",
+          "interval": {
+            "start": "2026-11-02T20:00:00.000Z",
+            "end": "2026-11-02T20:18:00.000Z"
+          }
+        }
+      ],
+      "now": "2026-11-03T00:00:00.000Z"
+    },
+    {
+      "id": "refund_01",
+      "target": "late_refund",
+      "label": "broken",
+      "observable": true,
+      "note": "refund landed 1 day late",
+      "promise": {
+        "id": "refund_01",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_01",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_refund_040",
+          "household_id": "hh_corpus",
+          "source_id": "src_bank",
+          "promise_id": "refund_01",
+          "captured_at": "2026-11-10T15:00:00.000Z",
+          "kind": "refund_observed",
+          "amount": {
+            "minor": 4000,
+            "currency": "USD"
+          }
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-11T15:00:00.000Z"
+    },
+    {
+      "id": "refund_02",
+      "target": "late_refund",
+      "label": "broken",
+      "observable": true,
+      "note": "refund landed 3 days late",
+      "promise": {
+        "id": "refund_02",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_02",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_refund_041",
+          "household_id": "hh_corpus",
+          "source_id": "src_bank",
+          "promise_id": "refund_02",
+          "captured_at": "2026-11-12T15:00:00.000Z",
+          "kind": "refund_observed",
+          "amount": {
+            "minor": 4000,
+            "currency": "USD"
+          }
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-13T15:00:00.000Z"
+    },
+    {
+      "id": "refund_03",
+      "target": "late_refund",
+      "label": "broken",
+      "observable": true,
+      "note": "refund landed 7 days late",
+      "promise": {
+        "id": "refund_03",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_03",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_refund_042",
+          "household_id": "hh_corpus",
+          "source_id": "src_bank",
+          "promise_id": "refund_03",
+          "captured_at": "2026-11-16T15:00:00.000Z",
+          "kind": "refund_observed",
+          "amount": {
+            "minor": 4000,
+            "currency": "USD"
+          }
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "refund_04",
+      "target": "late_refund",
+      "label": "broken",
+      "observable": true,
+      "note": "no refund 2 days past the deadline",
+      "promise": {
+        "id": "refund_04",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_04",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [],
+      "now": "2026-11-11T15:00:00.000Z"
+    },
+    {
+      "id": "refund_05",
+      "target": "late_refund",
+      "label": "broken",
+      "observable": true,
+      "note": "no refund 10 days past the deadline",
+      "promise": {
+        "id": "refund_05",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_05",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [],
+      "now": "2026-11-19T15:00:00.000Z"
+    },
+    {
+      "id": "refund_06",
+      "target": "late_refund",
+      "label": "broken",
+      "observable": true,
+      "note": "only half the money came back, and it came back on time",
+      "promise": {
+        "id": "refund_06",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_06",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_refund_043",
+          "household_id": "hh_corpus",
+          "source_id": "src_bank",
+          "promise_id": "refund_06",
+          "captured_at": "2026-11-08T15:00:00.000Z",
+          "kind": "refund_observed",
+          "amount": {
+            "minor": 2000,
+            "currency": "USD"
+          }
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-10T15:00:00.000Z"
+    },
+    {
+      "id": "refund_07",
+      "target": "late_refund",
+      "label": "kept",
+      "observable": true,
+      "note": "refund landed 5 days early",
+      "promise": {
+        "id": "refund_07",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_07",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_refund_044",
+          "household_id": "hh_corpus",
+          "source_id": "src_bank",
+          "promise_id": "refund_07",
+          "captured_at": "2026-11-04T15:00:00.000Z",
+          "kind": "refund_observed",
+          "amount": {
+            "minor": 4000,
+            "currency": "USD"
+          }
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-10T15:00:00.000Z"
+    },
+    {
+      "id": "refund_08",
+      "target": "late_refund",
+      "label": "kept",
+      "observable": true,
+      "note": "refund landed 1 day early",
+      "promise": {
+        "id": "refund_08",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_08",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_refund_045",
+          "household_id": "hh_corpus",
+          "source_id": "src_bank",
+          "promise_id": "refund_08",
+          "captured_at": "2026-11-08T15:00:00.000Z",
+          "kind": "refund_observed",
+          "amount": {
+            "minor": 4000,
+            "currency": "USD"
+          }
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-10T15:00:00.000Z"
+    },
+    {
+      "id": "refund_09",
+      "target": "late_refund",
+      "label": "kept",
+      "observable": true,
+      "note": "refund landed exactly on the promised day",
+      "promise": {
+        "id": "refund_09",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_09",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_refund_046",
+          "household_id": "hh_corpus",
+          "source_id": "src_bank",
+          "promise_id": "refund_09",
+          "captured_at": "2026-11-09T15:00:00.000Z",
+          "kind": "refund_observed",
+          "amount": {
+            "minor": 4000,
+            "currency": "USD"
+          }
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-10T15:00:00.000Z"
+    },
+    {
+      "id": "refund_10",
+      "target": "late_refund",
+      "label": "kept",
+      "observable": true,
+      "note": "still inside the refund window when it was assessed",
+      "promise": {
+        "id": "refund_10",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_refund_10",
+        "kind": "refund_sla",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "deadline": "2026-11-09T15:00:00.000Z",
+        "amount_at_stake": {
+          "minor": 4000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [],
+      "now": "2026-11-07T15:00:00.000Z"
+    },
+    {
+      "id": "price_01",
+      "target": "price_drop",
+      "label": "broken",
+      "observable": true,
+      "note": "price fell by one cent inside the window",
+      "promise": {
+        "id": "price_01",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_01",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_047",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_01",
+          "captured_at": "2026-11-05T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 19999,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "price_02",
+      "target": "price_drop",
+      "label": "broken",
+      "observable": true,
+      "note": "price fell by five dollars",
+      "promise": {
+        "id": "price_02",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_02",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_048",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_02",
+          "captured_at": "2026-11-05T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 19500,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "price_03",
+      "target": "price_drop",
+      "label": "broken",
+      "observable": true,
+      "note": "price fell by fifty dollars",
+      "promise": {
+        "id": "price_03",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_03",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_049",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_03",
+          "captured_at": "2026-11-11T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 15000,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "price_04",
+      "target": "price_drop",
+      "label": "broken",
+      "observable": true,
+      "note": "price fell by a hundred and twenty dollars",
+      "promise": {
+        "id": "price_04",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_04",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_050",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_04",
+          "captured_at": "2026-11-14T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 8000,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "price_05",
+      "target": "price_drop",
+      "label": "broken",
+      "observable": true,
+      "note": "price dipped then partly recovered; the dip is what counts",
+      "promise": {
+        "id": "price_05",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_05",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_051",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_05",
+          "captured_at": "2026-11-06T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 12000,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        },
+        {
+          "id": "evd_price_052",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_05",
+          "captured_at": "2026-11-08T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 17000,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "price_06",
+      "target": "price_drop",
+      "label": "broken",
+      "observable": true,
+      "note": "price fell at the exact instant the window closed",
+      "promise": {
+        "id": "price_06",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_06",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_053",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_06",
+          "captured_at": "2026-11-16T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 15000,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "price_07",
+      "target": "price_drop",
+      "label": "kept",
+      "observable": true,
+      "note": "price only ever went up",
+      "promise": {
+        "id": "price_07",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_07",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_054",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_07",
+          "captured_at": "2026-11-07T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 21500,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "price_08",
+      "target": "price_drop",
+      "label": "kept",
+      "observable": true,
+      "note": "price matched exactly; a match is not a drop",
+      "promise": {
+        "id": "price_08",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_08",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_055",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_08",
+          "captured_at": "2026-11-06T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 20000,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    },
+    {
+      "id": "price_09",
+      "target": "price_drop",
+      "label": "kept",
+      "observable": true,
+      "note": "price fell two days after the window closed",
+      "promise": {
+        "id": "price_09",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_09",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [
+        {
+          "id": "evd_price_056",
+          "household_id": "hh_corpus",
+          "source_id": "src_inbox",
+          "promise_id": "price_09",
+          "captured_at": "2026-11-18T15:00:00.000Z",
+          "kind": "price_observed",
+          "amount": {
+            "minor": 15000,
+            "currency": "USD"
+          },
+          "source": "Corpus Merchant"
+        }
+      ],
+      "uptime": [],
+      "now": "2026-11-20T15:00:00.000Z"
+    },
+    {
+      "id": "price_10",
+      "target": "price_drop",
+      "label": "kept",
+      "observable": true,
+      "note": "nobody ever saw another price",
+      "promise": {
+        "id": "price_10",
+        "household_id": "hh_corpus",
+        "merchant": "Corpus Merchant",
+        "source_ref": "msg_price_10",
+        "kind": "price_match",
+        "made_at": "2026-11-02T15:00:00.000Z",
+        "currency": "USD",
+        "confidence": 0.97,
+        "status": "Watching",
+        "window": {
+          "start": "2026-11-02T15:00:00.000Z",
+          "end": "2026-11-16T15:00:00.000Z"
+        },
+        "amount_at_stake": {
+          "minor": 20000,
+          "currency": "USD"
+        }
+      },
+      "evidence": [],
+      "uptime": [],
+      "now": "2026-11-17T15:00:00.000Z"
+    }
+  ]
+}

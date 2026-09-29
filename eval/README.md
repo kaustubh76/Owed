@@ -4,11 +4,85 @@ Run it:
 
 ```bash
 pnpm build
-pnpm --filter @owed/eval recourse    # single-shot: does negotiating beat taking the first offer?
-pnpm --filter @owed/eval learning    # repeat games: does knowing who you are arguing with help?
+pnpm --filter @owed/eval breach      # H2: does the breach engine get it right, and hold back when it cannot?
+pnpm --filter @owed/eval recourse    # H3 single-shot: does negotiating beat taking the first offer?
+pnpm --filter @owed/eval learning    # H3 repeat games: does knowing who you are arguing with help?
 ```
 
-Results are written to `eval/results/recourse.json`, one row per session.
+Results are written to `eval/results/`, one file per evaluation.
+
+---
+
+## Breach detection — H2
+
+### What is measured
+
+Sixty scripted evidence timelines, ten per breach kind, in
+[`eval/src/breach/corpus.ts`](src/breach/corpus.ts) and committed to
+[`data/corpus/breach.json`](../data/corpus/breach.json).
+
+Each timeline carries a label — `broken` or `kept` — set by **how it was built**, never by
+what a detector said about it. A parcel scanned eighty minutes after the window closed is
+broken whether or not anything in this repository agrees. Each also carries a one-line
+note a human can check the label against without running anything.
+
+- **Precision and recall** are measured over cases the corpus marks `observable`, meaning
+  the window was watched to at least 0.7. That is what H2 claims.
+- **False-positive rate on kept scenarios** is measured over every `kept` case.
+- **Held back** is reported separately: of the cases where something really was broken but
+  the camera was starved, how often Owed refused to claim. Rolling those into recall would
+  quietly punish the engine for the one behaviour the product most needs it to have.
+
+### Why the corpus is pre-registered
+
+Same protection as the merchant grid. `corpus.test.ts` pins the committed file to the
+generator, so dropping the cases that fail, softening a label or reordering the set after
+seeing a number all turn the suite red. The corpus was committed **before** the engine was
+touched in response to it, and the git history shows that order.
+
+The corpus also checks itself: it states how much of each window should be watchable, and
+the test asserts the engine measures the same thing. That caught a real construction bug
+— an appointment-slot case believed starved was sitting at 0.79 coverage, because
+`missed_window` also applies to a slot and judges the two-hour slot while `no_show` judges
+the slot plus thirty minutes of tolerance either side. Watching placed inside the slot
+counts for more against the narrower window.
+
+### Results — first run, before any engine change
+
+| kind | precision | recall | kept FPR | held back |
+|---|---|---|---|---|
+| late_eta | 100.0% | 100.0% | 0.0% | — |
+| missed_window | 83.3% | 100.0% | 33.3% | 2/2 |
+| phantom_delivery | 80.0% | 100.0% | 33.3% | 3/3 |
+| no_show | 75.0% | 100.0% | 25.0% | 3/3 |
+| late_refund | 100.0% | 83.3% | 0.0% | — |
+| price_drop | 100.0% | 83.3% | 0.0% | — |
+| **overall** | **90.0%** | **93.1%** | **13.0%** | **100%** |
+
+**H2 is not met.** It asks for ≥ 0.9 precision *per breach kind* and a false-positive rate
+under 5% on kept scenarios. Three kinds are below the precision bar and the false-positive
+rate is 13.0%, nearly three times the limit.
+
+Restraint is the one number that came out clean: **every** case where something was broken
+and the camera was starved was held back rather than claimed.
+
+### What the five failures actually are
+
+Every one is a boundary, and they fall into three groups.
+
+1. **A promise window is half-open.** `containsInstant` is `[start, end)`, which is right
+   for coverage arithmetic and wrong for "did it arrive in time". A parcel scanned at the
+   exact instant a 1–5 PM window closed reads as late, and a price that fell at the closing
+   instant of a price-match window reads as no drop at all. Two cases, opposite directions.
+2. **A partial refund counts as a refund.** Half the money, on time, reads as kept. The
+   detector asks whether *something* arrived and never compares it to what was owed.
+3. **Evidence one minute outside the tolerance is discarded entirely.** A parcel placed 31
+   minutes after the scan, and somebody turning up 29 minutes before an appointment slot
+   opened. The detector looks in a ±30 minute window and anything outside it does not exist.
+
+The first two are plainly wrong and were fixed. The third is a declared parameter rather
+than a defect, and moving it to make a number go up would be marking our own homework —
+it stays, and it stays reported. See the next section.
 
 ---
 
