@@ -37,6 +37,20 @@ export const DetectionSchema = z.object({
   confidence: ConfidenceSchema,
   coverage: CoverageSchema,
   evaluation_interval: IntervalSchema,
+  /**
+   * The stretches of `evaluation_interval` this verdict was actually able to see —
+   * clipped to it, merged, and sorted.
+   *
+   * Carried rather than reconstructed, because not every detector watches anything.
+   * Lateness is read off a clock and a clock has no gaps, so those detections observe
+   * the whole interval; a phantom delivery is judged on what a camera saw, so those
+   * observe only what it was up for. A card that reconstructed this from the
+   * household's camera timeline drew a broken-window verdict, correctly measured
+   * against a carrier scan, underneath four hours of camera gaps that had nothing to
+   * do with it — reporting full coverage and most of the window unwatched in the same
+   * breath. `coverage` is derived from this, so the two can no longer disagree.
+   */
+  observed: z.array(IntervalSchema),
   evidence_ids: z.array(EvidenceIdSchema),
   explanation: z.string().min(1),
 });

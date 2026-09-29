@@ -29,8 +29,19 @@ export function evidenceViewFor(
   const view = requirePromise(context, promiseId);
   const assessment = view.assessment;
 
-  const uptime = context.state.uptime.map((window) => window.interval);
-  const gaps = assessment === undefined ? [] : coverageGaps(uptime, assessment.evaluation_interval);
+  /**
+   * The gaps this verdict was reached in spite of — and no others.
+   *
+   * Read from the detection's own `observed`, never from the household's camera
+   * timeline. Those are not the same thing: a missed window settled by a carrier scan
+   * has full coverage whatever the camera was doing, and drawing the camera's gaps
+   * underneath it put "watched 100% of the window" directly above four hours of
+   * "not watched" on the same card.
+   */
+  const gaps =
+    assessment === undefined
+      ? []
+      : coverageGaps(assessment.observed, assessment.evaluation_interval);
 
   const items = view.evidence
     .filter((item) => onlyEvidenceId === undefined || item.id === onlyEvidenceId)

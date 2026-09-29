@@ -1,18 +1,41 @@
-import type { Evidence, Instant, ObservationWindow, OwedPromise, PromiseKind } from "@owed/domain";
+import type {
+  Evidence,
+  Instant,
+  Interval,
+  ObservationWindow,
+  OwedPromise,
+  PromiseKind,
+} from "@owed/domain";
 import {
   BREACH_CONFIDENCE_MIN,
   BREACH_COVERAGE_MIN,
   coveragePercent,
+  durationMs,
+  fromEpochMs,
   interval,
+  toEpochMs,
   usd,
 } from "@owed/domain";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+import { coverageGaps, measuredMs } from "../evidence/coverage.js";
 import { assessPromise } from "./engine.js";
 import { conclude } from "./types.js";
 
 const HH = "hh_test";
 const at = (hhmm: string): Instant => `2026-10-06T${hhmm}:00-07:00`;
+
+/**
+ * A stretch of the 13:00-14:00 hour covering exactly `fraction` of it.
+ *
+ * The properties below used to hand `conclude` a coverage number directly. Coverage is
+ * now read off what a detector says it saw, so they hand it the watching instead — one
+ * fewer thing a detector can assert without it being true.
+ */
+const watched = (fraction: number): Interval[] =>
+  fraction <= 0
+    ? []
+    : [interval(at("13:00"), fromEpochMs(toEpochMs(at("13:00")) + fraction * 60 * 60 * 1000))];
 
 function promise(kind: PromiseKind, extra: Partial<OwedPromise> = {}): OwedPromise {
   return {
@@ -349,7 +372,7 @@ describe("the gate", () => {
             promise: promise("delivery_window"),
             kind: "phantom_delivery",
             evaluation: interval(at("13:00"), at("14:00")),
-            coverage,
+            observed: watched(coverage),
             confidence,
             evidence_ids: [],
             explanation: "property test",
@@ -372,7 +395,7 @@ describe("the gate", () => {
           promise: promise("delivery_window"),
           kind: "phantom_delivery",
           evaluation: interval(at("13:00"), at("14:00")),
-          coverage,
+          observed: watched(coverage),
           confidence: 1,
           evidence_ids: [],
           explanation: "property test",
@@ -383,6 +406,76 @@ describe("the gate", () => {
         return detection.verdict === "Undetermined";
       }),
       { numRuns: 200 },
+    );
+  });
+});
+
+/**
+ * The invariant the evidence card rests on.
+ *
+ * A card that reported full coverage above four hours of "not watched" shipped because
+ * the number and the gaps came from different places: coverage from the detector, the
+ * gaps reconstructed from the household's camera timeline. They are now read from the
+ * one field, and these properties say what that buys.
+ */
+describe("what a detection says it saw", () => {
+  const evaluation = interval(at("13:00"), at("15:00"));
+  const minutes = (n: number) => fromEpochMs(toEpochMs(at("13:00")) + n * 60_000);
+
+  /** Spans anywhere from an hour before the interval to an hour after it. */
+  const spans = fc.array(
+    fc
+      .tuple(fc.integer({ min: -60, max: 180 }), fc.integer({ min: -60, max: 180 }))
+      .map(([a, b]): Interval => interval(minutes(Math.min(a, b)), minutes(Math.max(a, b) + 1))),
+    { maxLength: 6 },
+  );
+
+  const detectionFrom = (observed: readonly Interval[]) =>
+    conclude({
+      promise: promise("delivery_window"),
+      kind: "phantom_delivery",
+      evaluation,
+      observed,
+      confidence: 0.9,
+      evidence_ids: [],
+      explanation: "property test",
+      outcome: "broken",
+      decidable: true,
+    });
+
+  it("tiles the evaluated window exactly, with the gaps the card draws", () => {
+    fc.assert(
+      fc.property(spans, (observed) => {
+        const detection = detectionFrom(observed);
+        const gaps = coverageGaps(detection.observed, detection.evaluation_interval);
+        expect(measuredMs(detection.observed) + measuredMs(gaps)).toBe(durationMs(evaluation));
+      }),
+      { numRuns: 400 },
+    );
+  });
+
+  it("reports a coverage the same stretches add up to", () => {
+    fc.assert(
+      fc.property(spans, (observed) => {
+        const detection = detectionFrom(observed);
+        expect(measuredMs(detection.observed) / durationMs(evaluation)).toBeCloseTo(
+          detection.coverage,
+          10,
+        );
+      }),
+      { numRuns: 400 },
+    );
+  });
+
+  it("never claims to have seen anything outside the window it judged", () => {
+    fc.assert(
+      fc.property(spans, (observed) => {
+        for (const seen of detectionFrom(observed).observed) {
+          expect(toEpochMs(seen.start)).toBeGreaterThanOrEqual(toEpochMs(evaluation.start));
+          expect(toEpochMs(seen.end)).toBeLessThanOrEqual(toEpochMs(evaluation.end));
+        }
+      }),
+      { numRuns: 400 },
     );
   });
 });

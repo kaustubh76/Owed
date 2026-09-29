@@ -83,11 +83,12 @@ export const lateEta: Detector = {
     const end = arrival?.captured_at ?? (decidable ? now : deadline);
 
     if (arrival === undefined) {
+      const evaluation = interval(promise.made_at, end);
       return conclude({
         promise,
         kind: "late_eta",
-        evaluation: interval(promise.made_at, end),
-        coverage: 1,
+        evaluation,
+        observed: [evaluation],
         confidence: 0.9,
         evidence_ids: [],
         explanation: decidable
@@ -100,11 +101,12 @@ export const lateEta: Detector = {
 
     const lateByMs = toEpochMs(arrival.captured_at) - toEpochMs(deadline);
     const late = lateByMs > 0;
+    const evaluation = interval(promise.made_at, arrival.captured_at);
     return conclude({
       promise,
       kind: "late_eta",
-      evaluation: interval(promise.made_at, arrival.captured_at),
-      coverage: 1,
+      evaluation,
+      observed: [evaluation],
       confidence: 0.99,
       evidence_ids: [arrival.id],
       explanation: late
@@ -137,7 +139,10 @@ export const missedWindow: Detector = {
     const fulfilment = scan ?? sighting;
 
     // A carrier log settles the question outright; a camera only sees what it saw.
-    const coverage = scan !== undefined ? 1 : measureCoverage(uptime, window);
+    // Stated as intervals rather than a number, so the card can draw exactly the gaps
+    // this verdict was reached in spite of — and no others.
+    const observed = scan !== undefined ? [window] : uptime;
+    const coverage = measureCoverage(observed, window);
 
     if (fulfilment !== undefined) {
       const inside = containsInstant(window, fulfilment.captured_at);
@@ -146,7 +151,7 @@ export const missedWindow: Detector = {
         promise,
         kind: "missed_window",
         evaluation: window,
-        coverage,
+        observed,
         confidence: 0.98,
         evidence_ids: [fulfilment.id],
         explanation: inside
@@ -161,11 +166,11 @@ export const missedWindow: Detector = {
       promise,
       kind: "missed_window",
       evaluation: window,
-      coverage,
+      observed,
       confidence: confidenceFromCoverage(coverage),
       evidence_ids: [],
       explanation: decidable
-        ? `The window closed with nothing recorded as having arrived, ${describeGaps(uptime, window)}.`
+        ? `The window closed with nothing recorded as having arrived, ${describeGaps(observed, window)}.`
         : "The window is still open.",
       outcome: decidable ? "broken" : "unknown",
       decidable,
@@ -197,7 +202,7 @@ export const phantomDelivery: Detector = {
         promise,
         kind: "phantom_delivery",
         evaluation,
-        coverage,
+        observed: uptime,
         confidence: 0.97,
         evidence_ids: ids([scan, ...sightings]),
         explanation: "The scan matches what the door recorded.",
@@ -218,7 +223,7 @@ export const phantomDelivery: Detector = {
       promise,
       kind: "phantom_delivery",
       evaluation,
-      coverage,
+      observed: uptime,
       confidence,
       evidence_ids: ids([scan, ...snapshots]),
       explanation: `The carrier scanned this delivered, but the door was watched for ${Math.round(
@@ -253,7 +258,7 @@ export const noShow: Detector = {
         promise,
         kind: "no_show",
         evaluation,
-        coverage,
+        observed: uptime,
         confidence: 0.97,
         evidence_ids: ids(sightings),
         explanation: "Somebody arrived for the appointment.",
@@ -266,7 +271,7 @@ export const noShow: Detector = {
       promise,
       kind: "no_show",
       evaluation,
-      coverage,
+      observed: uptime,
       confidence: confidenceFromCoverage(coverage),
       evidence_ids: [],
       explanation: `Nobody arrived during the appointment slot, ${describeGaps(uptime, evaluation)}.`,
@@ -297,11 +302,12 @@ export const lateRefund: Detector = {
       const daysLate = Math.round(
         (toEpochMs(refund.captured_at) - toEpochMs(deadline)) / (24 * 60 * MINUTE_MS),
       );
+      const refunded = interval(promise.made_at, refund.captured_at);
       return conclude({
         promise,
         kind: "late_refund",
-        evaluation: interval(promise.made_at, refund.captured_at),
-        coverage: 1,
+        evaluation: refunded,
+        observed: [refunded],
         confidence: 1,
         evidence_ids: [refund.id],
         explanation: late
@@ -315,11 +321,12 @@ export const lateRefund: Detector = {
     const daysWaiting = Math.round(
       (toEpochMs(now) - toEpochMs(promise.made_at)) / (24 * 60 * MINUTE_MS),
     );
+    const waited = interval(promise.made_at, decidable ? now : deadline);
     return conclude({
       promise,
       kind: "late_refund",
-      evaluation: interval(promise.made_at, decidable ? now : deadline),
-      coverage: 1,
+      evaluation: waited,
+      observed: [waited],
       confidence: 1,
       evidence_ids: [],
       explanation: decidable
@@ -357,11 +364,12 @@ export const priceDrop: Detector = {
     const dropped = cheapest !== undefined && cheapest.amount.minor < paid.minor;
     const closed = hasPassed(now, window.end);
 
+    const watchedWindow = interval(window.start, closed ? window.end : now);
     return conclude({
       promise,
       kind: "price_drop",
-      evaluation: interval(window.start, closed ? window.end : now),
-      coverage: 1,
+      evaluation: watchedWindow,
+      observed: [watchedWindow],
       confidence: 0.98,
       evidence_ids: dropped && cheapest ? [cheapest.id] : [],
       explanation:

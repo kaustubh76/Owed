@@ -34,6 +34,16 @@ export function measuredMs(intervals: readonly Interval[]): number {
 }
 
 /**
+ * The parts of `evaluation` that at least one of `intervals` covers: clipped, merged,
+ * sorted. The single shape both coverage and gaps are read from.
+ */
+export function observedWithin(intervals: readonly Interval[], evaluation: Interval): Interval[] {
+  return unionIntervals(
+    intervals.map((i) => intersect(i, evaluation)).filter((i): i is Interval => i !== undefined),
+  );
+}
+
+/**
  * The fraction of `evaluation` that at least one source was watching.
  *
  * An empty evaluation interval has coverage 1 — there is nothing that could have
@@ -42,17 +52,12 @@ export function measuredMs(intervals: readonly Interval[]): number {
 export function measureCoverage(uptime: readonly Interval[], evaluation: Interval): Coverage {
   const total = durationMs(evaluation);
   if (total === 0) return 1;
-  const observed = uptime
-    .map((u) => intersect(u, evaluation))
-    .filter((u): u is Interval => u !== undefined);
-  return Math.min(1, measuredMs(observed) / total);
+  return Math.min(1, measuredMs(observedWithin(uptime, evaluation)) / total);
 }
 
 /** The parts of `evaluation` nobody was watching — what the card states explicitly. */
 export function coverageGaps(uptime: readonly Interval[], evaluation: Interval): Interval[] {
-  const covered = unionIntervals(
-    uptime.map((u) => intersect(u, evaluation)).filter((u): u is Interval => u !== undefined),
-  );
+  const covered = observedWithin(uptime, evaluation);
 
   const gaps: Interval[] = [];
   let cursor = toEpochMs(evaluation.start);

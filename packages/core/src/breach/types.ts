@@ -10,6 +10,7 @@ import type {
   Verdict,
 } from "@owed/domain";
 import { meetsBreachGate, toEpochMs } from "@owed/domain";
+import { measureCoverage, observedWithin } from "../evidence/coverage.js";
 
 export interface DetectorInput {
   promise: OwedPromise;
@@ -30,7 +31,15 @@ export interface ConcludeInput {
   promise: OwedPromise;
   kind: BreachKind;
   evaluation: Interval;
-  coverage: Coverage;
+  /**
+   * What this detector could actually see over `evaluation`.
+   *
+   * Stated rather than a coverage number, because a number cannot be checked against
+   * the gaps a card draws and an interval can. A detector that reads a clock observes
+   * the whole interval; one that reads a camera observes whatever the camera was up
+   * for. Coverage is derived from this and never passed in.
+   */
+  observed: readonly Interval[];
   confidence: Confidence;
   evidence_ids: string[];
   explanation: string;
@@ -47,20 +56,26 @@ export interface ConcludeInput {
  * thresholds" is enforced structurally rather than remembered six times.
  */
 export function conclude(input: ConcludeInput): Detection {
-  const verdict = verdictFor(input);
+  // Normalised here so every detection carries the same shape: clipped to the interval
+  // it is about, merged and sorted, with coverage read off it.
+  const observed = observedWithin(input.observed, input.evaluation);
+  const coverage = measureCoverage(observed, input.evaluation);
+  const verdict = verdictFor({ ...input, coverage });
+
   return {
     promise_id: input.promise.id,
     kind: input.kind,
     verdict,
     confidence: input.confidence,
-    coverage: input.coverage,
+    coverage,
     evaluation_interval: input.evaluation,
+    observed,
     evidence_ids: input.evidence_ids,
     explanation: input.explanation,
   };
 }
 
-function verdictFor(input: ConcludeInput): Verdict {
+function verdictFor(input: ConcludeInput & { coverage: Coverage }): Verdict {
   if (input.outcome === "kept") return "Kept";
   if (!input.decidable) return "Undetermined";
   if (input.outcome === "broken" && meetsBreachGate(input.confidence, input.coverage)) {
