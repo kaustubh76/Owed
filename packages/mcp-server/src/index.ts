@@ -5,6 +5,7 @@ export * from "./proactive/commitment.js";
 export * from "./proactive/scheduler.js";
 export * from "./seed/storyboard.js";
 export * from "./server.js";
+export * from "./store/sqlite.js";
 export * from "./tools/ledgerSummary.js";
 export * from "./views.js";
 export * from "./voice.js";

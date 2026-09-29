@@ -13,6 +13,7 @@ import {
   STORYBOARD_START,
   storyboardEvents,
 } from "./seed/storyboard.js";
+import { SqliteEventStore } from "./store/sqlite.js";
 
 const PORT = Number(process.env.OWED_PORT ?? 3939);
 const BASE_URL = new URL(process.env.OWED_BASE_URL ?? `http://127.0.0.1:${PORT}`);
@@ -31,8 +32,27 @@ const AUTH_SECRET = process.env.OWED_AUTH_SECRET ?? "owed-development-secret-not
 // One id generator for the seeded week and everything filed live after it, so ids
 // continue rather than collide.
 const idGen = new SeededIdGen();
-const store = new MemoryEventStore();
-await store.append(await storyboardEvents(idGen));
+
+/**
+ * Where the ledger lives.
+ *
+ * In memory by default, because a demo that reseeds identically every run is worth more
+ * than one that drifts. `OWED_DB=owed.db` puts it on disk instead, and then the seed is
+ * written **only if the file is empty** — reseeding a ledger that already has a week in
+ * it would append a second copy of everything, which is precisely the kind of quiet
+ * corruption an append-only store exists to make impossible.
+ */
+const dbPath = process.env.OWED_DB;
+const store = dbPath === undefined ? new MemoryEventStore() : new SqliteEventStore(dbPath);
+
+const existing = await store.read(HOUSEHOLD_ID);
+if (existing.length === 0) {
+  await store.append(await storyboardEvents(idGen));
+} else {
+  process.stdout.write(
+    `Owed ledger: ${existing.length} events already in ${dbPath}, not reseeding\n`,
+  );
+}
 
 const clock = new FixedClock(process.env.OWED_NOW ?? STORYBOARD_QUERY_AT);
 /**
@@ -65,7 +85,7 @@ createOwedApp({
   recourseLog,
 }).listen(PORT, "127.0.0.1", () => {
   process.stdout.write(
-    `Owed MCP server on ${BASE_URL.origin}/mcp (now: ${clock.now()}, account linking on)\n`,
+    `Owed MCP server on ${BASE_URL.origin}/mcp (now: ${clock.now()}, account linking on, ledger ${dbPath ?? "in memory"})\n`,
   );
   process.stdout.write(
     `  merchants: ${merchantsUrl === undefined ? "in-process" : merchantsUrl}\n`,

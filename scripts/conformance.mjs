@@ -58,5 +58,17 @@ const checker = spawn(
 );
 
 const code = await new Promise((resolve) => checker.on("close", resolve));
+
+if (code === 0) {
+  // The checker's closing line points at a document inside its own package, which sends
+  // anyone reading this output hunting through Owed's docs/ for a file that was never
+  // here. Owed's equivalent is named below.
+  process.stdout.write(
+    "\nThat last line is the conformance CLI's own, and the file it names lives in that\n" +
+      "package. Owed's account of what this does and does not establish — including that\n" +
+      "none of it has run against the real Alexa+ client — is docs/contract-v1.md.\n",
+  );
+}
+
 shutdown();
 process.exit(code ?? 1);

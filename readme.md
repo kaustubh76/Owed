@@ -216,6 +216,14 @@ serving cannot make one — so there `claim_file` proposes in words and waits fo
 Both paths are tested, including decline. See docs/friction-log.md §10–11; the second is an SDK
 bug we shipped from its own worked example before a test caught it.
 
+**The demo deliberately takes the `confirm` path.** The brain connects on **2025-11-25**,
+the revision Amazon's Alexa+ documentation names, precisely so the demo runs on the
+protocol Alexa+ actually speaks — and on that revision, served per-request, elicitation
+cannot happen at all. Switching the brain to 2026-07-28 would light up the elicited round
+trip on screen and would mean demonstrating a primitive on a revision Alexa+ does not use.
+The elicited path is exercised by the contract suite instead, on a modern-era connection,
+end to end with a client that answers.
+
 ---
 
 ## 7. Recourse protocol (open spec, `packages/recourse-protocol`)
@@ -265,7 +273,7 @@ Measured on 120 labelled messages and, separately, on 40 held out — see §10 a
 ### 8.3 Ledger
 Append-only and event-sourced (`PromiseCaptured`, `EvidenceObserved`, `PromiseAssessed`, `ClaimProposed`, `ClaimFiled`, `Settled`, `Recovered`, …). Every event carries both `occurred_at`, when the thing happened in the household's week, and `recorded_at`, when Owed learned of it — so the ledger replays to any instant and every tool answers for the clock rather than for now. That is what makes the timeline scrubber truthful rather than cosmetic.
 
-**In memory.** Restarting the server reseeds the same week, which is right for a demo and wrong for a product; there is no persistent store, and §13 says so.
+**In memory by default, on disk when you ask.** A demo that reseeds identically every run is worth more than one that drifts, so memory is the default. `OWED_DB=owed.db` swaps in a SQLite store built on Node's own `node:sqlite` — no dependency added — and then the seed is written only if the file is empty, because reseeding a ledger that already holds a week would append a second copy of everything. There is no `UPDATE` and no `DELETE` in that adapter; `seq` is insertion order and is the primary key. Rows are parsed back through the event schema on read, so a stale write or a hand edit is a loud failure rather than a card quietly showing something impossible.
 
 ### 8.4 Speaking first (`CommitmentEvent`)
 Alexa+ add-ons are strictly reactive: a tool runs because somebody said something. For most add-ons that is a limitation; for Owed it removes the product, because Owed exists to notice what the household did *not* ask about.
@@ -423,6 +431,14 @@ curl -X POST http://127.0.0.1:3939/control/clock \
   -d '{"instant":"2026-10-06T18:40:00-07:00"}'
 ```
 
+The ledger is in memory by default. To keep it across restarts:
+
+```bash
+OWED_DB=owed.db pnpm --filter @owed/mcp-server start
+```
+
+It seeds the week on first run and says so when it finds one already there.
+
 **Built and working today:** the MCP server over Streamable HTTP (spec-current SDK v2),
 `ledger_summary` with its `ui://owed/ledger` MCP Apps view, the event-sourced ledger with
 replay-to-any-instant, the coverage engine, the seeded storyboard week, the Node brain
@@ -455,7 +471,7 @@ nothing in this submission should be read as claiming otherwise.
 | The breach engine, coverage accounting, and the refusal to claim below the gates | The household's evidence. Doorbell events, snapshots, camera uptime, carrier scans and prices are seeded, not live |
 | The rule extractor, and eleven merchant messages every seeded promise is provably readable from | The eleven promises themselves are authored rather than extracted, so the demo is deterministic. A test proves the extractor recovers each one to the minute |
 | Merchant agents in **their own process**, argued with over MCP. The inspector shows that traffic | Their policies and their willingness to settle. Three merchants, plus a 270-merchant grid for the evaluation |
-| The event-sourced ledger, replayable to any instant — which is what makes the scrubber truthful | **Persistence.** It is in memory. Restarting reseeds the same week |
+| The event-sourced ledger, replayable to any instant — which is what makes the scrubber truthful — and a SQLite store behind the same port when `OWED_DB` is set | Persistence is **off by default**, because a demo that reseeds identically beats one that drifts |
 | H1, H2 and H3 measured against pre-registered corpora, reported met or not | Speaker identity and household roles. Not built |
 | — | A real Echo. The bridge was cut early; nothing here has run on a device |
 | — | Fire TV overlay and phone rail. First on the cut list, never built |
@@ -474,7 +490,8 @@ nothing in this submission should be read as claiming otherwise.
 | Proactive `CommitmentEvent`, timeline scrubber, Echo Dot | done — 33 browser checks, including the beat where Owed speaks first |
 | H1 extraction, H2 breach, H3 recourse | done — all three measured, **all three reported met or not** |
 | Clean-clone install → verify → demo → browser gate | done — run, not asserted (§12) |
-| Persistence, Docker, moderated walkthroughs (H4) | **not done** |
+| Persistence behind the same port, on Node's built-in SQLite | done — append-only, parsed on read, survives restart |
+| Docker, moderated walkthroughs (H4) | **not done** |
 | Real Echo, Fire TV, phone rail, AWS | **cut** |
 
 **Never cut, and not cut:** the three numbers on the ledger card, the claim card, the
