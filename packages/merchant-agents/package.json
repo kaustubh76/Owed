@@ -17,11 +17,21 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "start": "node dist/bin/serve.js"
   },
   "dependencies": {
     "zod": "^4.6.5",
     "@owed/recourse-protocol": "workspace:*",
-    "@owed/policy-library": "workspace:*"
+    "@owed/policy-library": "workspace:*",
+    "@modelcontextprotocol/core": "2.1.0",
+    "@modelcontextprotocol/server": "2.1.0",
+    "@modelcontextprotocol/node": "2.1.0",
+    "@modelcontextprotocol/express": "2.0.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.4",
+    "tsx": "^4.23.15"
   }
 }

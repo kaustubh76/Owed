@@ -147,7 +147,12 @@ export type RecourseMessage = z.infer<typeof RecourseMessageSchema>;
 export type RecourseMessageType = RecourseMessage["type"];
 
 /** What a merchant may say. A merchant never opens a claim and never counters. */
-export type RespondentMessage = OfferMessage | SettleMessage | DeclineMessage;
+export const RespondentMessageSchema = z.discriminatedUnion("type", [
+  OfferMessageSchema,
+  SettleMessageSchema,
+  DeclineMessageSchema,
+]);
+export type RespondentMessage = z.infer<typeof RespondentMessageSchema>;
 export const RESPONDENT_MESSAGE_TYPES: readonly RecourseMessageType[] = [
   "OFFER",
   "SETTLE",
