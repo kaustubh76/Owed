@@ -32,7 +32,7 @@ for (const [kind, totals] of Object.entries(report.by_breach_kind)) {
   );
 }
 
-const out = fileURLToPath(new URL("../../../results/recourse.json", import.meta.url));
-mkdirSync(fileURLToPath(new URL("../../../results/", import.meta.url)), { recursive: true });
+const out = fileURLToPath(new URL("../../results/recourse.json", import.meta.url));
+mkdirSync(fileURLToPath(new URL("../../results/", import.meta.url)), { recursive: true });
 writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
 process.stdout.write(`\n  written to eval/results/recourse.json\n`);

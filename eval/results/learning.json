@@ -1,0 +1,115 @@
+{
+  "episodes": 20,
+  "grid_size": 270,
+  "cells": 1620,
+  "accept_first_offer": {
+    "owed_minor": 1404000,
+    "realised_minor": 432000,
+    "share": 0.3076923076923077
+  },
+  "cold": {
+    "owed_minor": 1404000,
+    "realised_minor": 476600,
+    "share": 0.33945868945868946
+  },
+  "oracle": {
+    "owed_minor": 1404000,
+    "realised_minor": 619400,
+    "share": 0.4411680911680912
+  },
+  "first_episode": {
+    "owed_minor": 1404000,
+    "realised_minor": 476600,
+    "share": 0.33945868945868946
+  },
+  "last_episode": {
+    "owed_minor": 1404000,
+    "realised_minor": 619400,
+    "share": 0.4411680911680912
+  },
+  "learning_curve": [
+    {
+      "episode": 1,
+      "share": 0.33945868945868946
+    },
+    {
+      "episode": 2,
+      "share": 0.33945868945868946
+    },
+    {
+      "episode": 3,
+      "share": 0.33945868945868946
+    },
+    {
+      "episode": 4,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 5,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 6,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 7,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 8,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 9,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 10,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 11,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 12,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 13,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 14,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 15,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 16,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 17,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 18,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 19,
+      "share": 0.4411680911680912
+    },
+    {
+      "episode": 20,
+      "share": 0.4411680911680912
+    }
+  ],
+  "advantage_captured": 1,
+  "cold_loss_rate": 0.23333333333333334,
+  "learned_loss_rate": 0
+}

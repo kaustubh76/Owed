@@ -28,7 +28,7 @@ for (const point of report.learning_curve) {
   );
 }
 
-const dir = fileURLToPath(new URL("../../../results/", import.meta.url));
+const dir = fileURLToPath(new URL("../../results/", import.meta.url));
 mkdirSync(dir, { recursive: true });
 writeFileSync(`${dir}learning.json`, `${JSON.stringify(report, null, 2)}\n`);
 process.stdout.write("\n  written to eval/results/learning.json\n");
