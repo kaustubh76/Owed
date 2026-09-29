@@ -117,7 +117,7 @@ if (failed.length === 0) {
   Everything needed is here. Next:
 
     pnpm demo      then open http://127.0.0.1:5173 and ask "what am I owed?"
-    pnpm verify    build, lint, 233 tests and the conformance check
+    pnpm verify    build, lint, the whole test suite and the conformance check
     pnpm verify:ui the same storyboard, driven in a real browser
 
 `);

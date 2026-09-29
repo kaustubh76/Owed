@@ -411,14 +411,14 @@ else's machine is a port already in use, and the failure that causes is confusin
 names what it looked for, what it found and what to do about it.
 
 **Checked from a clean clone**, not asserted: `git clone` → `pnpm install` (3.4s) →
-`pnpm verify` (build, lint, **233 tests**, conformance — all green) → `pnpm demo` (all
+`pnpm verify` (build, lint, **240 tests**, conformance — all green) → `pnpm demo` (all
 four services answering in **4 seconds**) → `pnpm verify:ui` (**33 browser checks**,
 green) → all four evaluations run and write their results.
 
 Open http://127.0.0.1:5173 and ask *"Alexa, what am I owed?"*.
 
 ```bash
-pnpm verify         # build + lint + 240 tests + the conformance probe
+pnpm verify         # build + lint + the whole test suite + the conformance probe
                     # the same sequence .github/workflows/verify.yml runs on every push
 pnpm test           # unit, property, storyboard golden, and tool-contract tests
 ```
