@@ -231,6 +231,51 @@ try {
   check("evidence card names the gaps", (await cardText(".evidence__gaps")).startsWith("Not watched:"), true);
   check("evidence card gives the verdict", await cardText(".evidence__verdict"), "not enough to claim");
 
+  // --- the scrubber: move the household through its week -------------------
+  const slider = page.locator(".scrub__range");
+  await slider.waitFor({ state: "visible", timeout: 20_000 });
+  const weekStart = Number(await slider.getAttribute("min"));
+  const HOUR = 60 * 60 * 1000;
+  const scrubTo = async (ms) => {
+    await slider.fill(String(ms));
+    // The scrubber only tells the server where a drag settled, and the brain then
+    // polls. Wait for the clock the server echoed back rather than for a fixed delay.
+    await page.waitForFunction(
+      (expected) => document.querySelector(".app__clock")?.textContent?.includes(expected),
+      new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/Los_Angeles",
+      }).format(new Date(ms)),
+      { timeout: 20_000 },
+    );
+  };
+
+  await scrubTo(weekStart + 8 * HOUR);
+  check("scrubbed back to Monday", (await page.textContent(".app__clock"))?.includes("Mon"), true);
+
+  /**
+   * The proactive beat. Crossing the moment a promise breaks makes Owed speak without
+   * being asked — the one thing Alexa+ add-ons cannot do, which is why it is badged.
+   */
+  await scrubTo(weekStart + 6 * 24 * HOUR + 19.5 * HOUR);
+  await page.waitForSelector(".app__proactive", { timeout: 20_000 });
+  check("Owed spoke first", await page.isVisible(".app__proactive"), true);
+  check(
+    "the announcement is labelled simulated",
+    (await page.textContent(".app__proactive-badge"))?.trim(),
+    "simulated proactive",
+  );
+  const announced = (await page.textContent(".voice__reply")) ?? "";
+  check("announcement names the breach", announced.includes("missed the delivery window"), true);
+  check("announcement has no digits", /[0-9]/.test(announced), false);
+  check(
+    "inspector shows the commitment event",
+    await page.locator(".inspector__line--proactive").count(),
+    3,
+  );
+
   // --- the hero interaction: say yes, and watch it settle -----------------
   await page.getByRole("button", { name: "File it" }).click();
 
@@ -249,7 +294,7 @@ try {
   check("inspector shows the recourse exchange", recourseRows > 0, true);
   check(
     "recourse rows name the merchant",
-    (await page.locator(".inspector__channel").first().textContent())?.trim(),
+    (await page.locator(".inspector__line--recourse .inspector__channel").first().textContent())?.trim(),
     "Northwind Parcel",
   );
 
@@ -260,6 +305,27 @@ try {
   await cardText(".ledger__amount");
   const ledgerProblems = await auditAccessibility(card(), "ledger card");
   check("ledger card accessibility", ledgerProblems.join(" | ") || "clean", "clean");
+
+  // --- the surface with no screen -----------------------------------------
+  // Voice-only parity is a certification requirement and the easiest thing to fake.
+  // The only honest test is to take the card away and see whether the answer survives.
+  await page.getByRole("button", { name: "Echo Dot" }).click();
+  await page.waitForSelector(".dot__speech", { timeout: 20_000 });
+  check("the Dot has no screen", await page.locator("iframe.echo__screen").count(), 0);
+
+  const spokenOnDot = (await page.textContent(".dot__speech")) ?? "";
+  check("the Dot still answers", spokenOnDot.length > 0, true);
+  check("the Dot's answer has no digits", /[0-9]/.test(spokenOnDot), false);
+
+  await page.getByRole("button", { name: "Alexa, what am I owed?" }).click();
+  await page.waitForFunction(
+    () => (document.querySelector(".dot__speech")?.textContent ?? "").includes("recovered"),
+    undefined,
+    { timeout: 20_000 },
+  );
+  const ledgerOnDot = (await page.textContent(".dot__speech")) ?? "";
+  check("the ledger is answerable by voice alone", ledgerOnDot.includes("recovered"), true);
+  check("and stands on its own", ledgerOnDot.includes("still open"), true);
 
   check("console clean", consoleErrors.length, 0);
   if (consoleErrors.length > 0) process.stdout.write(`${consoleErrors.join("\n")}\n`);
