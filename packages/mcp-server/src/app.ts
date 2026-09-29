@@ -53,11 +53,11 @@ export function createOwedApp({
   }
 
   const node = toNodeHandler(
-    createMcpHandler((ctx: { authInfo?: unknown }) =>
-      createOwedServer({
-        ...deps,
-        householdId: householdFromAuth(ctx.authInfo) ?? deps.householdId,
-      }),
+    createMcpHandler((ctx: { authInfo?: unknown; era?: "legacy" | "modern" }) =>
+      createOwedServer(
+        { ...deps, householdId: householdFromAuth(ctx.authInfo) ?? deps.householdId },
+        ctx.era ?? "legacy",
+      ),
     ),
   );
 

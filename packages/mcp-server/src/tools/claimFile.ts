@@ -1,10 +1,17 @@
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
-import type { McpServer } from "@modelcontextprotocol/server";
+import { inputRequired, inputResponse, type McpServer } from "@modelcontextprotocol/server";
 import { fileClaim, type RemedyBounds, remedyContextFor } from "@owed/core";
-import { type ClaimView, ClaimViewSchema, coveragePercent, numberToWords } from "@owed/domain";
+import {
+  type ClaimView,
+  ClaimViewSchema,
+  coveragePercent,
+  formatMoney,
+  numberToWords,
+} from "@owed/domain";
 import { builtinPolicies, remedyFor } from "@owed/policy-library";
 import * as z from "zod/v4";
 import type { OwedDeps } from "../deps.js";
+import type { ProtocolEra } from "../server.js";
 import { VIEW_URIS } from "../views.js";
 import { assertSpeakable, joinSpoken, speakClaim } from "../voice.js";
 import { loadContext, NotFoundError, spokenError } from "./context.js";
@@ -15,7 +22,60 @@ function claimIdFor(promiseId: string): string {
   return `clm_${promiseId}`;
 }
 
-export function registerClaimFile(server: McpServer, deps: OwedDeps): void {
+/**
+ * The confirmation Owed asks for before it files anything.
+ *
+ * Form mode, one flat object, primitive properties only — which is the whole of what MCP
+ * elicitation permits. The ideation asks two questions ("file it?" and "attach the
+ * doorbell evidence?"); they are asked together in one round rather than serially,
+ * because a household being asked twice about one claim is worse, not better.
+ *
+ * Exported so the contract suite can assert the shape rather than trust it.
+ */
+export const CONFIRMATION_SCHEMA = {
+  // Literal types where the wire shape demands them; `required` stays a mutable array.
+  type: "object" as const,
+  properties: {
+    confirm: {
+      type: "boolean" as const,
+      title: "File this claim?",
+      description: "Owed will send it to the merchant and settle it for you.",
+    },
+    attach_evidence: {
+      type: "boolean" as const,
+      title: "Send the supporting evidence?",
+      description: "The merchant sees what was recorded, and nothing else.",
+      default: true,
+    },
+  },
+  required: ["confirm"],
+};
+
+/**
+ * Whether this connection can carry a question back to the household.
+ *
+ * On the 2026-07-28 revision an input request is part of the result and the client
+ * retries, so it works on stateless serving. On the 2025 revision it is a
+ * server-to-client request needing a session, which per-request serving cannot make —
+ * the SDK says so in as many words. There, and anywhere a client has not declared the
+ * capability, the `confirm` argument carries it instead.
+ *
+ * See docs/friction-log.md: this is a real constraint of the SDK's recommended posture,
+ * not a choice.
+ */
+function connectionCanAsk(server: McpServer, era: ProtocolEra): boolean {
+  if (era === "modern") return true;
+  const capabilities = (
+    server as unknown as { server?: { getClientCapabilities?: () => unknown } }
+  ).server?.getClientCapabilities?.();
+  return typeof capabilities === "object" && capabilities !== null && "elicitation" in capabilities;
+}
+
+export function registerClaimFile(
+  server: McpServer,
+  deps: OwedDeps,
+  era: ProtocolEra = "legacy",
+): void {
   registerAppTool(
     server,
     "claim_file",
@@ -44,9 +104,52 @@ export function registerClaimFile(server: McpServer, deps: OwedDeps): void {
         },
       },
     },
-    async ({ promise_id, confirm, attach_evidence }) => {
+    async ({ promise_id, confirm, attach_evidence }, ctx) => {
+      /**
+       * Re-entry after the household answered.
+       *
+       * Read as a discriminated view rather than through `acceptedContent`, which
+       * returns `undefined` for a decline exactly as it does for "not asked yet" — so
+       * asking again looked like the right thing and the exchange span until the
+       * client's round cap. A decline has to be distinguishable from silence.
+       */
+      const answer = inputResponse(
+        (ctx as { mcpReq?: { inputResponses?: unknown } }).mcpReq?.inputResponses as
+          | Record<string, unknown>
+          | undefined,
+        "confirm",
+      );
+      const content = answer.kind === "elicit" ? (answer.content ?? {}) : undefined;
+
+      const declined =
+        answer.kind === "elicit" && (answer.action !== "accept" || content?.confirm !== true);
+      const confirmed = confirm === true || content?.confirm === true;
+      const attach =
+        typeof content?.attach_evidence === "boolean"
+          ? content.attach_evidence
+          : attach_evidence !== false;
+
       try {
-        return await handleClaimFile(deps, promise_id, confirm === true, attach_evidence !== false);
+        if (declined) {
+          return spokenError("All right, I won't file it.");
+        }
+
+        const outcome = await handleClaimFile(deps, promise_id, confirmed, attach);
+        if (outcome.kind === "result") return outcome.result;
+
+        if (connectionCanAsk(server, era)) {
+          return inputRequired({
+            inputRequests: {
+              confirm: inputRequired.elicit({
+                message: outcome.question,
+                requestedSchema: CONFIRMATION_SCHEMA,
+              }),
+            },
+          });
+        }
+
+        // No elicitation on this client: ask in words and wait to be called again.
+        return outcome.fallback;
       } catch (error) {
         if (error instanceof NotFoundError) return spokenError("I don't have that promise.");
         throw error;
@@ -55,12 +158,16 @@ export function registerClaimFile(server: McpServer, deps: OwedDeps): void {
   );
 }
 
+type ClaimFileOutcome =
+  | { kind: "result"; result: ReturnType<typeof claimResult> | ReturnType<typeof spokenError> }
+  | { kind: "needs-confirmation"; question: string; fallback: ReturnType<typeof claimResult> };
+
 async function handleClaimFile(
   deps: OwedDeps,
   promiseId: string,
   confirmed: boolean,
   attachEvidence: boolean,
-) {
+): Promise<ClaimFileOutcome> {
   const context = await loadContext(deps);
   const view = context.state.promises.get(promiseId);
   if (view === undefined) throw new NotFoundError(promiseId);
@@ -69,7 +176,8 @@ async function handleClaimFile(
   const existingId = view.claim_id;
   if (existingId !== undefined) {
     const existing = context.state.claims.get(existingId);
-    if (existing !== undefined) return claimResult(claimViewFor(existing));
+    if (existing !== undefined)
+      return { kind: "result", result: claimResult(claimViewFor(existing)) };
   }
 
   const assessment = view.assessment;
@@ -79,7 +187,7 @@ async function handleClaimFile(
    * of is never filed, and the refusal says how little was seen rather than going quiet.
    */
   if (assessment === undefined || assessment.verdict !== "Breached") {
-    return spokenError(refusalFor(view.promise.merchant, assessment));
+    return { kind: "result", result: spokenError(refusalFor(view.promise.merchant, assessment)) };
   }
 
   const policy = builtinPolicies().get(view.promise.merchant);
@@ -90,11 +198,14 @@ async function handleClaimFile(
 
   // No published remedy means there is no claim to make. Owed does not invent one.
   if (remedy === undefined) {
-    return spokenError(
-      assertSpeakable(
-        `${view.promise.merchant} has published nothing covering this, so there is nothing for me to claim.`,
+    return {
+      kind: "result",
+      result: spokenError(
+        assertSpeakable(
+          `${view.promise.merchant} has published nothing covering this, so there is nothing for me to claim.`,
+        ),
       ),
-    );
+    };
   }
 
   const bounds: RemedyBounds = {
@@ -114,18 +225,27 @@ async function handleClaimFile(
     round_count: 0,
   };
 
-  if (!confirmed) return claimResult(proposed);
+  if (!confirmed) {
+    return {
+      kind: "needs-confirmation",
+      question: `${view.promise.merchant} owes you ${formatMoney(bounds.reservation)} under their own policy. Shall I file it?`,
+      fallback: claimResult(proposed),
+    };
+  }
 
   const respondent = deps.merchants.respondentFor(view.promise.merchant, {
     stated: bounds.reservation,
     clause_title: bounds.clause.title,
   });
   if (respondent === undefined) {
-    return spokenError(
-      assertSpeakable(
-        `I can't reach ${view.promise.merchant} right now. I'll keep the claim open.`,
+    return {
+      kind: "result",
+      result: spokenError(
+        assertSpeakable(
+          `I can't reach ${view.promise.merchant} right now. I'll keep the claim open.`,
+        ),
       ),
-    );
+    };
   }
 
   const filed = await fileClaim({
@@ -152,7 +272,10 @@ async function handleClaimFile(
 
   const after = await loadContext(deps);
   const settled = after.state.claims.get(proposed.claim_id);
-  return claimResult(settled === undefined ? proposed : claimViewFor(settled));
+  return {
+    kind: "result",
+    result: claimResult(settled === undefined ? proposed : claimViewFor(settled)),
+  };
 }
 
 function coverageStatement(coverage: number): string {
