@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc -b && pnpm --filter @owed/ui-views build",
+    "preflight": "node scripts/preflight.mjs",
     "typecheck": "tsc -b",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",

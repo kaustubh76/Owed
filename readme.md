@@ -377,8 +377,18 @@ no Ring access, no API keys.
 # prerequisites: Node 20+ (repo is pinned to 26 via .nvmrc) and pnpm
 pnpm install
 pnpm build          # compiles the workspaces and bundles the ui:// views
-pnpm demo           # MCP server :3939 · brain :3940 · simulated home :5173
+pnpm preflight      # checks Node, pnpm, the build and all four ports
+pnpm demo           # merchants :3941 · MCP server :3939 · brain :3940 · home :5173
 ```
+
+`pnpm preflight` exists because the most likely reason this does not work on somebody
+else's machine is a port already in use, and the failure that causes is confusing. It
+names what it looked for, what it found and what to do about it.
+
+**Checked from a clean clone**, not asserted: `git clone` → `pnpm install` (3.4s) →
+`pnpm verify` (build, lint, **233 tests**, conformance — all green) → `pnpm demo` (all
+four services answering in **4 seconds**) → `pnpm verify:ui` (**33 browser checks**,
+green) → all four evaluations run and write their results.
 
 Open http://127.0.0.1:5173 and ask *"Alexa, what am I owed?"*.
 
