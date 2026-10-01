@@ -75,6 +75,14 @@ nine messages it missed and why, in [`eval/README.md`](../../eval/README.md).
 Use it where determinism, auditability and running offline matter more than coverage. It
 is a reasonable first pass and a poor last word.
 
+**The heading above is still a promise this table does not keep.** What it costs you to not
+use a model cannot be read off one column — it needs the other one.
+[`@owed/extractor-bedrock`](../extractor-bedrock) is that column, scored by the same code
+over the same corpus, and it has not been run yet: the model access is a console request.
+Until it is, the honest reading of this section is that the rules extractor finds four
+promises in seven on data it has not seen, and nobody here has measured what a model would
+find.
+
 ## Known limits, stated rather than discovered
 
 - **Fixed UTC offsets, not timezones.** "Tuesday at 1pm" in Los Angeles is a different

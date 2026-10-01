@@ -289,7 +289,7 @@ Full write-up and the rules the scheduler keeps: **[docs/proactive.md](docs/proa
 ## 9. Simulated home (`apps/home`)
 
 React + Vite. One page:
-- **Surfaces**: an Echo Show 8 at its documented 768×480 base canvas, and an **Echo Dot with no screen at all**. The Dot is a proof rather than a decoration — voice-only parity is a certification requirement and the easiest thing to fake, so the only honest test is to take the card away and run the storyboard again. If a beat stops making sense there, the spoken line was a caption for a picture, which is a bug in the add-on. *(Fire TV overlay and phone rail: not built — first on the cut list, §16.)*
+- **Surfaces**: an Echo Show 8 at its documented 768×480 base canvas, and an **Echo Dot with no screen at all**. The Dot is a proof rather than a decoration — voice-only parity is a certification requirement and the easiest thing to fake, so the only honest test is to take the card away and run the storyboard again. If a beat stops making sense there, the spoken line was a caption for a picture, which is a bug in the add-on. *(Fire TV overlay and phone rail: not built — first on the cut list, §13.)*
 - **Timeline scrubber**: drag through the seeded week. The clock moves, the ledger is replayed to that instant, and every tool answers for it without any tool knowing a scrubber exists — including whether it has anything to say unprompted. Dragging onto Sunday evening is what makes the proactive beat happen.
 - **Voice**: browser SpeechRecognition in, TTS out (browser default; ElevenLabs optional), barge-in supported.
 - **Protocol inspector**: live JSON-RPC from simulator → Owed, and the recourse exchange with merchant agents. Every card on the Echo is traceable to a `_meta.ui.resourceUri` in the pane.
@@ -369,6 +369,7 @@ owed/
 │  ├─ domain/               # schemas and value objects — Money, Instant, Interval, Promise, Breach, Claim
 │  ├─ core/                 # breach engine, coverage accounting, ledger projections, negotiator
 │  ├─ extractor/            # rule-based promise extraction from merchant messages
+│  ├─ extractor-bedrock/    # the same job asked of a model; unrun, and says so
 │  ├─ mcp-server/           # the add-on: Streamable HTTP, OAuth AS, six tools, ui:// views, proactive
 │  ├─ recourse-protocol/    # open spec + types + conformance tests        (Open Source mini-challenge)
 │  ├─ merchant-agents/      # three merchant agents, served over MCP in their own process
@@ -381,22 +382,37 @@ owed/
 ├─ scripts/
 │  ├─ preflight.mjs         # can this machine run it?
 │  ├─ conformance.mjs       # the published-requirements check
-│  └─ verify-ui.mjs         # drives the whole storyboard in a real browser
+│  ├─ verify-ui.mjs         # drives the whole storyboard in a real browser
+│  └─ aws-smoke.mjs         # proves the ledger against real DynamoDB, in a named account
+├─ deploy/                  # one box: Caddyfile, four systemd units, bootstrap, IAM policy
 ├─ docs/
 │  ├─ contract-v1.md        # the frozen v1 contract, with its amendments recorded
 │  ├─ proactive.md          # the one primitive Alexa+ is missing, written as a schema
 │  ├─ friction-log.md       # per-tool friction, fourteen entries
+│  ├─ demo-script.md        # what to say, and what not to claim, while recording
 │  └─ policies/             # the merchant policy documents the claims are argued from
-├─ LICENSE                  # Apache-2.0
 └─ readme.md
 ```
+
+**No `LICENSE` file exists yet, and five packages need one.** `extractor`,
+`extractor-bedrock`, `recourse-protocol`, `policy-library` and `merchant-agents` all declare
+`"license": "Apache-2.0"` and set `files` for publication, which is a promise the repository
+does not currently keep — there is no licence text anywhere in it. An earlier revision of
+this tree listed a `LICENSE` that was never added. It needs the Apache-2.0 text with a real
+copyright line, which is the author's to write rather than something to guess at, and it
+matters for the Open Source mini-challenge specifically.
 
 ---
 
 ## 12. Local setup
 
-Everything runs offline. There are no cloud prerequisites and no keys of any kind: no AWS
-account, no model API, no doorbell vendor, nothing to sign up for.
+**The demo still runs entirely offline**, and that has not changed: `pnpm install && pnpm
+demo` needs no AWS account, no model API, no doorbell vendor and no keys of any kind. The
+ledger is in memory by default.
+
+What *is* new is that persistence and deployment are now optional extras rather than absent.
+`OWED_DYNAMO_TABLE` puts the ledger in DynamoDB and `deploy/` holds a one-instance
+deployment — both opt-in, neither needed to run or judge anything below.
 
 ```bash
 # prerequisites: Node 20+ (repo is pinned to 26 via .nvmrc) and pnpm
@@ -411,8 +427,8 @@ else's machine is a port already in use, and the failure that causes is confusin
 names what it looked for, what it found and what to do about it.
 
 **Checked from a clean clone**, not asserted: `git clone` → `pnpm install` (3.4s) →
-`pnpm verify` (build, lint, **240 tests**, conformance — all green) → `pnpm demo` (all
-four services answering in **4 seconds**) → `pnpm verify:ui` (**33 browser checks**,
+`pnpm verify` (build, lint, the whole test suite, conformance — all green) → `pnpm demo` (all
+four services answering in **4 seconds**) → `pnpm verify:ui` (every browser check,
 green) → all four evaluations run and write their results.
 
 Open http://127.0.0.1:5173 and ask *"Alexa, what am I owed?"*.
@@ -438,7 +454,42 @@ The ledger is in memory by default. To keep it across restarts:
 OWED_DB=owed.db pnpm --filter @owed/mcp-server start
 ```
 
-It seeds the week on first run and says so when it finds one already there.
+It seeds the week on first run and says so when it finds one already there. `OWED_DYNAMO_TABLE`
+does the same thing in DynamoDB instead, behind the same port — see §12.2.
+
+### 12.1 Surviving more than a demo
+
+The system was written against an in-memory store on loopback, where a read cannot fail, a
+peer cannot vanish and nothing restarts underneath you. A deployment has all three, so
+these are the behaviours that exist for that and are tested for it:
+
+| | |
+|---|---|
+| **The session is rebuilt, not held** | Access tokens live an hour and the brain used to freeze one into its transport for the life of the process — so it stopped answering exactly 3600s after boot, with no crash to restart it and no log line. The session now renews itself and is rebuilt on a dead transport. `apps/brain/src/session.test.ts` covers both. |
+| **Both hops are reported** | "brain connected" meant the home's socket to the brain, which says nothing about whether the brain can reach the add-on. The header now distinguishes them, because the two fail independently with the identical symptom: nothing happens when you speak. |
+| **The home reconnects** | A brain restart used to leave every open page dead until a human reloaded it. |
+| **A store failure is a failed request** | `/control/commitments` fired a floating promise, so one DynamoDB throttle became an unhandled rejection and took the server down — on an endpoint the brain polls every 1500ms. It answers 503 now, and `packages/mcp-server/src/failure.test.ts` asserts the process survives. |
+| **`/health` touches the ledger** | So a proxy can tell "listening" from "working", which are different and were indistinguishable. |
+| **SIGTERM drains** | All three services close their listeners and the store on the way out. |
+
+### 12.2 Going public, and the four variables that matter
+
+Every one of these is **unset by default**, so nothing above changes. They exist because a
+server reachable from the internet needs four things the loopback demo does not.
+
+| Variable | Why it exists |
+|---|---|
+| `OWED_AUTH_SECRET` | Signs the HS256 tokens. The household comes from the token's `sub`, so with the development default — published in this repo — anyone could mint a token for any household. The server **refuses to boot** if this is still the default, or under 32 bytes, while `OWED_BASE_URL` is not loopback. |
+| `OWED_CONTROL_TOKEN` | `/control/*` carries no auth of its own. Unprotected those routes leak the merchant negotiations verbatim, name merchants and amounts, and let a stranger move scenario time for everybody. Only the brain calls them, so only the brain needs this. |
+| `OWED_ALLOWED_HOSTS` | Behind a reverse proxy the `Host` header is the public hostname, and the DNS-rebinding validator's default allow-list is loopback only — so **every request 403s** until this is set. It is unioned with the loopback names rather than replacing them, which is the trap the upstream option has. |
+| `OWED_DYNAMO_TABLE` | Ledger in DynamoDB rather than memory or SQLite. |
+| `OWED_BRAIN_TOKEN` | Hands the brain an access token instead of letting it walk the authorization-code flow. Useful for debugging; a session built on one gets **no renewal timer**, because there is nothing to renew it with — so it stops working when the token expires, which is the failure the managed session exists to prevent. |
+
+The processes keep listening on `127.0.0.1` even when deployed: Caddy runs on the same box
+and proxies to loopback, so nothing binds a public interface. `deploy/` has the Caddyfile,
+four systemd units (three Node services plus Caddy), a bootstrap script and the IAM
+policy; the Caddyfile deliberately does **not** proxy
+`/control/*`.
 
 **Built and working today:** the MCP server over Streamable HTTP (spec-current SDK v2),
 `ledger_summary` with its `ui://owed/ledger` MCP Apps view, the event-sourced ledger with
@@ -446,10 +497,9 @@ replay-to-any-instant, the coverage engine, the seeded storyboard week, the Node
 holding the MCP client, and the simulated home with the Echo Show frame and a protocol
 inspector fed by real captured JSON-RPC frames.
 
-**Not built yet** (see `docs/contract-v1.md` and the plan): OAuth 2.1 account linking and
-the conformance gate, the remaining five tools, the claim and evidence views, the breach
-detectors, the recourse protocol and merchant agents, the promise extractor, and the
-evaluation harnesses.
+*(An earlier revision listed account linking, the remaining tools, the extractor, the
+recourse protocol and the eval harnesses as "not built yet". They were built; §14 has the
+state that is actually current, and §13 has what is still simulated.)*
 
 ## 13. Real vs. simulated (mirrored in the submission)
 
@@ -476,7 +526,7 @@ nothing in this submission should be read as claiming otherwise.
 | H1, H2 and H3 measured against pre-registered corpora, reported met or not | Speaker identity and household roles. Not built |
 | — | A real Echo. The bridge was cut early; nothing here has run on a device |
 | — | Fire TV overlay and phone rail. First on the cut list, never built |
-| — | AWS. No Bedrock, no DynamoDB, no CDK — a deliberate choice to keep the whole thing offline and inspectable |
+| DynamoDB, behind the same `EventStore` port as memory and SQLite, verified against DynamoDB Local | Bedrock. A model-backed extractor exists in `packages/extractor-bedrock` and is tested either side of the model call — but **no model has run**, so there are no numbers and every reported figure is still the rules extractor's. The deployment is one instance with Caddy; there is no CDK |
 
 ---
 
@@ -488,12 +538,13 @@ nothing in this submission should be read as claiming otherwise.
 | MCP server: Streamable HTTP, own OAuth AS, six tools, three views | done — conformance green on every documented check |
 | Recourse protocol, negotiator, merchant agents over HTTP | done — published as `recourse-protocol`; the inspector shows the argument |
 | Alexa+ contract suite, elicitation, accessibility | done — 13 contract tests, p95 4.7–35 ms, worst-case contrast 6.36:1 |
-| Proactive `CommitmentEvent`, timeline scrubber, Echo Dot | done — 33 browser checks, including the beat where Owed speaks first |
+| Proactive `CommitmentEvent`, timeline scrubber, Echo Dot | done — asserted by the browser checks, including the beat where Owed speaks first |
 | H1 extraction, H2 breach, H3 recourse | done — all three measured, **all three reported met or not** |
 | Clean-clone install → verify → demo → browser gate | done — run, not asserted (§12) |
 | Persistence behind the same port, on Node's built-in SQLite | done — append-only, parsed on read, survives restart |
 | Docker, moderated walkthroughs (H4) | **not done** |
-| Real Echo, Fire TV, phone rail, AWS | **cut** |
+| Real Echo, Fire TV, phone rail | **cut** |
+| AWS | **done after the fact** — the ledger runs on DynamoDB, verified against the real service in account `240250534690`; `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
 
 **Never cut, and not cut:** the three numbers on the ledger card, the claim card, the
 protocol inspector, the storyboard golden test, the contract suite, the friction log, and
@@ -503,7 +554,7 @@ saying plainly when a hypothesis was not met.
 
 ## 15. Submission checklist
 
-- [x] Primary track: **Alexa+**. Mini-challenge: **Open Source** (`recourse-protocol`, `policy-library`, `extractor`). *Not entering AWS Builder — there is no AWS in this project, by choice.*
+- [x] Primary track: **Alexa+**. Mini-challenges: **Open Source** (`recourse-protocol`, `policy-library`, `extractor`, `merchant-agents`, `extractor-bedrock` — all Apache-2.0 with `files` set for publication) and **AWS Builder** — the ledger runs on DynamoDB behind the port that already had two adapters. Earlier drafts of this README said the opposite, because for most of the build it was true.
 - [x] The repo calls MCP in code — server entry point, `_meta.ui` on every tool, elicitation, `ui://` resources — not just in this README
 - [x] Product feedback for every tool used: **[docs/friction-log.md](docs/friction-log.md)**, fourteen entries with task, expected, actual, severity, workaround and suggestion
 - [x] Feature request, written as a schema rather than a paragraph: **[docs/proactive.md](docs/proactive.md)** — `CommitmentEvent` and the proactive channel Alexa+ add-ons do not have

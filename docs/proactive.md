@@ -45,6 +45,11 @@ A **projection, not a queue**:
 GET /control/commitments → { now, events: CommitmentEvent[] }
 ```
 
+*(Unauthenticated on a loopback demo, which is where it belongs. Set `OWED_CONTROL_TOKEN`
+and it requires a bearer token — the `spoken` line names a merchant and an amount, so this
+is a ledger read, and the deployed Caddyfile does not proxy `/control/*` at all. See
+readme §12.2.)*
+
 Everything Owed would say unprompted at the instant on the clock, derived from the
 ledger. That choice matters more than it looks. The timeline scrubber moves scenario time
 in both directions, and a queue would either replay announcements on the way back or lose

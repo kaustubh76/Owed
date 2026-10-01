@@ -10,6 +10,19 @@ pnpm --filter @owed/eval recourse    # H3 single-shot: does negotiating beat tak
 pnpm --filter @owed/eval learning    # H3 repeat games: does knowing who you are arguing with help?
 ```
 
+One more exists and is **not** run by default, because it costs money and calls a network
+service:
+
+```bash
+AWS_REGION=us-east-1 pnpm --filter @owed/eval extraction:bedrock   # H1 again, with a model
+```
+
+It needs Bedrock model access. It is kept out of `pnpm test` on purpose: the corpus test
+below asserts that *nothing* is read out of the twenty-five messages that promise nothing,
+and a model behind that assertion would fail CI whenever it misread one. That is not a
+flaky test — it is a correct test of a non-deterministic thing, which is a worse problem to
+have.
+
 Results are written to `eval/results/`, one file per evaluation.
 
 ---
@@ -40,9 +53,17 @@ Two readings are reported: **kind only**, which is what H1 claims, and **kind an
 timing**, which is what actually has to be right for the breach engine to do anything with
 the promise.
 
-The extractor is rules, not a model — `packages/extractor`, no network, no AWS. Every
-extraction carries the sentence it was read from, because a promise a household cannot
-trace back to words somebody wrote them is a promise Owed invented.
+The extractor **measured below** is rules, not a model — `packages/extractor`, no network,
+no AWS. Every extraction carries the sentence it was read from, because a promise a
+household cannot trace back to words somebody wrote them is a promise Owed invented.
+
+A second, model-backed extractor now exists —
+[`packages/extractor-bedrock`](../packages/extractor-bedrock) — scored by the same
+`scoreExtractions` over the same corpus, so the two columns are comparable. **It has not
+been run:** Bedrock model access is a console request, and every number in this file is
+still the rules extractor's. The model-backed one enforces the same evidence rule by
+discarding any extraction whose quote is not literally in the message, so a hallucination
+costs it recall rather than producing a card citing words nobody wrote.
 
 ### Results — first run, before any extractor change
 
