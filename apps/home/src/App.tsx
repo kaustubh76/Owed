@@ -25,7 +25,7 @@ const SURFACES: ReadonlyArray<{ id: Surface; label: string }> = [
 ];
 
 export function App() {
-  const { connected, turn, frames, now, range, speak, scrub } = useBrain();
+  const { connected, session, error, turn, frames, now, range, speak, scrub } = useBrain();
   const [surface, setSurface] = useState<Surface>("show");
 
   return (
@@ -52,8 +52,30 @@ export function App() {
         <span className="app__clock" title={now ?? ""}>
           scenario time &middot; {formatScenarioTime(now)}
         </span>
-        <span className={`app__status app__status--${connected ? "on" : "off"}`}>
-          {connected ? "brain connected" : "brain offline"}
+        {/*
+          Two hops, one indicator, and it has to be honest about both.
+
+          The home's socket to the brain being open says nothing about whether the brain can
+          reach the add-on, and those fail independently with the same symptom: nothing
+          happens when you speak. Reporting only the first is what let a brain with an
+          expired token sit behind a header reading "brain connected" while every utterance
+          failed — the demo looked healthy and answered nothing.
+
+          `--on` therefore means both hops are good, which is also what
+          `scripts/verify-ui.mjs` waits for and what docs/demo-script.md tells a presenter
+          "brain connected" means.
+        */}
+        <span
+          className={`app__status app__status--${connected && session === "live" ? "on" : connected ? "warn" : "off"}`}
+          title={error ?? ""}
+        >
+          {connected && session === "live"
+            ? "brain connected"
+            : connected && session === "linking"
+              ? "linking…"
+              : connected
+                ? "add-on unreachable"
+                : "brain offline"}
         </span>
       </header>
 

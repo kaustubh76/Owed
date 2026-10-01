@@ -88,6 +88,40 @@ function pair(expected: readonly Expected[], actual: readonly Extraction[]) {
  * twenty-five messages that promise nothing are where precision is actually decided.
  */
 export function measureExtraction(corpus: readonly LabelledMessage[]): ExtractionReport {
+  return scoreExtractions(
+    corpus,
+    corpus.map((item) => extractPromises(item.input)),
+  );
+}
+
+/**
+ * Score predictions that have already been produced.
+ *
+ * Split out from `measureExtraction` so a second extractor can be measured by **identical
+ * code**. The rules extractor is synchronous and a model-backed one cannot be, so the two
+ * cannot share a call site — but they must share the scoring, or the comparison is between
+ * two implementations of the rules as well as between two extractors, and means nothing.
+ *
+ * `measureExtraction` above keeps its exact original signature and behaviour on purpose.
+ * Making it `async` would cascade into `corpus.test.ts`, which calls it at `describe` body
+ * scope three times, where `await` is not available — and that file is the pre-registration
+ * guard. Restructuring the thing that protects the corpus, in order to measure something
+ * against the corpus, is the wrong order of operations.
+ *
+ * `predictions` is aligned with `corpus` by index, and a mismatch throws rather than being
+ * padded: silently scoring a short list would report missing answers as an extractor that
+ * found nothing.
+ */
+export function scoreExtractions(
+  corpus: readonly LabelledMessage[],
+  predictions: readonly (readonly Extraction[])[],
+): ExtractionReport {
+  if (predictions.length !== corpus.length) {
+    throw new Error(
+      `scoreExtractions got ${predictions.length} predictions for ${corpus.length} messages`,
+    );
+  }
+
   const kindOverall = emptyTally();
   const exactOverall = emptyTally();
   const bySet: Record<string, Tally> = {};
@@ -102,8 +136,8 @@ export function measureExtraction(corpus: readonly LabelledMessage[]): Extractio
     exactBySet[set] = emptyTally();
   }
 
-  for (const item of corpus) {
-    const read = extractPromises(item.input);
+  for (const [index, item] of corpus.entries()) {
+    const read = predictions[index] as readonly Extraction[];
     const { matched, unmatchedExpected, unmatchedActual } = pair(item.expected, read);
 
     const set = bySet[item.set] as Tally;

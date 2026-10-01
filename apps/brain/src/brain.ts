@@ -1,14 +1,21 @@
-import type { Client } from "@modelcontextprotocol/client";
 import type { CommitmentEvent } from "@owed/mcp-server";
 import { routeUtterance } from "./intents.js";
 import type { ProactiveMessage, ToolTrace, TurnMessage } from "./protocol.js";
+import type { SessionHandle } from "./session.js";
 
 /** What Owed says when it has no tool for what was asked. */
 const FALLBACK =
   "I can tell you what you're owed, what's still open, and why I did or didn't file a claim.";
 
 export class OwedBrain {
-  readonly #client: Client;
+  /**
+   * A way to reach a session, not a session.
+   *
+   * The session is rebuilt when a token expires or the server restarts, and the brain must
+   * survive that **without losing `#focus`** — otherwise a reconnect silently turns "file
+   * it" into "file what?", which is a worse bug than the disconnection it followed.
+   */
+  readonly #session: SessionHandle;
   readonly #viewCache = new Map<string, string>();
   /**
    * The promise currently under discussion.
@@ -20,8 +27,8 @@ export class OwedBrain {
   /** The promise Owed decided not to claim, which is a different question. */
   #declined: string | undefined;
 
-  constructor(client: Client) {
-    this.#client = client;
+  constructor(session: SessionHandle) {
+    this.#session = session;
   }
 
   get focus(): string | undefined {
@@ -44,7 +51,9 @@ export class OwedBrain {
     }
 
     const started = performance.now();
-    const result = await this.#client.callTool({ name: intent.tool, arguments: args });
+    const result = await this.#session.call((client) =>
+      client.callTool({ name: intent.tool, arguments: args }),
+    );
     const ms = Math.round(performance.now() - started);
     this.#rememberFocus(result);
 
@@ -94,7 +103,7 @@ export class OwedBrain {
     if (call === undefined) return message;
 
     try {
-      const result = await this.#client.callTool(call);
+      const result = await this.#session.call((client) => client.callTool(call));
       this.#rememberFocus(result);
 
       const uri = readResourceUri(result);
@@ -112,7 +121,7 @@ export class OwedBrain {
     const cached = this.#viewCache.get(uri);
     if (cached !== undefined) return cached;
 
-    const resource = await this.#client.readResource({ uri });
+    const resource = await this.#session.call((client) => client.readResource({ uri }));
     const first = resource.contents[0] as { text?: string } | undefined;
     if (typeof first?.text !== "string") return undefined;
 

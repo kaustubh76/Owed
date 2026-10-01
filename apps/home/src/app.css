@@ -37,6 +37,9 @@ body {
 .app__status { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--panel-edge); }
 .app__status--on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
 .app__status--off { color: var(--fg-muted); }
+/* Socket to the brain is up, but the brain cannot reach the add-on. Distinct from both
+   "fine" and "offline", because the fix is different and the symptom is identical. */
+.app__status--warn { color: var(--warn, #d08b2c); border-color: color-mix(in srgb, var(--warn, #d08b2c) 45%, transparent); }
 
 .app__stage {
   display: grid;

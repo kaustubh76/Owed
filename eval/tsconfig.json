@@ -26,6 +26,9 @@
     },
     {
       "path": "../packages/extractor"
+    },
+    {
+      "path": "../packages/extractor-bedrock"
     }
   ]
 }

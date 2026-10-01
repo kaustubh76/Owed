@@ -29,6 +29,13 @@ export interface HarnessOptions {
   auth?: boolean;
   now?: string;
   secret?: string;
+  /**
+   * Bearer token required on `/control/*`. Unset leaves them open, which is what every
+   * existing test expects — only the control-gate tests pass this.
+   */
+  controlToken?: string;
+  /** Extra hostnames accepted in `Host`/`Origin`, on top of the loopback names. */
+  allowedHosts?: readonly string[];
 }
 
 /**
@@ -60,6 +67,8 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
     deps,
     ...(options.auth === false ? {} : { auth: { config: proxyConfig(() => authConfig) } }),
     scrubbableClock: clock,
+    ...(options.controlToken === undefined ? {} : { controlToken: options.controlToken }),
+    ...(options.allowedHosts === undefined ? {} : { allowedHosts: options.allowedHosts }),
   });
 
   const http = await new Promise<Server>((resolve) => {

@@ -17,25 +17,27 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "zod": "^4.6.5",
-    "@owed/domain": "workspace:*",
-    "@owed/core": "workspace:*",
-    "express": "^5.2.1",
+    "@aws-sdk/client-dynamodb": "^3.1143.0",
+    "@aws-sdk/lib-dynamodb": "^3.1143.0",
     "@modelcontextprotocol/core": "2.1.0",
-    "@modelcontextprotocol/server": "2.1.0",
-    "@modelcontextprotocol/node": "2.1.0",
     "@modelcontextprotocol/express": "2.0.1",
     "@modelcontextprotocol/ext-apps": "2.0.3",
-    "@owed/ui-views": "workspace:*",
-    "jose": "^6.2.12",
-    "@owed/policy-library": "workspace:*",
+    "@modelcontextprotocol/node": "2.1.0",
+    "@modelcontextprotocol/server": "2.1.0",
+    "@owed/core": "workspace:*",
+    "@owed/domain": "workspace:*",
+    "@owed/extractor": "workspace:*",
     "@owed/merchant-agents": "workspace:*",
+    "@owed/policy-library": "workspace:*",
     "@owed/recourse-protocol": "workspace:*",
-    "@owed/extractor": "workspace:*"
+    "@owed/ui-views": "workspace:*",
+    "express": "^5.2.1",
+    "jose": "^6.2.12",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "tsx": "^4.23.15",
+    "@modelcontextprotocol/client": "2.1.0",
     "@types/express": "^5.0.4",
-    "@modelcontextprotocol/client": "2.1.0"
+    "tsx": "^4.23.15"
   }
 }

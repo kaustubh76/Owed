@@ -26,6 +26,14 @@ export interface HttpMerchantsOptions {
  * Frames are tapped at the transport, the same way the brain taps its own, because the
  * inspector's claim is that it shows what actually went over the wire.
  */
+/**
+ * How long one negotiation round may take.
+ *
+ * Chosen to be noticeably shorter than the SDK's 60s default: a household asking "file it"
+ * should hear an answer or a failure, and three rounds at a minute each is neither.
+ */
+const RESPOND_TIMEOUT_MS = 10_000;
+
 export function httpMerchants({ baseUrl, log }: HttpMerchantsOptions): MerchantDirectory {
   const clients = new Map<string, Promise<Client>>();
 
@@ -51,12 +59,35 @@ export function httpMerchants({ baseUrl, log }: HttpMerchantsOptions): MerchantD
     return client;
   }
 
+  /**
+   * A connection per merchant, cached — but never a *failure* cached.
+   *
+   * The promise is stored before it settles, which is what makes concurrent claims against
+   * the same merchant share one connection. The bug that created was permanence: nothing
+   * removed a rejected promise, so once a merchant was briefly unreachable, every later
+   * claim re-awaited the same rejection for the life of the process. Restarting the
+   * merchant agents did not help; only restarting this server did, and the agents are
+   * ordered to start *first*, so a `systemctl restart owed-merchants` left the MCP server
+   * running and permanently broken against every merchant.
+   *
+   * Dropping the entry on rejection means the next claim tries again, which is all the
+   * recovery this needs.
+   */
   function clientFor(merchant: string): Promise<Client> {
     const existing = clients.get(merchant);
     if (existing !== undefined) return existing;
-    const created = connect(merchant);
+
+    const created = connect(merchant).catch((error: unknown) => {
+      if (clients.get(merchant) === created) clients.delete(merchant);
+      throw error;
+    });
     clients.set(merchant, created);
     return created;
+  }
+
+  /** Forget a session so the next claim reconnects. */
+  function forget(merchant: string): void {
+    clients.delete(merchant);
   }
 
   return {
@@ -65,10 +96,22 @@ export function httpMerchants({ baseUrl, log }: HttpMerchantsOptions): MerchantD
         name: merchant,
         async respond(transcript: readonly RecourseMessage[]): Promise<RespondentMessage> {
           const client = await clientFor(merchant);
-          const result = await client.callTool({
-            name: "recourse_respond",
-            arguments: { transcript },
-          });
+          let result: Awaited<ReturnType<Client["callTool"]>>;
+          try {
+            result = await client.callTool(
+              { name: "recourse_respond", arguments: { transcript } },
+              // An explicit ceiling. Without one the client SDK's 60s default applies per
+              // request, and a negotiation runs up to three rounds — so one unresponsive
+              // merchant could hold a claim open for minutes while the household waited.
+              { timeout: RESPOND_TIMEOUT_MS },
+            );
+          } catch (error) {
+            // A failed call means this session is suspect, not just this request. Dropping
+            // it is what turns "the merchant restarted" into one failed claim rather than
+            // every future claim.
+            forget(merchant);
+            throw error;
+          }
 
           const parsed = RespondentMessageSchema.safeParse(result.structuredContent);
           if (!parsed.success) {

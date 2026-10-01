@@ -21,6 +21,26 @@ export class SeededIdGen implements IdGen {
   reset(): void {
     this.#counters.clear();
   }
+
+  /**
+   * Raise a prefix's counter past an id that already exists.
+   *
+   * Needed because the counters start at zero on every boot, which is correct when the
+   * ledger is seeded in the same process and wrong when it is not. A server that finds a
+   * ledger already on disk — or in DynamoDB — does not reseed, so without this the next
+   * claim it files is handed `clm_000001` again and collides with the seeded week.
+   *
+   * Ignores anything that is not one of our ids, so it can be pointed at arbitrary event
+   * payloads without the caller knowing which fields carry one.
+   */
+  observe(value: string): void {
+    const match = /^([a-z]+)_(\d{6})$/.exec(value);
+    if (match === null) return;
+    const [, prefix, digits] = match;
+    if (prefix === undefined || digits === undefined) return;
+    const seen = Number.parseInt(digits, 10);
+    if (seen > (this.#counters.get(prefix) ?? 0)) this.#counters.set(prefix, seen);
+  }
 }
 
 /** Randomness, injected so merchant-agent behaviour is reproducible. */

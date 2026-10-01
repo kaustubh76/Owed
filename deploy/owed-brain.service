@@ -1,0 +1,35 @@
+[Unit]
+# The Alexa+ stand-in. The only caller of /control/*, which is why it is the only process
+# that needs OWED_CONTROL_TOKEN, and why those routes never have to leave the box.
+Description=Owed brain (Alexa+ stand-in, WebSocket to the home)
+After=owed-server.service
+Wants=owed-server.service
+
+[Service]
+Type=simple
+User=owed
+WorkingDirectory=/srv/owed
+EnvironmentFile=/etc/owed/owed.env
+# Talks to the MCP server over loopback, so its /control/* calls never touch the proxy.
+Environment=OWED_MCP_URL=http://127.0.0.1:3939/mcp
+ExecStart=/usr/local/bin/node apps/brain/dist/main.js
+Restart=always
+RestartSec=2
+# Never give up.
+#
+# systemd's default start limit is five starts in ten seconds, after which the unit goes to
+# `failed` and stops being retried. With RestartSec=2 that budget is gone in eight seconds —
+# so a dependency that is briefly unavailable at the wrong moment would stop the service for
+# good and need a human. These services are worth retrying forever; the crash handlers in
+# each of them now say why in the journal, which is what makes a slow loop diagnosable
+# rather than mysterious.
+StartLimitIntervalSec=0
+# Give in-flight work a moment to drain; each service handles SIGTERM.
+TimeoutStopSec=10s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

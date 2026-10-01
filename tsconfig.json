@@ -8,6 +8,9 @@
       "path": "packages/extractor"
     },
     {
+      "path": "packages/extractor-bedrock"
+    },
+    {
       "path": "packages/recourse-protocol"
     },
     {

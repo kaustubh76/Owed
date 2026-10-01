@@ -49,17 +49,22 @@ try {
 }
 record("Dependencies", installed, installed ? "installed" : "not installed", "Run `pnpm install`.");
 
-let built = false;
-try {
-  readFileSync(new URL("../packages/ui-views/dist/views/ledger/index.html", import.meta.url));
-  built = true;
-} catch {
-  built = false;
-}
+// All three, not just one. Each view is a separate vite pass, so a build that produced the
+// ledger and then failed on the claim would have passed a check that looked at the ledger
+// alone — and the failure would have surfaced much later, as a card that would not render.
+const VIEWS = ["ledger", "claim", "evidence"];
+const missing = VIEWS.filter((view) => {
+  try {
+    readFileSync(new URL(`../packages/ui-views/dist/views/${view}/index.html`, import.meta.url));
+    return false;
+  } catch {
+    return true;
+  }
+});
 record(
   "Built views",
-  built,
-  built ? "ui:// views bundled" : "not built",
+  missing.length === 0,
+  missing.length === 0 ? `all three ui:// views bundled` : `missing: ${missing.join(", ")}`,
   "Run `pnpm build`. The views are single-file HTML bundles and the server serves them from disk.",
 );
 
@@ -86,7 +91,7 @@ for (const [port, what] of PORTS) {
     `Port ${port}`,
     open,
     open ? `free (${what})` : `in use — ${what} cannot start`,
-    `Something else is listening on ${port}. Stop it, or set a different port (OWED_PORT, OWED_BRAIN_PORT, OWED_MERCHANTS_PORT).`,
+    `Something else is listening on ${port}. Stopping it is the simple fix. Moving the port is not just OWED_PORT: the brain finds the server through OWED_MCP_URL, so both have to agree — and set them for the one command rather than exporting them, because conformance and aws:smoke read OWED_PORT too and pick 3999/3998 to stay out of the way.`,
   );
 }
 

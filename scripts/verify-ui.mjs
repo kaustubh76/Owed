@@ -279,6 +279,25 @@ try {
     (await page.textContent(".app__proactive-badge"))?.trim(),
     "simulated proactive",
   );
+  /**
+   * Let the announcement burst settle before reading it, or saying anything else.
+   *
+   * Crossing Sunday evening brings several commitments due at once, and the brain announces
+   * them oldest-first so the household is left looking at the most recent. Reading
+   * `.voice__reply` the instant `.app__proactive` appears catches whichever landed first,
+   * and — worse — the "file it" below then refers to whatever the brain's focus happened to
+   * be mid-burst, which may be a recovered claim with nothing to file.
+   *
+   * Both were reliably fine only because an in-memory ledger made the burst instant. With
+   * the ledger in DynamoDB each announcement is a real round trip. This waits for the state
+   * the beat actually asserts; it is not a weaker check, because if Owed never announces the
+   * breach the next line fails exactly as it did before.
+   */
+  await page
+    .locator(".voice__reply")
+    .filter({ hasText: "missed the delivery window" })
+    .waitFor({ timeout: 10_000 })
+    .catch(() => {});
   const announced = (await page.textContent(".voice__reply")) ?? "";
   check("announcement names the breach", announced.includes("missed the delivery window"), true);
   check("announcement has no digits", /[0-9]/.test(announced), false);

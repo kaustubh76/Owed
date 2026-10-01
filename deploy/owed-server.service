@@ -1,0 +1,40 @@
+[Unit]
+Description=Owed MCP server (the add-on itself)
+After=owed-merchants.service network-online.target
+Wants=owed-merchants.service
+
+[Service]
+Type=simple
+User=owed
+WorkingDirectory=/srv/owed
+# Holds OWED_AUTH_SECRET, OWED_CONTROL_TOKEN, OWED_ALLOWED_HOSTS, OWED_BASE_URL,
+# OWED_DYNAMO_TABLE, AWS_REGION. Mode 0640, root:owed — readable by the user this unit runs
+# as and nobody else. The secret is the one thing on this box whose leak would expose every
+# household's ledger. (0600 root:root would be tighter and would stop this unit starting.)
+EnvironmentFile=/etc/owed/owed.env
+ExecStart=/usr/local/bin/node packages/mcp-server/dist/main.js
+Restart=always
+RestartSec=2
+# Never give up.
+#
+# systemd's default start limit is five starts in ten seconds, after which the unit goes to
+# `failed` and stops being retried. With RestartSec=2 that budget is gone in eight seconds —
+# so a dependency that is briefly unavailable at the wrong moment would stop the service for
+# good and need a human. These services are worth retrying forever; the crash handlers in
+# each of them now say why in the journal, which is what makes a slow loop diagnosable
+# rather than mysterious.
+StartLimitIntervalSec=0
+# Give in-flight work a moment to drain; each service handles SIGTERM.
+TimeoutStopSec=10s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# `ProtectSystem=strict` mounts the whole filesystem read-only, so the one path this
+# process may need to write has to be named. Only used when OWED_DB selects the SQLite
+# ledger; with OWED_DYNAMO_TABLE nothing is written locally. Declared either way, because a
+# unit that works only in one of its two supported configurations is a trap.
+ReadWritePaths=/srv/owed/data
+
+[Install]
+WantedBy=multi-user.target

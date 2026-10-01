@@ -21,6 +21,7 @@
     "demo:build": "pnpm build",
     "conformance": "node scripts/conformance.mjs",
     "verify:ui": "node scripts/verify-ui.mjs",
+    "aws:smoke": "node scripts/aws-smoke.mjs",
     "eval": "pnpm --filter @owed/eval recourse"
   },
   "devDependencies": {

@@ -77,9 +77,25 @@ export interface ErrorMessage {
   message: string;
 }
 
+/**
+ * The state of the hop the home cannot see.
+ *
+ * The home's own socket to the brain says nothing about whether the brain can reach the
+ * MCP server, and those are different questions with the same symptom. Reporting only the
+ * first is what let a brain with an expired token sit behind a header reading "brain
+ * connected" while every utterance failed.
+ */
+export interface SessionMessage {
+  type: "session";
+  status: "linking" | "live" | "lost";
+  /** Why, when it is known. Shown to whoever is looking, not parsed. */
+  detail?: string;
+}
+
 export type BrainToHome =
   | TurnMessage
   | ProactiveMessage
   | FrameMessage
   | ClockMessage
-  | ErrorMessage;
+  | ErrorMessage
+  | SessionMessage;
