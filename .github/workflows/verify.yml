@@ -8,6 +8,24 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+
+    # DynamoDB Local, so the ledger adapter is actually tested here.
+    #
+    # Without this the adapter's tests found nothing at 127.0.0.1:8000, skipped, and the job
+    # went green — so the store that holds the household's ledger, its atomic sequence
+    # counter and its append-only guarantee had no automated coverage at all. It was checked
+    # only when somebody remembered to start Docker locally.
+    #
+    # No health check is declared because the image serves a Java process that answers HTTP
+    # 400 to a bare GET, which `--health-cmd` cannot easily assert on; the test file polls
+    # for readiness itself instead, and OWED_REQUIRE_DYNAMO below makes a container that
+    # never comes up a failure rather than a silent skip.
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local
+        ports:
+          - 8000:8000
+
     steps:
       - uses: actions/checkout@v5
 
@@ -26,7 +44,13 @@ jobs:
 
       - run: pnpm lint
 
+      # OWED_REQUIRE_DYNAMO turns this suite's one conditional skip into a failure. The skip
+      # is correct on a laptop — a clean clone must run `pnpm verify` green with nothing
+      # installed — and wrong here, where skipping silently would report coverage of the
+      # DynamoDB adapter while testing none of it.
       - run: pnpm test
+        env:
+          OWED_REQUIRE_DYNAMO: "1"
 
       # The external Alexa+ conformance checker, run against a real booted server.
       - run: pnpm conformance

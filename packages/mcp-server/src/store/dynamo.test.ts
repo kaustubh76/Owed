@@ -17,16 +17,42 @@ import { DynamoEventStore, ensureDynamoTable } from "./dynamo.js";
  */
 const ENDPOINT = process.env.OWED_DYNAMO_ENDPOINT ?? "http://127.0.0.1:8000";
 
-async function reachable(): Promise<boolean> {
-  try {
-    await fetch(ENDPOINT, { signal: AbortSignal.timeout(1500) });
-    return true;
-  } catch {
-    return false;
+/**
+ * Whether skipping is allowed.
+ *
+ * The skip above is right on a laptop and dangerous in CI. A skip is silent, so a CI job
+ * whose service container came up slowly would skip these tests and still go green —
+ * reporting coverage of the adapter that holds the household's ledger while testing none of
+ * it. That is worse than having no CI for it, because it looks like there is.
+ *
+ * `OWED_REQUIRE_DYNAMO=1` says "I expect DynamoDB to be here", and an unreachable endpoint
+ * becomes a failure instead. CI sets it; nobody else needs to.
+ */
+const REQUIRED = process.env.OWED_REQUIRE_DYNAMO === "1";
+
+/** Retried, because a service container can take a moment and one probe is a coin toss. */
+async function reachable(attempts = REQUIRED ? 20 : 1): Promise<boolean> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await fetch(ENDPOINT, { signal: AbortSignal.timeout(1500) });
+      return true;
+    } catch {
+      if (attempt >= attempts) return false;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
   }
 }
 
 const available = await reachable();
+
+if (REQUIRED && !available) {
+  throw new Error(
+    `OWED_REQUIRE_DYNAMO=1 but nothing answered at ${ENDPOINT}.\n` +
+      "These tests were about to skip silently, which in CI would report coverage of the\n" +
+      "DynamoDB adapter while testing none of it. Start it with:\n" +
+      "  docker run --rm -d -p 8000:8000 amazon/dynamodb-local",
+  );
+}
 
 function localClient(): DynamoDBClient {
   return new DynamoDBClient({

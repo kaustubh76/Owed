@@ -211,6 +211,27 @@ const counted = awsJson(
 );
 process.stdout.write(`✓ ${counted.Count} items in the table by Scan (events + the seq counter)\n`);
 
+// ── 6. The documented contract, against a remote ledger ──────────────────────────────
+//
+// The same external conformance checker `pnpm conformance` runs, pointed at this server.
+// Worth the one spawn: every other time it runs, the ledger is in memory on the same
+// machine. This is the only place it meets a server whose every read is a network round
+// trip to another continent, which is where a latency or ordering assumption would show.
+//
+// Not fatal if the binary is absent — it ships with `@owed/brain`'s dependencies, and a
+// missing dev dependency should not fail a check about AWS.
+const checker = "./apps/brain/node_modules/.bin/mcp-voice-simulator-conformance";
+if (existsSync(checker)) {
+  process.stdout.write("\n── Alexa+ conformance, against the DynamoDB-backed server ──\n");
+  const code = await new Promise((resolve) => {
+    spawn(checker, [`http://127.0.0.1:${PORT}/mcp`], { stdio: "inherit" }).on("close", resolve);
+  });
+  if (code !== 0) fail(`the conformance checker exited ${code}`);
+  process.stdout.write("✓ documented checks pass with the ledger in DynamoDB\n");
+} else {
+  process.stdout.write(`\n  (conformance checker not installed at ${checker} — skipped)\n`);
+}
+
 shutdown();
 store.close();
 
@@ -218,7 +239,9 @@ process.stdout.write(
   isLocal
     ? "\nLOCAL DRY RUN passed. This script works; your AWS account is still untouched.\n"
     : `\nThe ledger is in DynamoDB in account ${identity.Account}, and the projection agrees with it.\n` +
-        "What this does NOT establish: anything about Alexa+, which is partner-gated — see\n" +
-        "docs/contract-v1.md. It establishes that the storage adapter is real.\n\n" +
+        "The documented Alexa+ checks also pass against it. What that does NOT establish is\n" +
+        "anything about the real Alexa+ client, which is partner-gated and has never seen this\n" +
+        "server — see docs/contract-v1.md. It establishes that the storage adapter is real and\n" +
+        "that moving the ledger off the machine did not break the contract.\n\n" +
         `Tear down with:\n  aws dynamodb delete-table --table-name ${TABLE} --region ${REGION}\n`,
 );
