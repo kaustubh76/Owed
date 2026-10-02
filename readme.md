@@ -391,16 +391,17 @@ owed/
 │  ├─ friction-log.md       # per-tool friction, fourteen entries
 │  ├─ demo-script.md        # what to say, and what not to claim, while recording
 │  └─ policies/             # the merchant policy documents the claims are argued from
+├─ LICENSE                  # Apache-2.0, verbatim
+├─ NOTICE                   # the copyright line, and which packages it covers
 └─ readme.md
 ```
 
-**No `LICENSE` file exists yet, and five packages need one.** `extractor`,
-`extractor-bedrock`, `recourse-protocol`, `policy-library` and `merchant-agents` all declare
-`"license": "Apache-2.0"` and set `files` for publication, which is a promise the repository
-does not currently keep — there is no licence text anywhere in it. An earlier revision of
-this tree listed a `LICENSE` that was never added. It needs the Apache-2.0 text with a real
-copyright line, which is the author's to write rather than something to guess at, and it
-matters for the Open Source mini-challenge specifically.
+**The licence covers five packages.** `extractor`, `extractor-bedrock`,
+`recourse-protocol`, `policy-library` and `merchant-agents` each declare
+`"license": "Apache-2.0"` and set `files` for publication. For most of this repository's
+life that was a promise it did not keep — an earlier revision of this tree listed a
+`LICENSE` that had never been added. `LICENSE` is now the Apache-2.0 text verbatim from
+apache.org, and `NOTICE` carries the copyright line and says which packages it covers.
 
 ---
 
