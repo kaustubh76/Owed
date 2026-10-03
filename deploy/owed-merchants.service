@@ -6,6 +6,19 @@ Description=Owed merchant agents (reference MCP peers)
 After=network-online.target
 Wants=network-online.target
 
+# Never give up.
+#
+# systemd's default start limit is five starts in ten seconds, after which the unit goes to
+# `failed` and stops being retried. With RestartSec=2 that budget is gone in eight seconds —
+# so a dependency briefly unavailable at the wrong moment would stop the service for good and
+# need a human.
+#
+# This lives in [Unit], not [Service]. It was in [Service] first, where systemd reports
+# "Unknown key name 'StartLimitIntervalSec' … ignoring" and carries on — so the protection
+# was silently absent. `systemd-analyze verify` says so and still exits 0, which is why the
+# check reads its output rather than its status.
+StartLimitIntervalSec=0
+
 [Service]
 Type=simple
 User=owed
@@ -14,15 +27,6 @@ EnvironmentFile=/etc/owed/owed.env
 ExecStart=/usr/local/bin/node packages/merchant-agents/dist/bin/serve.js
 Restart=always
 RestartSec=2
-# Never give up.
-#
-# systemd's default start limit is five starts in ten seconds, after which the unit goes to
-# `failed` and stops being retried. With RestartSec=2 that budget is gone in eight seconds —
-# so a dependency that is briefly unavailable at the wrong moment would stop the service for
-# good and need a human. These services are worth retrying forever; the crash handlers in
-# each of them now say why in the journal, which is what makes a slow loop diagnosable
-# rather than mysterious.
-StartLimitIntervalSec=0
 # Give in-flight work a moment to drain; each service handles SIGTERM.
 TimeoutStopSec=10s
 # Listens on 127.0.0.1:3941 and is never proxied. Nothing off the box reaches it.
