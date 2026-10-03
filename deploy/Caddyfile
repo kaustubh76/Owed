@@ -31,6 +31,19 @@ owed.example.com {
 		respond 404
 	}
 
+	# /health is internal too, and for a sharper reason than privacy.
+	#
+	# Without this block it falls through to the static site at the bottom of this file and
+	# returns **index.html with a 200** — so a monitor pointed at the public /health reports
+	# healthy forever, whatever the ledger is doing. A 404 is a useless answer; a 200 that
+	# means nothing is a dangerous one.
+	#
+	# It also carries the household's event count and replays the ledger on every call,
+	# neither of which belongs on a public URL.
+	handle /health {
+		respond 404
+	}
+
 	# ── The add-on contract ────────────────────────────────────────────────────────────
 	#
 	# Streamable HTTP holds long-lived text/event-stream sessions, so buffering must stay
@@ -39,24 +52,27 @@ owed.example.com {
 	handle /mcp* {
 		reverse_proxy 127.0.0.1:3939 {
 			flush_interval -1
-
-			# Probe the ledger, not the socket.
-			#
-			# /health reads the household's events, so it distinguishes "the process is
-			# listening" from "the process can do its job" — which are different states and
-			# were previously indistinguishable from outside.
-			#
-			# Being honest about what this buys with a single upstream: Caddy cannot route
-			# around a broken server when there is nowhere else to route, so an unhealthy
-			# upstream means 502 instead of the application's own 503. What it does buy is
-			# that the condition is named in Caddy's log the moment it starts, rather than
-			# inferred later from a pile of failed requests.
-			health_uri /health
-			health_interval 10s
-			health_timeout 5s
-			health_status 2xx
 		}
 	}
+
+	# No active health check here, and that is a reversal worth recording.
+	#
+	# An earlier version of this file probed /health on this upstream, on the reasoning that
+	# "listening" and "able to read the ledger" are different states. Running it proved the
+	# idea actively harmful: Caddy's health checker sends `Host: <upstream-address>`, the
+	# server's DNS-rebinding protection answers **403** to any host outside its allow-list,
+	# and Caddy then marks the only upstream unhealthy and returns `no upstreams available`
+	# — a bare 503 — for every MCP request. A healthy server, taken off the air by its own
+	# monitoring.
+	#
+	# With `127.0.0.1` as the upstream it happens to pass, because loopback is always in the
+	# allow-list. That is a coincidence, not a design: anyone who moves the upstream to a
+	# hostname gets a total outage whose cause is in neither service's obvious logs.
+	#
+	# And the check bought little even working. There is one upstream, so Caddy cannot route
+	# around a bad one; and the application already answers a failed ledger read with a 503
+	# that *names the reason*, which is strictly more useful than Caddy's empty one. An
+	# operator curls /health on the box; see deploy/README.md.
 
 	# OAuth discovery: RFC 9728 protected-resource and RFC 8414 authorization-server
 	# metadata, plus the authorize/token endpoints. The issuer in those documents comes

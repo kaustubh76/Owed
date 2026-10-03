@@ -79,12 +79,19 @@ curl -s http://127.0.0.1:3939/health      # on the box: the ledger, not just the
 `/health` reads the ledger rather than returning a constant, so it distinguishes
 "listening" from "working" — which are different, and were previously indistinguishable.
 
-**It is loopback-only, on purpose.** The Caddyfile has no `handle /health` block, so it is
-not reachable from the internet: the response carries the household's event count, and each
-call replays the ledger, neither of which belongs on a public URL. Caddy consults it as an
-*upstream probe* (`health_uri` inside the `/mcp` proxy), and from on the box you curl it
-directly. A public `GET /health` would fall through to the static site and return
-`index.html` with a 200 — which looks like success and is the reason this paragraph exists.
+**It is loopback-only, and the Caddyfile answers 404 for it explicitly.** Not merely
+unrouted — without that block `/health` falls through to the static site and returns
+`index.html` with a **200**, so a monitor pointed at the public URL would report healthy
+forever regardless of the ledger. Verified by running it, which is how that was found.
+
+**Caddy does not probe it either**, and that is deliberate. An earlier version used
+`health_uri /health` on the `/mcp` proxy; testing showed Caddy's health checker sends
+`Host: <upstream-address>`, the server's DNS-rebinding protection answers 403 to anything
+outside its allow-list, and Caddy then pulled the only upstream and served a bare 503 for
+all MCP traffic — a healthy server taken down by its own monitoring. The application's own
+503 names the reason, which is more useful than Caddy's empty one.
+
+So: curl it **on the box**, over loopback.
 
 **Stop the instance when not demoing.** Stopped, it costs only its EBS volume (~$1.60/mo)
 against a ~$14/mo running cost. That lever is most of why this is one VM rather than a
