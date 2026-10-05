@@ -27,6 +27,12 @@ Businesses price in the fact that almost nobody claims. Owed removes the effort,
 drives this exact sequence in a real Chrome and checks the numbers on the cards. The
 figures here are the figures it reads.*
 
+*These are the beats, at the pace the automated check drives them.
+[`docs/demo-script.md`](docs/demo-script.md) is the same sequence as a recorded take —
+the same beats in the same order, with narration, an opening framing of the problem and a
+closing pass over the published numbers, which is why it lands at 2:50 rather than 1:30.
+Neither is stale; one is the test, the other is the script.*
+
 | t | Surface | What happens |
 |---|---|---|
 | 0:00 | Echo Show (Sun 19:30) | *"Alexa, what am I owed?"* → **Recovered this week $47.00 · Still open $8.00 · 2 kept.** Spoken: "You've recovered forty-seven dollars this week, and eight dollars is still open. Two promises were kept. There's one I'm not claiming, because I only watched twenty percent of the window. There's one more I can file." |
@@ -417,6 +423,8 @@ deployment — both opt-in, neither needed to run or judge anything below.
 
 ```bash
 # prerequisites: Node 20+ (repo is pinned to 26 via .nvmrc) and pnpm
+#                 `pnpm verify:ui` additionally needs Google Chrome installed
+#                 (Playwright is run with channel: "chrome", not a bundled browser)
 pnpm install
 pnpm build          # compiles the workspaces and bundles the ui:// views
 pnpm preflight      # checks Node, pnpm, the build and all four ports
@@ -545,7 +553,7 @@ nothing in this submission should be read as claiming otherwise.
 | Persistence behind the same port, on Node's built-in SQLite | done — append-only, parsed on read, survives restart |
 | Docker, moderated walkthroughs (H4) | **not done** |
 | Real Echo, Fire TV, phone rail | **cut** |
-| AWS | **done after the fact** — the ledger runs on DynamoDB, verified against the real service in account `240250534690`; `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
+| AWS | **done after the fact** — the ledger runs on DynamoDB, verified against the real service in `us-east-1`; `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
 
 **Never cut, and not cut:** the three numbers on the ledger card, the claim card, the
 protocol inspector, the storyboard golden test, the contract suite, the friction log, and
@@ -555,9 +563,12 @@ saying plainly when a hypothesis was not met.
 
 ## 15. Submission checklist
 
-- [x] Primary track: **Alexa+**. Mini-challenges: **Open Source** (`recourse-protocol`, `policy-library`, `extractor`, `merchant-agents`, `extractor-bedrock` — all Apache-2.0 with `files` set for publication) and **AWS Builder** — the ledger runs on DynamoDB behind the port that already had two adapters. Earlier drafts of this README said the opposite, because for most of the build it was true.
+- [x] Primary track: **Alexa+**. Mini-challenges: **Open Source** and **AWS Builder** — the ledger runs on DynamoDB behind the port that already had two adapters. Earlier drafts of this README said the opposite, because for most of the build it was true.
+- [x] Open Source, stated precisely: **three** packages are publishable as they stand — `recourse-protocol` (no workspace dependencies at all), `policy-library` and `merchant-agents` — each Apache-2.0 with `files` set. `extractor` and `extractor-bedrock` are Apache-2.0 and `files`-ready too, but both depend on `@owed/domain`, which is `private: true`, so **they cannot be published without extracting the domain types first**. An earlier draft of this line claimed all five; that was wrong.
 - [x] The repo calls MCP in code — server entry point, `_meta.ui` on every tool, elicitation, `ui://` resources — not just in this README
-- [x] Product feedback for every tool used: **[docs/friction-log.md](docs/friction-log.md)**, fourteen entries with task, expected, actual, severity, workaround and suggestion
+- [x] **(d) Product feedback** for every tool, API and SDK used — what it was used for, what worked well, what needs work, how onboarding felt, whether we would build with it again, **and the AWS services described in that same answer**: **[docs/product-feedback.md](docs/product-feedback.md)**. Only tools this repo actually imports or invokes appear in it; where something was written but never executed against the service — Bedrock — it says so.
+- [x] **(g) Friction log**, the optional one: **[docs/friction-log.md](docs/friction-log.md)**, fourteen entries, each with the task, what was expected, what happened, severity, the workaround and what would have prevented it. An earlier draft of this README offered this file as the answer to (d) as well. It was not: it is the right shape for (g) and the wrong shape for (d), and it mentioned no AWS service at all.
+- [x] Built entirely inside the submission window — first commit 2026-09-28, nothing pre-existing to declare
 - [x] Feature request, written as a schema rather than a paragraph: **[docs/proactive.md](docs/proactive.md)** — `CommitmentEvent` and the proactive channel Alexa+ add-ons do not have
 - [x] Real-vs-simulated map (§13), and the statement that **none of this has run against the real Alexa+ client** because it is partner-gated
 - [x] Numbers published met or not: H1 **met on the corpus it was tuned against, missed on held-out data**; H2 **not met**; H3 **not met**

@@ -4,9 +4,16 @@ Every entry below was hit while building Owed, not collected from reading. Each 
 task, what was expected, what actually happened, the severity, the workaround used, and
 what would have prevented it.
 
-Tools covered: MCP TypeScript SDK v2 (`@modelcontextprotocol/core|client|server|node|express`),
-`@modelcontextprotocol/ext-apps`, `mcp-voice-simulator`, and the published Alexa+ add-on
-documentation.
+Tools covered: MCP TypeScript SDK v2 (`@modelcontextprotocol/client|server|node|express`),
+`@modelcontextprotocol/ext-apps`, `mcp-voice-simulator`'s conformance CLI, and the published
+Alexa+ add-on documentation. `@modelcontextprotocol/core` is **not** covered: it is declared
+as a dependency in three packages and imported in none, so there is nothing here we actually
+learned about it.
+
+This file is the friction log — the things that cost time, and what would have prevented
+them. It is not the product feedback: for what each tool was used for, what worked well, how
+onboarding felt and whether we would use it again, see
+**[product-feedback.md](product-feedback.md)**.
 
 Severity: **high** — blocked progress or would ship a broken add-on · **medium** — cost
 significant time or forced a design change · **low** — papercut.
@@ -112,6 +119,9 @@ sends the same header-less probe so the ordering cannot silently regress.
 
 **Task.** Decide whether the 401 should carry a challenge header.
 
+**Expected.** One answer: either the three sources agree, or Amazon's page is explicit
+enough to settle it.
+
 **Actual.** Amazon's account-linking page lists `WWW-Authenticate` under *not supported*.
 RFC 9728 and general MCP convention say a 401 SHOULD carry one pointing at the
 protected-resource metadata. The SDK's `requireBearerAuth` sends one by default. The
@@ -131,6 +141,12 @@ generic MCP clients.
 ## 6. Amazon's docs disagree with themselves on the discovery path and the protocol version
 
 **Tool:** Alexa+ add-on documentation · **Severity: medium**
+
+**Task.** Serve the OAuth discovery documents where Alexa+ will look for them, and
+declare a protocol version it will accept.
+
+**Expected.** One well-known path per document and one protocol version, consistent across
+Amazon's own pages.
 
 **Actual.** The MCP QuickStart describes protected-resource metadata at
 `/.well-known/oauth-authorization-server`, which is the RFC 8414 authorization-server path;
@@ -154,6 +170,10 @@ implement the union — which is more surface than anyone wants to maintain.
 **Task.** Design the confirmation step before filing a claim — the product's central safety
 guarantee is that no claim is filed without a human "yes".
 
+**Expected.** A declared `elicitation` capability object with its modes, schema
+restrictions, timeout and round limit — enough to know whether the product's central safety
+guarantee can rest on it.
+
 **Actual.** The documentation says only that "the system uses the existing elicitation
 framework through the MCP protocol". It never states which elicitation modes Alexa+
 declares, whether URL mode is supported, what the schema restrictions or timeouts are, or
@@ -172,6 +192,12 @@ safety-critical part of the contract and currently the least specified.
 ## 8. `registerAppResource`'s argument order is easy to get wrong, and the examples hide it
 
 **Tool:** `@modelcontextprotocol/ext-apps` · **Severity: low-medium**
+
+**Task.** Register the three `ui://` views as app resources under names of our own
+choosing.
+
+**Expected.** An argument order that cannot be transposed silently, or examples in which a
+transposition would show.
 
 **Actual.** The signature is `registerAppResource(server, name, uri, config, readCallback)` —
 **name before uri**. Every shipped example passes the same string for both, so the ordering
@@ -250,6 +276,9 @@ write-once, but it is not *run-anywhere*. Better still, offer a sessionful optio
 
 **Task.** Handle "no" as well as "yes".
 
+**Expected.** A declined elicitation distinguishable from one that was never asked, and a
+worked example that handles both.
+
 **Actual.** `acceptedContent()` returns `undefined` for a **declined** elicitation — exactly
 as it does for one that was never asked. The worked example in the type documentation branches
 on that single value:
@@ -280,6 +309,9 @@ this API gets used wrongly.
 
 **Task.** Declare a deny-by-default content security policy for each `ui://` view.
 
+**Expected.** A policy declared once at registration and in force wherever a host reads the
+view — including the read that rendering requires.
+
 **Actual.** `registerAppResource(server, name, uri, { _meta: { ui: { csp } } }, read)` puts the
 policy on the `resources/list` entry. A host that reads the resource — which is what it must do
 to render it — receives content items with no `_meta` at all. Our own contract test failed on
@@ -299,6 +331,11 @@ items unless the callback sets its own. The current split is a trap with a silen
 
 **Tool:** `@modelcontextprotocol/express` · **Severity: low**
 
+**Task.** Mount the MCP route on the app `createMcpExpressApp()` returns, under `strict`.
+
+**Expected.** Handler parameters typed from the returned `Express` instance, the way they
+are on an app from `express()`.
+
 **Actual.** `createMcpExpressApp()` returns `Express`, and `@types/express` resolves
 correctly, but `app.all("/mcp", (req, res) => …)` still produces `TS7006: implicitly has an
 'any' type` under `strict`. Annotating the parameters explicitly fixes it.
@@ -315,6 +352,9 @@ will hit it in their first five minutes.
 **Surface:** Alexa+ add-on model · **Severity: high** — this one is a feature request, not a bug.
 
 **Task.** Tell the household a parcel never arrived.
+
+**Expected.** Some channel — a scheduled wake, an event push, anything — that reaches a
+device without a person having started the exchange.
 
 **Actual.** There is no way to. Alexa+ add-ons are strictly reactive: a tool runs because
 somebody said something. No scheduled wake, no event channel, nothing that reaches a
