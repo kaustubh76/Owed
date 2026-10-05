@@ -14,7 +14,7 @@
         "dynamodb:PutItem",
         "dynamodb:UpdateItem"
       ],
-      "Resource": "arn:aws:dynamodb:us-east-1:240250534690:table/owed-*"
+      "Resource": "arn:aws:dynamodb:us-east-1:AWS_ACCOUNT_ID:table/owed-*"
     },
     {
       "Sid": "WhoAmI",

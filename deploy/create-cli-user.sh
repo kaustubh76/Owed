@@ -19,8 +19,13 @@
 
 set -euo pipefail
 
-ACCOUNT="240250534690"
-REGION="us-east-1"
+# Discovered, not hardcoded. CloudShell is already authenticated as the console user, so
+# the account is something we can simply ask for — which makes this script work for anyone
+# who pastes it, and keeps an account number out of a public repository. `set -e` above
+# means a failure here stops the script, which is the right outcome: every ARN below
+# depends on this value being real.
+REGION="${AWS_REGION:-us-east-1}"
+ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 USER_NAME="owed-cli"
 POLICY_NAME="owed-phase1"
 POLICY_ARN="arn:aws:iam::${ACCOUNT}:policy/${POLICY_NAME}"
@@ -35,7 +40,7 @@ POLICY_ARN="arn:aws:iam::${ACCOUNT}:policy/${POLICY_NAME}"
 # console rejects the string outright. The SDK command being called `TransactWriteCommand`
 # makes a matching permission the natural thing to expect; it does not exist.
 POLICY_DOCUMENT=$(
-	cat <<'JSON'
+	cat <<JSON
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -52,7 +57,7 @@ POLICY_DOCUMENT=$(
         "dynamodb:PutItem",
         "dynamodb:UpdateItem"
       ],
-      "Resource": "arn:aws:dynamodb:us-east-1:240250534690:table/owed-*"
+      "Resource": "arn:aws:dynamodb:${REGION}:${ACCOUNT}:table/owed-*"
     },
     {
       "Sid": "WhoAmI",

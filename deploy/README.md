@@ -10,7 +10,7 @@ judge the demo — `pnpm demo` is unchanged and still needs no account and no ke
 | `owed-server.service`, `owed-brain.service`, `owed-merchants.service` | One process each, so a crash is visible and restartable rather than one shell holding three. |
 | `bootstrap.sh` | Amazon Linux 2023 arm64, run once as root. Installs checksum-verified Node and Caddy, builds, writes `/etc/owed/owed.env`, enables the units. |
 | `iam-policy-phase1.json` | Least privilege for the Phase 1 smoke test: the ledger table and nothing else. |
-| `create-cli-user.sh` | Creates that policy, a user, and an access key — **run it in AWS CloudShell**, which is already authenticated as the console user and so needs no key to create one. Self-contained, because CloudShell has no checkout; its inline policy is kept byte-identical to the JSON above. |
+| `create-cli-user.sh` | Creates that policy, a user, and an access key — **run it in AWS CloudShell**, which is already authenticated as the console user and so needs no key to create one. Self-contained, because CloudShell has no checkout; its inline policy is the same statement as the JSON above, except that it substitutes the account it discovers via `sts:GetCallerIdentity` where the file carries an `AWS_ACCOUNT_ID` placeholder. Change one, change both. |
 
 ## Two things that will look like bugs and are not
 
@@ -46,6 +46,20 @@ OWED_DYNAMO_TABLE=owed-ledger AWS_REGION=us-east-1 pnpm verify:ui
 
 `pnpm aws:smoke` has no such requirement — it asserts the seeded week is a *prefix* of the
 table rather than the whole of it, precisely so it can be run against a table with history.
+
+It does require **`OWED_AWS_ACCOUNT`**, alongside `OWED_DYNAMO_TABLE` and `AWS_REGION`, and
+refuses to start without it:
+
+```bash
+OWED_AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text) \
+OWED_DYNAMO_TABLE=owed-ledger AWS_REGION=us-east-1 pnpm aws:smoke
+```
+
+It writes a real household ledger to a real table, so it asserts whose account it is pointed
+at before writing anything. That used to default to the author's account number, which both
+published it in a public repository and made the guard weaker than it looked — a default is a
+value nobody chose, and the check only means something if someone named the account on
+purpose.
 
 ## The two variables that are not optional
 

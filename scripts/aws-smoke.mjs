@@ -62,9 +62,14 @@ const SERVER_ENTRY = "packages/mcp-server/dist/main.js";
 /**
  * Checked rather than assumed, because the failure it prevents is the expensive one: a
  * smoke test that quietly seeds a household's ledger into somebody else's account tells
- * you nothing and leaves data behind. Override deliberately if the account changes.
+ * you nothing and leaves data behind.
+ *
+ * Required, with no default. It used to default to the author's account, which both
+ * published an account number in a public repository and made the guard weaker than it
+ * looks: a default is a value nobody chose, and this check is only meaningful if someone
+ * deliberately named the account they expect.
  */
-const EXPECTED_ACCOUNT = process.env.OWED_AWS_ACCOUNT ?? "240250534690";
+const EXPECTED_ACCOUNT = process.env.OWED_AWS_ACCOUNT;
 
 function fail(message) {
   process.stderr.write(`\n✗ ${message}\n`);
@@ -76,6 +81,13 @@ if (TABLE === undefined) {
 }
 if (REGION === undefined) {
   fail("AWS_REGION is not set — the region decides which account's table this is");
+}
+if (EXPECTED_ACCOUNT === undefined) {
+  fail(
+    "OWED_AWS_ACCOUNT is not set — name the account you expect, so this cannot seed a\n" +
+      "  household's ledger into somebody else's. Find it with:\n" +
+      "    aws sts get-caller-identity --query Account --output text",
+  );
 }
 if (!existsSync(SERVER_ENTRY)) {
   fail(`${SERVER_ENTRY} is missing — run \`pnpm build\` first`);
