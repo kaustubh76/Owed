@@ -4,10 +4,26 @@ on:
   push:
     branches: [main]
   pull_request:
+  # So a run can be started without inventing a commit to trigger one. This mattered when
+  # the workflow had never executed: every run between 2026-09-29 and 2026-10-05 was refused
+  # before the job started, and there was no way to retry one except by pushing again.
+  workflow_dispatch:
+
+# Nothing here writes to the repository, and a fork's pull request should not be able to.
+permissions:
+  contents: read
+
+# One run per ref. A superseded push has nothing to tell us, and the queue is shared.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    # The whole job takes ~47s. Ten minutes is generous and still far from the 360-minute
+    # default a hung step would otherwise burn.
+    timeout-minutes: 10
 
     # DynamoDB Local, so the ledger adapter is actually tested here.
     #
