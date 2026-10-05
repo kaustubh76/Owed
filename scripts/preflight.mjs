@@ -24,12 +24,24 @@ function version(command) {
 
 // --- required ---------------------------------------------------------------
 
+// 24, not 20, and the reason is a hard one: the ledger's SQLite adapter imports
+// `node:sqlite` at module top level (packages/mcp-server/src/store/sqlite.ts), and
+// packages/mcp-server/src/main.ts imports that adapter unconditionally. The module does
+// not exist before Node 22.5 and is not available unflagged before 23.4, so on Node 20
+// `pnpm demo` dies with ERR_UNKNOWN_BUILTIN_MODULE before it prints anything.
+//
+// This check said `>= 20` and therefore cleared a configuration that cannot work — the
+// one failure mode this script exists to prevent. 24 rather than 23.4 because 23 is an
+// odd-numbered release and already end-of-life; pointing anyone at it would be a worse
+// answer than pointing them at 24.
 const nodeMajor = Number(process.versions.node.split(".")[0]);
 record(
   "Node",
-  nodeMajor >= 20,
+  nodeMajor >= 24,
   `v${process.versions.node}`,
-  "Owed needs Node 20 or newer. The repo is pinned to 26 in .nvmrc; `nvm use` picks it up.",
+  "Owed needs Node 24 or newer: the ledger's SQLite adapter imports `node:sqlite`, which " +
+    "does not exist before 22.5 and needs a flag before 23.4. The repo is pinned to 26 in " +
+    ".nvmrc; `nvm use` picks it up.",
 );
 
 const pnpmVersion = version("pnpm --version");
@@ -37,7 +49,10 @@ record(
   "pnpm",
   pnpmVersion !== undefined,
   pnpmVersion ?? "not found",
-  "Install it with `corepack enable pnpm`, or see https://pnpm.io/installation.",
+  // Not `corepack enable pnpm`: corepack was removed from Node, and this repo pins 26 in
+  // .nvmrc — so the fix this line used to suggest fails on the very version it tells you
+  // to use. See docs/product-feedback.md.
+  "Install it with `npm install -g pnpm@10.18.2`, or see https://pnpm.io/installation.",
 );
 
 let installed = false;
