@@ -7,8 +7,11 @@ The copyright holder above is taken from this repository's commit authorship. If
 right holder is someone else — an employer, a team, an organisation — this is the line
 to change, and it is the only place the name appears.
 
-These packages are published under that licence and carry "license": "Apache-2.0" in
-their package.json:
+These packages carry "license": "Apache-2.0" in their package.json and are licensed under
+it for use outside this repository. Three of them — recourse-protocol, policy-library and
+merchant-agents — have no dependency on anything private here and can be lifted out as they
+stand; the two extractors depend on @owed/domain, which is not published. None of the five
+is on a package registry.
 
   @owed/extractor           rule-based promise extraction
   @owed/extractor-bedrock   the same job, asked of a model

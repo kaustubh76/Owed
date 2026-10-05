@@ -422,7 +422,9 @@ What *is* new is that persistence and deployment are now optional extras rather 
 deployment — both opt-in, neither needed to run or judge anything below.
 
 ```bash
-# prerequisites: Node 20+ (repo is pinned to 26 via .nvmrc) and pnpm
+# prerequisites: Node 24+ (repo is pinned to 26 via .nvmrc) and pnpm
+#                 24, not 20: the ledger's SQLite adapter imports `node:sqlite`, which
+#                 does not exist before 22.5 and needs a flag before 23.4
 #                 `pnpm verify:ui` additionally needs Google Chrome installed
 #                 (Playwright is run with channel: "chrome", not a bundled browser)
 pnpm install
@@ -484,7 +486,9 @@ these are the behaviours that exist for that and are tested for it:
 ### 12.2 Going public, and the four variables that matter
 
 Every one of these is **unset by default**, so nothing above changes. They exist because a
-server reachable from the internet needs four things the loopback demo does not.
+server reachable from the internet needs four things the loopback demo does not — plus
+`OWED_BRAIN_TOKEN`, which is a debugging aid rather than a deployment need, listed here
+because this is where anyone would look for it.
 
 | Variable | Why it exists |
 |---|---|
@@ -545,7 +549,7 @@ nothing in this submission should be read as claiming otherwise.
 |---|---|
 | Domain, ledger, breach engine, coverage accounting | done — property-tested, including the invariant that coverage and the gaps a card draws can never disagree |
 | MCP server: Streamable HTTP, own OAuth AS, six tools, three views | done — conformance green on every documented check |
-| Recourse protocol, negotiator, merchant agents over HTTP | done — published as `recourse-protocol`; the inspector shows the argument |
+| Recourse protocol, negotiator, merchant agents over HTTP | done — extracted as `recourse-protocol`, packaged for publication; the inspector shows the argument |
 | Alexa+ contract suite, elicitation, accessibility | done — 13 contract tests, p95 4.7–35 ms, worst-case contrast 6.36:1 |
 | Proactive `CommitmentEvent`, timeline scrubber, Echo Dot | done — asserted by the browser checks, including the beat where Owed speaks first |
 | H1 extraction, H2 breach, H3 recourse | done — all three measured, **all three reported met or not** |
@@ -564,7 +568,7 @@ saying plainly when a hypothesis was not met.
 ## 15. Submission checklist
 
 - [x] Primary track: **Alexa+**. Mini-challenges: **Open Source** and **AWS Builder** — the ledger runs on DynamoDB behind the port that already had two adapters. Earlier drafts of this README said the opposite, because for most of the build it was true.
-- [x] Open Source, stated precisely: **three** packages are publishable as they stand — `recourse-protocol` (no workspace dependencies at all), `policy-library` and `merchant-agents` — each Apache-2.0 with `files` set. `extractor` and `extractor-bedrock` are Apache-2.0 and `files`-ready too, but both depend on `@owed/domain`, which is `private: true`, so **they cannot be published without extracting the domain types first**. An earlier draft of this line claimed all five; that was wrong.
+- [x] Open Source: **the whole repository is public under Apache-2.0** — `LICENSE`, `NOTICE`, and GitHub detecting the licence. Within it, **three** packages are self-contained enough to lift out as they stand: `recourse-protocol` (no workspace dependencies at all), `policy-library` and `merchant-agents`, each Apache-2.0 with `files`, `exports` and a README. `extractor` and `extractor-bedrock` are Apache-2.0 and `files`-ready too, but both depend on `@owed/domain`, which is `private: true`, so **they cannot be lifted out without extracting the domain types first**. An earlier draft claimed all five, and claimed they were published to a registry; neither was true.
 - [x] The repo calls MCP in code — server entry point, `_meta.ui` on every tool, elicitation, `ui://` resources — not just in this README
 - [x] **(d) Product feedback** for every tool, API and SDK used — what it was used for, what worked well, what needs work, how onboarding felt, whether we would build with it again, **and the AWS services described in that same answer**: **[docs/product-feedback.md](docs/product-feedback.md)**. Only tools this repo actually imports or invokes appear in it; where something was written but never executed against the service — Bedrock — it says so.
 - [x] **(g) Friction log**, the optional one: **[docs/friction-log.md](docs/friction-log.md)**, fourteen entries, each with the task, what was expected, what happened, severity, the workaround and what would have prevented it. An earlier draft of this README offered this file as the answer to (d) as well. It was not: it is the right shape for (g) and the wrong shape for (d), and it mentioned no AWS service at all.
@@ -573,10 +577,15 @@ saying plainly when a hypothesis was not met.
 - [x] Real-vs-simulated map (§13), and the statement that **none of this has run against the real Alexa+ client** because it is partner-gated
 - [x] Numbers published met or not: H1 **met on the corpus it was tuned against, missed on held-out data**; H2 **not met**; H3 **not met**
 - [ ] Demo video: public YouTube, English, < 3 min, no third-party trademarks or music
-- [ ] Repo access for judges at submit time — invites expire in 7 days, so this is done last
+- [x] Judges can read the repo — it is **public** under Apache-2.0, so there is nothing to invite and nothing that expires. This line previously tracked seven-day collaborator invitations, which the visibility change made unnecessary.
 
 ---
 
 ## 16. License
 
-Apache-2.0. `recourse-protocol`, `policy-library`, and `merchant-agents` are published as standalone packages.
+Apache-2.0 — `LICENSE` and `NOTICE` at the root, and this repository is public under it.
+
+`recourse-protocol`, `policy-library` and `merchant-agents` are **packaged for standalone
+publication**: Apache-2.0, an `exports` map, `files` set, a README each, and no dependency on
+anything private in this repo. They are not on npm, and an earlier version of this line said
+they were "published", which was not true of any registry.
