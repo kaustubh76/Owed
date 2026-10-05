@@ -11,5 +11,10 @@
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "types": ["node", "vite/client"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../domain"
+    }
+  ]
 }
