@@ -27,13 +27,15 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
+    "@modelcontextprotocol/client": "2.1.0",
     "@types/node": "^26.6.3",
     "concurrently": "^10.0.5",
     "fast-check": "^4.10.2",
     "playwright-core": "^1.63.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.2",
+    "zod": "^4.6.5"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
