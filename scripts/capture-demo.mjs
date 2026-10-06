@@ -37,9 +37,33 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
+import { createRequire } from "node:module";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import * as z from "zod/v4";
 import { linkAccount } from "../packages/mcp-server/dist/index.js";
+
+/**
+ * The spec revisions the SDK the add-on is built on actually supports.
+ *
+ * Read from `SUPPORTED_PROTOCOL_VERSIONS`, the constant the package exports at runtime,
+ * rather than from anything I typed. Resolved through the mcp-server package because
+ * that is the workspace member that depends on it.
+ */
+const fromServerPkg = createRequire(new URL("../packages/mcp-server/package.json", import.meta.url));
+// The SDK does not export its own package.json, so the version comes from the manifest
+// that depends on it — which is the version actually installed.
+const ownPkg = JSON.parse(
+  readFileSync(new URL("../packages/mcp-server/package.json", import.meta.url), "utf8"),
+);
+const { SUPPORTED_PROTOCOL_VERSIONS } = await import(
+  fromServerPkg.resolve("@modelcontextprotocol/server")
+);
+const SDK_INFO = {
+  package: "@modelcontextprotocol/server",
+  version: ownPkg.dependencies["@modelcontextprotocol/server"],
+  supportedSpecVersions: SUPPORTED_PROTOCOL_VERSIONS ?? null,
+  newestSpecVersion: SUPPORTED_PROTOCOL_VERSIONS?.[0] ?? null,
+};
 
 const SERVER_PORT = process.env.OWED_PORT ?? "3997";
 const MERCHANTS_PORT = process.env.OWED_MERCHANTS_PORT ?? "3996";
@@ -311,12 +335,50 @@ async function drainRecourse() {
 // ── capture ──────────────────────────────────────────────────────────────────────────
 
 const range = await control("/control/clock");
+
+/**
+ * The OAuth evidence, fetched rather than described.
+ *
+ * `linkAccount` already walks both of these during the run, and the capture used to throw
+ * them away — which left the strongest claim about this add-on's authorization server
+ * resting on my word. They are the documents Alexa+ account linking reads: RFC 9728 says
+ * which authorization server protects this resource, RFC 8414 says what that server
+ * supports. Between them they show PKCE S256 advertised, the authorization-code grant
+ * present, and — by its absence — no `registration_endpoint`, which is what "no Dynamic
+ * Client Registration" actually means.
+ */
+const discovery = {
+  protectedResource: {
+    path: "/.well-known/oauth-protected-resource",
+    rfc: "RFC 9728",
+    document: await control("/.well-known/oauth-protected-resource"),
+  },
+  authorizationServer: {
+    path: "/.well-known/oauth-authorization-server",
+    rfc: "RFC 8414",
+    document: await control("/.well-known/oauth-authorization-server"),
+  },
+};
+
 const capture = {
   $comment:
     "Captured from a real run by scripts/capture-demo.mjs. Not hand-written. Re-runnable: pnpm build && node scripts/capture-demo.mjs",
   captured_at: new Date().toISOString(),
   commit: null, // filled in below
-  server: { info: client.getServerVersion?.() ?? null, range },
+  server: {
+    info: client.getServerVersion?.() ?? null,
+    range,
+    /**
+     * The SDK the add-on is built on, and the revision it declares. Recorded from the
+     * installed package rather than from a frame: this client negotiates with
+     * `versionNegotiation: { mode: "auto" }`, so the exchange opens with `server/discover`
+     * and no `initialize` carrying a protocolVersion is sent. Claiming a version this
+     * capture never saw on the wire would be exactly the kind of unbacked assertion this
+     * file exists to avoid.
+     */
+    sdk: SDK_INFO,
+  },
+  oauth: discovery,
   tools: (await client.listTools()).tools.map((t) => ({
     name: t.name,
     title: t.title ?? null,
@@ -449,6 +511,11 @@ for (const name of ["ledger", "claim", "evidence"]) {
 
 capture.claim_file.questions = questions;
 capture.mcpFrames = mcpFrames;
+/** Which revision this connection actually spoke, read off the first frame sent. */
+capture.server.negotiation = {
+  firstFrameMethod: mcpFrames[0]?.message?.method ?? null,
+  era: mcpFrames.some((f) => f.message?.method === "server/discover") ? "modern" : "legacy",
+};
 
 // ── write ────────────────────────────────────────────────────────────────────────────
 
@@ -487,6 +554,23 @@ if (capture.claim_file.declined?.isError !== true) {
 }
 if (!capture.views.every((v) => v.matchesDist)) {
   problems.push("a served view differs from its built file");
+}
+const asMeta = capture.oauth.authorizationServer.document;
+if (!asMeta?.code_challenge_methods_supported?.includes("S256")) {
+  problems.push("authorization-server metadata does not advertise PKCE S256");
+}
+if (!asMeta?.grant_types_supported?.includes("authorization_code")) {
+  problems.push("authorization-server metadata does not advertise the authorization_code grant");
+}
+if (!capture.oauth.protectedResource.document?.authorization_servers?.length) {
+  problems.push("protected-resource metadata names no authorization server");
+}
+// The submission requires spec 2025-11-25 or later, so this is the one version claim the
+// page makes and it has to come from the SDK rather than from a README.
+if (!capture.server.sdk.supportedSpecVersions?.includes("2025-11-25")) {
+  problems.push(
+    `the SDK does not list 2025-11-25 among its supported revisions (${JSON.stringify(capture.server.sdk.supportedSpecVersions)})`,
+  );
 }
 if (problems.length > 0) {
   process.stderr.write("\n✗ the capture is incomplete:\n");
