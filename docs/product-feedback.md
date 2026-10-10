@@ -412,14 +412,23 @@ this class of add-on.
 forbidden.* Those are different instructions, and the difference decides whether one server
 can serve both Alexa+ and generic MCP clients.
 
-*An add-on cannot say anything first.* Add-ons are strictly reactive: no scheduled wake, no
-event channel, nothing that reaches a device unless a person started the exchange. For most
-add-ons that is a limitation; for this one it removes the product, because Owed exists to
-notice what the household did *not* ask about. We have written the shape we would need as a
-schema rather than requesting "proactive support" in the abstract — `CommitmentEvent`, with
-`expires_at`, `urgency` and `offer`, in **[proactive.md](proactive.md)**. This is the
-submission's feature request, and it is the one thing on this page we cannot work around
-honestly.
+*Nothing documented lets an add-on say anything first.* Everything in the published docs is
+reactive: no scheduled wake, no event channel, no documented way to reach a device unless a
+person started the exchange. For most add-ons that would be an inconvenience; for this one it
+looked like it removed the product, because Owed exists to notice what the household did *not*
+ask about.
+
+We first reported that as a platform limitation. On review we were told the public
+documentation is incomplete here and that a good deal is omitted — so the capability may exist
+and we simply could not find it. We have not verified either way, and the claim we can stand
+behind is the narrow one: **we checked the docs, not the platform.** Which makes this the
+highest-value documentation request on this page, because a builder who cannot find a
+capability designs around its absence, and we did: the whole proactive surface in this project
+is a simulation with a `simulated proactive` badge on it.
+
+The shape we designed for is written as a schema rather than a request for "proactive support"
+in the abstract — `CommitmentEvent`, with `expires_at`, `urgency` and `offer`, in
+**[proactive.md](proactive.md)**.
 
 **Would we build against it again.** Yes. The contract is implementable and the hard parts
 are documentation, not design.

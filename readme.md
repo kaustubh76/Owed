@@ -38,7 +38,7 @@ Neither is stale; one is the test, the other is the script.*
 | 0:00 | Echo Show (Sun 19:30) | *"Alexa, what am I owed?"* → **Recovered this week $47.00 · Still open $8.00 · 2 kept.** Spoken: "You've recovered forty-seven dollars this week, and eight dollars is still open. Two promises were kept. There's one I'm not claiming, because I only watched twenty percent of the window. There's one more I can file." |
 | 0:15 | Echo Show | *"Why aren't you claiming that?"* → the evidence card. A coverage bar with the unwatched stretches **cut out where they actually fell**, the verdict *not enough to claim*, and — quoted under **they wrote** — the merchant's own sentence the promise was read out of. |
 | 0:30 | Timeline scrubber | The judge drags back to Monday and forward across the week. Every tool answers for the clock, so the ledger empties and refills as they scrub. |
-| 0:45 | Echo Show | Crossing Sunday evening, **Owed speaks first**, badged `simulated proactive`: "Northwind Parcel missed the delivery window they promised. They owe you eight dollars under their own policy. Shall I file it?" The inspector shows the `CommitmentEvent` on its own channel — the shape Alexa+ would have to emit, because it has no such channel today. |
+| 0:45 | Echo Show | Crossing Sunday evening, **Owed speaks first**, badged `simulated proactive`: "Northwind Parcel missed the delivery window they promised. They owe you eight dollars under their own policy. Shall I file it?" The inspector shows the `CommitmentEvent` on its own channel — the shape we designed for, because the published docs describe no such channel. |
 | 1:00 | Echo Show | *"File it."* → **Asked · They offered · Countered · Settled**, at **$8.00**. The counter cites **Delivery Guarantee 4.1** — the merchant's own published clause. |
 | 1:10 | Protocol inspector | The argument itself, on the wire: `tools/call claim_file`, then the recourse exchange with Northwind Parcel's agent nested inside it, then the result that argument produced. Sorted into causal order, not arrival order. |
 | 1:20 | Echo Dot | Same questions, **no screen at all**. The answers still stand on their own, which is the only honest way to show voice-only parity. |
@@ -114,8 +114,9 @@ breach engine, the rule extractor, the negotiator, and the merchant agents, whic
 their own process and are argued with over HTTP rather than called in-process.
 
 **Simulated, and labelled as such wherever it appears:** the Alexa+ orchestrator, NLU and
-voice pipeline; proactive delivery, because Alexa+ add-ons have no such channel; the device
-frames; and the household's evidence sources, which are seeded rather than live.
+voice pipeline; proactive delivery, because the published add-on documentation describes no
+such channel and we could not find one; the device frames; and the household's evidence
+sources, which are seeded rather than live.
 
 ---
 
@@ -282,9 +283,11 @@ Append-only and event-sourced (`PromiseCaptured`, `EvidenceObserved`, `PromiseAs
 **In memory by default, on disk when you ask.** A demo that reseeds identically every run is worth more than one that drifts, so memory is the default. `OWED_DB=owed.db` swaps in a SQLite store built on Node's own `node:sqlite` — no dependency added — and then the seed is written only if the file is empty, because reseeding a ledger that already holds a week would append a second copy of everything. There is no `UPDATE` and no `DELETE` in that adapter; `seq` is insertion order and is the primary key. Rows are parsed back through the event schema on read, so a stale write or a hand edit is a loud failure rather than a card quietly showing something impossible.
 
 ### 8.4 Speaking first (`CommitmentEvent`)
-Alexa+ add-ons are strictly reactive: a tool runs because somebody said something. For most add-ons that is a limitation; for Owed it removes the product, because Owed exists to notice what the household did *not* ask about.
+Everything the published add-on documentation describes is reactive: a tool runs because somebody said something. For most add-ons that would be an inconvenience; for Owed it looked like it removed the product, because Owed exists to notice what the household did *not* ask about.
 
-So the one primitive we need is the one that does not exist, and we wrote it down as a schema rather than a paragraph in a feedback form: **`CommitmentEvent`**, carrying `expires_at` (proactive speech has to be allowed to go stale), `urgency` (only the add-on knows whether money is about to stop being recoverable) and `offer` (without it, an announcement is a dead end).
+*What that claims, precisely:* we checked the documentation, not the platform. On review we were told the public docs are incomplete here and that a good deal is omitted, so a proactive path may exist and we simply could not find it — we have not verified either way. The consequence was real regardless: a builder who cannot find a capability designs around its absence, and everything proactive in this project is therefore a simulation wearing a `simulated proactive` badge.
+
+So the one primitive we needed was the one we could not find documented, and we wrote it down as a schema rather than a paragraph in a feedback form: **`CommitmentEvent`**, carrying `expires_at` (proactive speech has to be allowed to go stale), `urgency` (only the add-on knows whether money is about to stop being recoverable) and `offer` (without it, an announcement is a dead end).
 
 The server exposes everything Owed would say unprompted as a **projection of the ledger**, not a queue — so scrubbing the week backwards takes an announcement away again instead of replaying it. The brain polls, announces what has newly fallen due, and the home badges every one `simulated proactive`. The inspector shows each event on its own channel.
 
@@ -306,12 +309,15 @@ The home talks to one thing: a WebSocket to the **Owed brain** (`apps/brain`), w
 
 ## 10. Evaluation (the numbers in the video)
 
-| Metric | Method | Where |
-|---|---|---|
-| Promise extraction P/R | 120 labelled messages + 40 held out, 7 promise kinds | `eval/src/extraction/` |
-| Breach detection P/R by kind | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/src/breach/` |
-| Recovery rate & rounds | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
-| Tool latency p95 | k6 against Streamable HTTP endpoint | `eval/latency/` |
+Three hypotheses, pre-registered before the code that answers them, and referred to as
+**H1**, **H2** and **H3** throughout this document:
+
+| | The question | Method | Where |
+|---|---|---|---|
+| **H1** | Can a promise be extracted from what a merchant actually wrote? | 120 labelled messages + 40 held out, 7 promise kinds | `eval/src/extraction/` |
+| **H2** | Can a breach be detected reliably, per promise kind, without crying wolf? | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/src/breach/` |
+| **H3** | Does arguing recover more than accepting the merchant's first offer? | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
+| — | Does a tool answer fast enough for voice? | k6 against Streamable HTTP endpoint | `eval/latency/` |
 
 **Measured so far (promise extraction, `eval/README.md`):** the rule-based extractor
 reaches **100% precision and 99% recall** on the 120-message labelled corpus — and
@@ -468,6 +474,51 @@ OWED_DB=owed.db pnpm --filter @owed/mcp-server start
 It seeds the week on first run and says so when it finds one already there. `OWED_DYNAMO_TABLE`
 does the same thing in DynamoDB instead, behind the same port — see §12.2.
 
+#### The DynamoDB design, since it is the interesting part
+
+An append-only event log is one of the few things this database is unambiguously best at, and
+the whole guarantee is **one conditional write**:
+
+```
+PK  household_id
+SK  seq                 zero-padded, so lexical order is numeric order
+    ConditionExpression: attribute_not_exists(sk)
+```
+
+Two writers racing for sequence 42 means **a failed transaction, not a lost event**. No lock,
+no version column, no read-before-write. The sequence itself comes from a separate atomic
+`ADD` counter, so nothing has to read the tail of the log to know where the end is.
+
+**The sort key is `seq`, not time — and that is the one decision worth explaining.** Sorting
+by timestamp reads better and was the first schema. It breaks the moment two events share a
+millisecond: the adapter returns them in a different order from the in-memory and SQLite
+stores, so a replay produces a different ledger depending on which store happens to be behind
+the port. Since every number in this product is a projection of a replay, that is a
+correctness bug, not a cosmetic one. Time is therefore demoted to a `FilterExpression` — which
+costs read capacity on events that get discarded, and buys a replay that is identical across
+all three adapters. `scripts/aws-smoke.mjs` asserts exactly that: the seeded week read back
+from DynamoDB must match, event for event, what `MemoryEventStore` produces for the same
+events — as a *prefix* of the table, so the check still works against a table with history.
+
+Interactive retries are tuned for a person waiting rather than for throughput:
+`maxAttempts: 3`, a 3 s request timeout and a 1.5 s connection timeout, because a tool call
+someone is listening to should fail fast and say so.
+
+**The AWS surface actually used**, all of it exercised rather than mentioned: DynamoDB; the two
+AWS SDK v3 clients (`@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`); the `aws` CLI, which
+`aws:smoke` uses for `sts get-caller-identity` so it refuses to seed a stranger's account; IAM,
+with a policy of **eight actions scoped to one table ARN** and nothing else; Amazon Linux 2023
+on arm64 (`deploy/bootstrap.sh`, proven by running it); and CloudShell, which is how
+`deploy/create-cli-user.sh` creates a first access key without already having one.
+
+One finding worth passing on: **`dynamodb:TransactWriteItems` is not an IAM action.** The SDK
+command is `TransactWriteCommand` and the wire operation is `TransactWriteItems`, so the
+obvious policy is wrong and the console rejects the string outright. Transactional APIs have no
+IAM action of their own — permission comes from the component operations, so a `Put` inside a
+transaction is authorised by `dynamodb:PutItem`. The natural guess produces an error that reads
+like a typo, and the next guess is usually to widen the policy to `dynamodb:*`, which is the
+opposite of what anyone wants.
+
 ### 12.1 Surviving more than a demo
 
 The system was written against an in-memory store on loopback, where a read cannot fail, a
@@ -522,7 +573,12 @@ green check below is against the *documented* contract and the community conform
 contract suite asserts what Amazon publishes: every advertised tool invocable, one text block
 per result, nothing internal ever spoken, every `ui://` view readable and self-contained under a
 deny-by-default CSP, elicitation flat and primitive. Measured: **p95 4.7–35 ms** against a
-documented 500 ms target, and **worst-case text contrast 6.36:1** against a required 4.5:1.
+documented 500 ms target. Contrast and target size are computed from the colours the browser
+resolved rather than eyeballed, and the gate fails on any text under 4.5:1 (3:1 for large or
+bold) or any control under 48×48. Measured on the cards as rendered: **worst case 8.94:1 in
+dark and 5.33:1 in light**. (An earlier revision quoted 6.36:1 here. The gate reports only
+*violations*, so it never emits a worst case and that figure could not be reproduced from it;
+these two were measured with the same algorithm, by hand.)
 
 Those are real measurements of a real server. They are not evidence that it works on Alexa+, and
 nothing in this submission should be read as claiming otherwise.
@@ -530,13 +586,13 @@ nothing in this submission should be read as claiming otherwise.
 | Real — runs, and you can watch it on the wire | Simulated, or not built |
 |---|---|
 | MCP server over Streamable HTTP, SDK v2, spec-current | The Alexa+ orchestrator, NLU and voice pipeline. There is no Alexa here |
-| Its own OAuth 2.1 authorization server — PKCE S256, RFC 9728, 8414, 8707, 8252 — walked for real by the brain at startup | **Proactive delivery. Alexa+ add-ons have no such channel**; the shape we would need is a schema and the home badges every announcement `simulated proactive`. See [docs/proactive.md](docs/proactive.md) |
+| Its own OAuth 2.1 authorization server — PKCE S256, RFC 9728, 8414, 8707, 8252 — walked for real by the brain at startup | **Proactive delivery. The published docs describe no such channel and we could not find one** — we checked the docs, not the platform, and were later told the public docs omit a good deal. The shape we designed for is a schema, and the home badges every announcement `simulated proactive`. See [docs/proactive.md](docs/proactive.md) |
 | Six tools, three `ui://` MCP Apps views in sandboxed opaque-origin iframes, elicitation where the connection can carry it | The device frames. An Echo Show 8 at its documented canvas and an Echo Dot with no screen, drawn in a browser |
 | The breach engine, coverage accounting, and the refusal to claim below the gates | The household's evidence. Doorbell events, snapshots, camera uptime, carrier scans and prices are seeded, not live |
 | The rule extractor, and eleven merchant messages every seeded promise is provably readable from | The eleven promises themselves are authored rather than extracted, so the demo is deterministic. A test proves the extractor recovers each one to the minute |
 | Merchant agents in **their own process**, argued with over MCP. The inspector shows that traffic | Their policies and their willingness to settle. Three merchants, plus a 270-merchant grid for the evaluation |
 | The event-sourced ledger, replayable to any instant — which is what makes the scrubber truthful — and a SQLite store behind the same port when `OWED_DB` is set | Persistence is **off by default**, because a demo that reseeds identically beats one that drifts |
-| H1, H2 and H3 measured against pre-registered corpora, reported met or not | Speaker identity and household roles. Not built |
+| All three hypotheses measured against pre-registered corpora and reported met or not — H1 extraction, H2 breach detection, H3 recourse | Speaker identity and household roles. Not built |
 | — | A real Echo. The bridge was cut early; nothing here has run on a device |
 | — | Fire TV overlay and phone rail. First on the cut list, never built |
 | DynamoDB, behind the same `EventStore` port as memory and SQLite, verified against DynamoDB Local | Bedrock. A model-backed extractor exists in `packages/extractor-bedrock` and is tested either side of the model call — but **no model has run**, so there are no numbers and every reported figure is still the rules extractor's. The deployment is one instance with Caddy; there is no CDK |
@@ -550,14 +606,14 @@ nothing in this submission should be read as claiming otherwise.
 | Domain, ledger, breach engine, coverage accounting | done — property-tested, including the invariant that coverage and the gaps a card draws can never disagree |
 | MCP server: Streamable HTTP, own OAuth AS, six tools, three views | done — conformance green on every documented check |
 | Recourse protocol, negotiator, merchant agents over HTTP | done — extracted as `recourse-protocol`, packaged for publication; the inspector shows the argument |
-| Alexa+ contract suite, elicitation, accessibility | done — 13 contract tests, p95 4.7–35 ms, worst-case contrast 6.36:1 |
+| Alexa+ contract suite, elicitation, accessibility | done — 13 contract tests, p95 4.7–35 ms (6.8 ms in CI), computed contrast and target-size gates, worst case measured 8.94:1 dark / 5.33:1 light |
 | Proactive `CommitmentEvent`, timeline scrubber, Echo Dot | done — asserted by the browser checks, including the beat where Owed speaks first |
-| H1 extraction, H2 breach, H3 recourse | done — all three measured, **all three reported met or not** |
+| H1 (extraction), H2 (breach detection), H3 (recourse) | done — all three measured against pre-registered corpora, **all three reported met or not** |
 | Clean-clone install → verify → demo → browser gate | done — run, not asserted (§12) |
 | Persistence behind the same port, on Node's built-in SQLite | done — append-only, parsed on read, survives restart |
 | Docker, moderated walkthroughs (H4) | **not done** |
 | Real Echo, Fire TV, phone rail | **cut** |
-| AWS | **done after the fact** — the ledger runs on DynamoDB, verified against the real service in `us-east-1`; `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
+| AWS | **done after the fact** — the ledger runs on DynamoDB with an append-only guarantee from one conditional write and an atomic sequence counter (§12), verified against the real service in `us-east-1`; also the SDK v3 clients, the `aws` CLI, an eight-action IAM policy scoped to one table, Amazon Linux 2023 and CloudShell. `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
 
 **Never cut, and not cut:** the three numbers on the ledger card, the claim card, the
 protocol inspector, the storyboard golden test, the contract suite, the friction log, and
@@ -567,7 +623,8 @@ saying plainly when a hypothesis was not met.
 
 ## 15. Submission checklist
 
-- [x] Primary track: **Alexa+**. Mini-challenges: **Open Source** and **AWS Builder** — the ledger runs on DynamoDB behind the port that already had two adapters. Earlier drafts of this README said the opposite, because for most of the build it was true.
+- [x] Primary track: **Alexa+**. Mini-challenges: **Open Source** and **AWS Builder**. Earlier drafts of this README said the opposite about AWS, because for most of the build it was true.
+- [x] **AWS Builder, specifically:** the household ledger is an append-only event log on DynamoDB whose entire guarantee is one conditional write — `attribute_not_exists(sk)` — plus an atomic `ADD` sequence counter, with `seq` rather than time as the sort key so a replay is identical across all three store adapters (**§12**, and that trade-off is the design decision worth reading). Verified against the real service and exercised in CI against DynamoDB Local. Also used: the two AWS SDK v3 clients, the `aws` CLI, IAM at eight actions scoped to one table ARN, Amazon Linux 2023 on arm64, and CloudShell. **Bedrock is written and tested either side of the model call and has never executed** — no model access on this account, and nothing here claims a Bedrock result.
 - [x] Open Source: **the whole repository is public under Apache-2.0** — `LICENSE`, `NOTICE`, and GitHub detecting the licence. Within it, **three** packages are self-contained enough to lift out as they stand: `recourse-protocol` (no workspace dependencies at all), `policy-library` and `merchant-agents`, each Apache-2.0 with `files`, `exports` and a README. `extractor` and `extractor-bedrock` are Apache-2.0 and `files`-ready too, but both depend on `@owed/domain`, which is `private: true`, so **they cannot be lifted out without extracting the domain types first**. An earlier draft claimed all five, and claimed they were published to a registry; neither was true.
 - [x] The repo calls MCP in code — server entry point, `_meta.ui` on every tool, elicitation, `ui://` resources — not just in this README
 - [x] **(d) Product feedback** for every tool, API and SDK used — what it was used for, what worked well, what needs work, how onboarding felt, whether we would build with it again, **and the AWS services described in that same answer**: **[docs/product-feedback.md](docs/product-feedback.md)**. Only tools this repo actually imports or invokes appear in it; where something was written but never executed against the service — Bedrock — it says so.
@@ -575,7 +632,10 @@ saying plainly when a hypothesis was not met.
 - [x] Built entirely inside the submission window — first commit 2026-09-28, nothing pre-existing to declare
 - [x] Feature request, written as a schema rather than a paragraph: **[docs/proactive.md](docs/proactive.md)** — `CommitmentEvent` and the proactive channel Alexa+ add-ons do not have
 - [x] Real-vs-simulated map (§13), and the statement that **none of this has run against the real Alexa+ client** because it is partner-gated
-- [x] Numbers published met or not: H1 **met on the corpus it was tuned against, missed on held-out data**; H2 **not met**; H3 **not met**
+- [x] All three pre-registered hypotheses published met or not, with the numbers (§10):
+  - **H1 — can a promise be extracted from what a merchant wrote?** 100% precision / 99% recall on the 120-message corpus it was tuned against, and **73.7% / 58.3%** on 40 held-out messages. **Met on the corpus it was tuned against, missed on data it had not seen** — and that gap is the most useful number in this repository.
+  - **H2 — can a breach be detected reliably per promise kind?** 93.5% precision and 100% recall on cases with enough coverage, but an **8.7% false-positive rate** against a target of 0.9 precision per kind and under 5%. **Not met** — two kinds sit at 80% and 75%.
+  - **H3 — does arguing recover more than accepting the first offer?** Target was ≥60% recovery and ≥1.5× the baseline. **Not met** on either figure.
 - [ ] Demo video: public YouTube, English, < 3 min, no third-party trademarks or music
 - [x] Judges can read the repo — it is **public** under Apache-2.0, so there is nothing to invite and nothing that expires. This line previously tracked seven-day collaborator invitations, which the visibility change made unnecessary.
 

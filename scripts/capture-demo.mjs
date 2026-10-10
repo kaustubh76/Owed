@@ -118,12 +118,12 @@ const POSITIONS = [
   {
     // The proactive beat. Checked against the capture rather than assumed: this is the
     // first instant where `commitmentsDue` returns a `promise_breached` event carrying an
-    // offer, which is the thing Owed would say unprompted and the thing Alexa+ add-ons
-    // have no channel for.
+    // offer — the thing Owed would say unprompted, and the thing we found no documented
+    // channel for. (We checked the docs, not the platform; see docs/proactive.md.)
     id: "proactive",
     instant: "2026-10-12T01:25:00.000Z",
     label: "Sun 18:25",
-    note: "prm_011 is Breached and unfiled. This is where Owed speaks first — a `promise_breached` commitment whose offer is \"File it\". Alexa+ add-ons have no proactive channel, so the home badges every one of these `simulated proactive`.",
+    note: "prm_011 is Breached and unfiled. This is where Owed speaks first — a `promise_breached` commitment whose offer is \"File it\". We found no documented proactive channel for add-ons, so the home badges every one of these `simulated proactive`.",
   },
   {
     id: "query",

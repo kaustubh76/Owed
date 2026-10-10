@@ -138,7 +138,7 @@ proposes in words and waits for `confirm`. Both paths are tested; see docs/frict
 | Target | Documented | Measured |
 |---|---|---|
 | Tool round trip | under 500 ms | **p95 4.7–35 ms** across the tool surface |
-| Text contrast | 4.5:1 (3:1 for large or bold) | **worst case 6.36:1** on the cards |
+| Text contrast | 4.5:1 (3:1 for large or bold) | gate fails on any violation; **worst case measured 8.94:1 dark / 5.33:1 light** on the cards |
 | Touch targets | 48×48 px | all controls pass |
 | Spoken answer | self-sufficient, no digits, ≤ 240 chars | enforced on every result |
 

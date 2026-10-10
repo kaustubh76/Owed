@@ -347,7 +347,7 @@ will hit it in their first five minutes.
 
 ---
 
-## 14. An add-on cannot say anything first
+## 14. The published docs describe no way for an add-on to speak first
 
 **Surface:** Alexa+ add-on model · **Severity: high** — this one is a feature request, not a bug.
 
@@ -356,23 +356,34 @@ will hit it in their first five minutes.
 **Expected.** Some channel — a scheduled wake, an event push, anything — that reaches a
 device without a person having started the exchange.
 
-**Actual.** There is no way to. Alexa+ add-ons are strictly reactive: a tool runs because
-somebody said something. No scheduled wake, no event channel, nothing that reaches a
-device unless a person started the exchange.
+**Actual.** The published documentation describes nothing of the kind, and we could not
+find one. Everything documented is reactive: a tool runs because somebody said something.
+No scheduled wake, no event channel, no documented way to reach a device unless a person
+started the exchange.
 
-For most add-ons that is a limitation. For this one it removes the product. Owed exists
-to notice what the household did *not* ask about, and the moment that only works if
-somebody thinks to ask is the moment it is worth nothing — people do not wake up
-wondering whether a courier honoured a delivery guarantee eleven days ago. That is
+For most add-ons that would be a limitation. For this one it looked like it removed the
+product. Owed exists to notice what the household did *not* ask about, and the moment that
+only works if somebody thinks to ask is the moment it is worth nothing — people do not wake
+up wondering whether a courier honoured a delivery guarantee eleven days ago. That is
 exactly the work they wanted handed off.
+
+**Correction, and the reason this entry is now about documentation.** We first wrote this up
+as a platform limitation — "an add-on cannot say anything first". On review we were told the
+public documentation is incomplete here and that a good deal is omitted. We have not verified
+either way, and the honest position is the narrow one: *we checked the docs, not the
+platform.* So this is a documentation gap with a product-shaped consequence, which is worth
+more as feedback than a complaint about a capability that may well exist.
 
 **Workaround.** The server derives everything Owed would say unprompted as a projection
 of the ledger and serves it outside the MCP surface; the simulated home's host polls it
 and badges every announcement `simulated proactive`. Honest, and not shippable.
 
-**Suggestion.** We have written the shape we would need as a schema rather than asking
-for "proactive support" in the abstract — `CommitmentEvent`, with the three fields we
-think are easy to leave out and expensive to add later:
+**Suggestion.** Publish the contract. If a proactive path exists, the single highest-value
+documentation change for this class of add-on is to say so and specify it — because a builder
+who cannot find it designs around its absence, which is exactly what we did. And whatever the
+shape turns out to be, we have written the one we would need as a schema rather than asking
+for "proactive support" in the abstract — `CommitmentEvent`, with the three fields we think
+are easy to leave out and expensive to add later:
 
 - `expires_at`, because proactive speech has to be allowed to go stale. Being told on
   Friday about a parcel that failed on Sunday is worse than silence.

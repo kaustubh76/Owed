@@ -82,7 +82,7 @@ export function App() {
       <main className="app__stage">
         <div className="app__household">
           {/*
-            Owed speaking first. Badged, loudly, because Alexa+ has no proactive channel
+            Owed speaking first. Badged, loudly, because we found no documented proactive channel
             for add-ons and a judge must never have to guess which part of this is real.
           */}
           {turn?.proactive ? (

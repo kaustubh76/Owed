@@ -4,11 +4,20 @@
 
 ## The gap
 
-Alexa+ add-ons are strictly reactive. A tool runs because somebody said something. There
-is no way for an add-on to raise anything on its own — no scheduled wake, no event
-channel, nothing that reaches a device unless a person started the exchange.
+Everything the published add-on documentation describes is reactive. A tool runs because
+somebody said something. We found no documented way for an add-on to raise anything on its
+own — no scheduled wake, no event channel, nothing that reaches a device unless a person
+started the exchange.
 
-For most add-ons that is a limitation. For Owed it removes the product.
+**A note on what that sentence claims.** We checked the documentation, not the platform. On
+review we were told the public docs are incomplete here and that a good deal is omitted, so a
+proactive path may well exist; we have not verified it either way. The gap we can evidence is
+therefore a documentation one — and it had a product-shaped consequence, because a builder who
+cannot find the capability designs around its absence. That is what the rest of this document
+is: the shape we designed for, offered as a proposal rather than a complaint.
+
+For most add-ons an undocumented proactive path would be an inconvenience. For Owed it looked
+like it removed the product.
 
 Owed exists to notice what the household did **not** ask about. A parcel that never came,
 a refund that never landed, a claim window closing on Thursday. The moment that only
@@ -16,7 +25,7 @@ works if somebody thinks to ask is the moment the product is worth nothing: peop
 wake up wondering whether a courier honoured a delivery guarantee eleven days ago. That
 is precisely the work they want handed off.
 
-So the one primitive Owed needs is the one that does not exist.
+So the one primitive Owed needs is the one we could not find documented.
 
 ## The shape we would need
 

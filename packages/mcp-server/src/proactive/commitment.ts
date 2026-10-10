@@ -4,12 +4,14 @@ import * as z from "zod/v4";
 /**
  * What Alexa+ would have to emit for an add-on to speak first.
  *
- * Alexa+ add-ons are strictly reactive: a tool runs because somebody said something.
- * Owed's entire premise is noticing what the household did *not* ask about — a parcel
- * that never came, a refund that never landed — so "speak first" is not a nice-to-have
- * for this product, it is the product.
+ * Everything the published add-on documentation describes is reactive: a tool runs because
+ * somebody said something. Owed's entire premise is noticing what the household did *not*
+ * ask about — a parcel that never came, a refund that never landed — so "speak first" is
+ * not a nice-to-have for this product, it is the product.
  *
- * There is no such channel, so this is the shape we would need, written as a real
+ * We checked the docs, not the platform; we were later told the public docs omit a good
+ * deal here, so a channel may exist that we could not find. Either way this is the shape
+ * we designed for, written as a real
  * schema rather than a paragraph in a feedback form. The simulated home delivers these
  * and badges them `simulated proactive`; the protocol inspector shows each one on the
  * wire. Nothing here is a guess at a private API — it is a request, and the fields are
