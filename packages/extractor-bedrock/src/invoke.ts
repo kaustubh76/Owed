@@ -6,7 +6,14 @@
  * service existing. Prompt construction and reply parsing are the whole substance of a
  * model-backed extractor, and neither needs a model to check — so they sit on this side of
  * the line and get real tests, while the Bedrock call sits on the other side in
- * `bedrock.ts` and is the only file here that cannot be verified offline.
+ * `bedrock.ts`.
+ *
+ * That line is about what the port is *for*, not about what can be tested. This comment
+ * used to call `bedrock.ts` the one file here that could not be verified offline, which
+ * stopped being true the moment somebody pointed a real `BedrockRuntimeClient` at a local
+ * endpoint: `bedrock.test.ts` drives the adapter over h2c against a server that speaks
+ * Converse, and even the throttling retry runs on an exception the SDK deserialised
+ * itself. What still needs the real service is whether a model's answers are any good.
  *
  * Deliberately a bare function rather than an interface with one method. There is one
  * operation, the model is stateless between calls, and a test double is then a two-line

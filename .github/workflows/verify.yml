@@ -54,6 +54,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Before the build, because this is what a cross-package import missing its tsconfig
+      # reference looks like when it is not caught: `tsc -b` builds independent projects
+      # concurrently, so the import resolves or does not depending on which finishes first.
+      # It cost three green runs and one red one to notice.
+      - run: pnpm verify:graph
+
       # Views must be built before the server can serve them, and before the
       # contract test can read one back over the wire.
       - run: pnpm build

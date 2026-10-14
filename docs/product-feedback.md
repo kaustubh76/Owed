@@ -89,9 +89,11 @@ permanently. As it stands, the most natural guess produces an error that reads l
 and the next guess is usually to widen the policy to `dynamodb:*`, which is the opposite of
 what anyone wants.
 
-**Would we use it again.** Yes. The resulting policy is eight actions scoped to one table ARN
-and nothing else, which is what least privilege should look like. Getting there was harder
-than it needed to be.
+**Would we use it again.** Yes. The resulting policy is eight DynamoDB actions scoped to
+tables named `owed-*`, plus one `sts:GetCallerIdentity` so the smoke test can say whose
+account it is about to write to — `deploy/iam-policy-phase1.json`, and nothing beyond those
+two statements. That is what least privilege should look like. Getting there was harder than
+it needed to be.
 
 ### AWS SDK for JavaScript v3 — `@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`
 

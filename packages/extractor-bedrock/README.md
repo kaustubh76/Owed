@@ -64,15 +64,18 @@ One function does I/O. Everything else is pure, and tested.
 | File | |
 |---|---|
 | `invoke.ts` | The port: `(prompt: string) => Promise<string>`. |
-| `bedrock.ts` | The real adapter — Converse API, `OWED_BEDROCK_MODEL`, retry on throttling. **The only file here with no tests**, because there is no local Bedrock to point it at. |
+| `bedrock.ts` | The real adapter — Converse API, `OWED_BEDROCK_MODEL`, retry on throttling. Tested in `bedrock.test.ts` against a local server that speaks Converse over h2c, with a real `BedrockRuntimeClient` pointed at it: what reaches the wire, how the envelope is read back, and which failures are retried. What that cannot tell you is whether a model's answers are any good. |
 | `prompt.ts` | `buildPrompt`. Pure. |
 | `parse.ts` | `parseExtractions` — schema validation and the evidence guard. Pure. |
 | `extract.ts` | `createBedrockExtractor`. |
 
 That split is the same one `MerchantDirectory` uses to keep a real network peer and a
 deterministic stand-in behind one port. It also mirrors `DynamoEventStore`'s injectable
-client — with one honest difference: DynamoDB Local makes that adapter verifiable offline,
-and nothing equivalent exists for Bedrock.
+client, and the difference between them turned out to be smaller than this file used to
+claim. There is no local Bedrock the way there is a DynamoDB Local — but a
+`BedrockRuntimeClient` takes an `endpoint`, so the adapter is verifiable offline anyway,
+against a server that speaks Converse. The part that genuinely needs the real service is
+not the adapter. It is the model.
 
 ## Running it
 

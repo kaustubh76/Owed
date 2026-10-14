@@ -527,7 +527,9 @@ someone is listening to should fail fast and say so.
 **The AWS surface actually used**, all of it exercised rather than mentioned: DynamoDB; the two
 AWS SDK v3 clients (`@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`); the `aws` CLI, which
 `aws:smoke` uses for `sts get-caller-identity` so it refuses to seed a stranger's account; IAM,
-with a policy of **eight actions scoped to one table ARN** and nothing else; Amazon Linux 2023
+with a policy of **eight DynamoDB actions scoped to tables named `owed-*`**, plus
+`sts:GetCallerIdentity` — nine in total, and that second statement is the one the account check
+above runs on; Amazon Linux 2023
 on arm64 (`deploy/bootstrap.sh`, proven by running it); and CloudShell, which is how
 `deploy/create-cli-user.sh` creates a first access key without already having one.
 
@@ -632,7 +634,7 @@ nothing in this submission should be read as claiming otherwise.
 | All three hypotheses measured against pre-registered corpora and reported met or not — H1 extraction, H2 breach detection, H3 recourse | Speaker identity and household roles. Not built |
 | — | A real Echo. The bridge was cut early; nothing here has run on a device |
 | — | Fire TV overlay and phone rail. First on the cut list, never built |
-| DynamoDB, behind the same `EventStore` port as memory and SQLite, verified against DynamoDB Local | Bedrock. A model-backed extractor exists in `packages/extractor-bedrock` and is tested either side of the model call — but **no model has run**, so there are no numbers and every reported figure is still the rules extractor's. The deployment is one instance with Caddy; there is no CDK |
+| DynamoDB, behind the same `EventStore` port as memory and SQLite, verified against DynamoDB Local | Bedrock. A model-backed extractor exists in `packages/extractor-bedrock`, tested either side of the model call and at it — the adapter runs against a local server speaking Converse, over a real SDK client. But **no model has run**, so there are no numbers and every reported figure is still the rules extractor's. The deployment is one instance with Caddy; there is no CDK |
 
 ---
 
@@ -661,7 +663,7 @@ saying plainly when a hypothesis was not met.
 ## 15. Submission checklist
 
 - [x] Primary track: **Alexa+**. Mini-challenges: **Open Source** and **AWS Builder**. Earlier drafts of this README said the opposite about AWS, because for most of the build it was true.
-- [x] **AWS Builder, specifically:** the household ledger is an append-only event log on DynamoDB whose entire guarantee is one conditional write — `attribute_not_exists(sk)` — plus an atomic `ADD` sequence counter, with `seq` rather than time as the sort key so a replay is identical across all three store adapters (**§12**, and that trade-off is the design decision worth reading). Verified against the real service and exercised in CI against DynamoDB Local. Also used: the two AWS SDK v3 clients, the `aws` CLI, IAM at eight actions scoped to one table ARN, Amazon Linux 2023 on arm64, and CloudShell. **Bedrock is written and tested either side of the model call and has never executed** — no model access on this account, and nothing here claims a Bedrock result.
+- [x] **AWS Builder, specifically:** the household ledger is an append-only event log on DynamoDB whose entire guarantee is one conditional write — `attribute_not_exists(sk)` — plus an atomic `ADD` sequence counter, with `seq` rather than time as the sort key so a replay is identical across all three store adapters (**§12**, and that trade-off is the design decision worth reading). Verified against the real service and exercised in CI against DynamoDB Local. Also used: the two AWS SDK v3 clients, the `aws` CLI, IAM at nine actions — eight on DynamoDB tables named `owed-*`, one `sts:GetCallerIdentity` — Amazon Linux 2023 on arm64, and CloudShell. **Bedrock is written and tested — either side of the model call and at it, the adapter against a local Converse endpoint through a real SDK client — and has never run against a model**: no model access on this account, and nothing here claims a Bedrock result.
 - [x] Open Source: **the whole repository is public under Apache-2.0** — `LICENSE`, `NOTICE`, and GitHub detecting the licence. Within it, **three** packages are self-contained enough to lift out as they stand: `recourse-protocol` (no workspace dependencies at all), `policy-library` and `merchant-agents`, each Apache-2.0 with `files`, `exports` and a README. `extractor` and `extractor-bedrock` are Apache-2.0 and `files`-ready too, but both depend on `@owed/domain`, which is `private: true`, so **they cannot be lifted out without extracting the domain types first**. An earlier draft claimed all five, and claimed they were published to a registry; neither was true.
 - [x] The repo calls MCP in code — server entry point, `_meta.ui` on every tool, elicitation, `ui://` resources — not just in this README
 - [x] **(d) Product feedback** for every tool, API and SDK used — what it was used for, what worked well, what needs work, how onboarding felt, whether we would build with it again, **and the AWS services described in that same answer**: **[docs/product-feedback.md](docs/product-feedback.md)**. Only tools this repo actually imports or invokes appear in it; where something was written but never executed against the service — Bedrock — it says so.

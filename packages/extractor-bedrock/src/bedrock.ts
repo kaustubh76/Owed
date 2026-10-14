@@ -24,14 +24,18 @@ export interface BedrockInvokeOptions {
 }
 
 /**
- * The real adapter, and the only file in this package that cannot be tested here.
+ * The real adapter.
  *
  * `client` is injectable for the same reason `DynamoEventStore` takes one: so a caller can
  * point this somewhere else without the adapter knowing anything about endpoints or
- * credentials. There is no local Bedrock to point it at, though, which is the honest
- * difference between this file and that one — DynamoDB Local made the storage adapter
- * verifiable offline, and nothing equivalent exists here. Everything it is built on is
- * tested; the wiring in this file is not, until it runs against the real service.
+ * credentials. This file used to say it was the one file here that could not be tested
+ * offline, because there is no Bedrock to run locally the way DynamoDB Local runs. That
+ * was the wrong conclusion from a true premise: a `BedrockRuntimeClient` takes an
+ * `endpoint`, so a real client can be pointed at a local server that speaks Converse, and
+ * `bedrock.test.ts` does exactly that — over h2c, because the SDK speaks HTTP/2 to this
+ * service. What it cannot establish is whether a model's answers are any good; what it can
+ * establish is everything in this function, including that a throttle is deserialised by
+ * the SDK into a real `ThrottlingException` and retried, and that nothing else is.
  *
  * **Temperature 0.** Not for reproducibility — a model is not deterministic and pretending
  * otherwise is how a flaky evaluation gets published — but because sampling buys nothing
@@ -42,7 +46,22 @@ export function bedrockInvoke({
   modelId = process.env.OWED_BEDROCK_MODEL ?? DEFAULT_MODEL_ID,
   maxRetries = 4,
 }: BedrockInvokeOptions = {}): Invoke {
-  const runtime = client ?? new BedrockRuntimeClient({});
+  /**
+   * `maxAttempts: 1`, so the retry policy lives in exactly one place: the loop below, the
+   * one `maxRetries` documents.
+   *
+   * The SDK retries throttling on its own, three attempts by default — measured, against a
+   * local server that throttles everything: one `send()` reached the wire three times over
+   * 849ms. Layered under the loop below that made the documented behaviour false in both
+   * directions. `maxRetries: 0`, which says it disables retrying, still sent three
+   * requests; and the default of 4 meant five of our attempts times three of the SDK's, so
+   * up to fifteen requests with two compounding backoffs — on the exact path the 160-call
+   * evaluation runs through.
+   *
+   * A caller who injects a client chooses its retry policy themselves, which is the point
+   * of injecting one.
+   */
+  const runtime = client ?? new BedrockRuntimeClient({ maxAttempts: 1 });
 
   return async (prompt: string) => {
     for (let attempt = 0; ; attempt++) {
