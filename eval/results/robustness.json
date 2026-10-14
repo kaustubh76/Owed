@@ -1,0 +1,532 @@
+{
+  "what": "H3 under merchants that do not behave exactly as configured",
+  "grid_size": 270,
+  "breach_kinds": 6,
+  "sessions_per_pass": 1620,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "jitters": [
+    0.1,
+    0.25
+  ],
+  "varied": [
+    "anchor_ratio",
+    "concession_rate",
+    "accept_ratio"
+  ],
+  "held_fixed": [
+    "declines_at_round",
+    "withdraws_on_counter"
+  ],
+  "deterministic": {
+    "jitter": 0,
+    "seed": 0,
+    "negotiator_share": 0.33945868945868946,
+    "accept_first_offer_share": 0.3076923076923077,
+    "lift": 1.1032407407407407,
+    "median_rounds": 2,
+    "loss_rate": 0.23333333333333334
+  },
+  "knife_edge": {
+    "grid_size": 270,
+    "accept_ratio_exactly_one": 90,
+    "comparison": "counter <= stated * accept_ratio, with counter === stated"
+  },
+  "by_arm": [
+    {
+      "arm": "all three",
+      "jitter": 0.1,
+      "runs": 5,
+      "mean_negotiator_share": 0.28985754985754986,
+      "mean_lift": 0.9507933945485657,
+      "min_lift": 0.9346298031865042,
+      "max_lift": 0.9639681796911558,
+      "beats_baseline_in": 0,
+      "mean_median_rounds": 2
+    },
+    {
+      "arm": "all three",
+      "jitter": 0.25,
+      "runs": 5,
+      "mean_negotiator_share": 0.27431623931623933,
+      "mean_lift": 0.8991988086768081,
+      "min_lift": 0.8809358350706509,
+      "max_lift": 0.9193097014925373,
+      "beats_baseline_in": 0,
+      "mean_median_rounds": 2
+    },
+    {
+      "arm": "anchor_ratio",
+      "jitter": 0.1,
+      "runs": 5,
+      "mean_negotiator_share": 0.3227920227920228,
+      "mean_lift": 1.058823966539428,
+      "min_lift": 1.051844932274638,
+      "max_lift": 1.0673841834347215,
+      "beats_baseline_in": 5,
+      "mean_median_rounds": 2
+    },
+    {
+      "arm": "anchor_ratio",
+      "jitter": 0.25,
+      "runs": 5,
+      "mean_negotiator_share": 0.31749287749287747,
+      "mean_lift": 1.0407112043819635,
+      "min_lift": 1.0326981886614914,
+      "max_lift": 1.0508395522388059,
+      "beats_baseline_in": 5,
+      "mean_median_rounds": 2
+    },
+    {
+      "arm": "concession_rate",
+      "jitter": 0.1,
+      "runs": 5,
+      "mean_negotiator_share": 0.3394017094017094,
+      "mean_lift": 1.1030555555555557,
+      "min_lift": 1.1027777777777779,
+      "max_lift": 1.1034722222222222,
+      "beats_baseline_in": 5,
+      "mean_median_rounds": 2
+    },
+    {
+      "arm": "concession_rate",
+      "jitter": 0.25,
+      "runs": 5,
+      "mean_negotiator_share": 0.3391595441595442,
+      "mean_lift": 1.1022685185185186,
+      "min_lift": 1.1009259259259259,
+      "max_lift": 1.103935185185185,
+      "beats_baseline_in": 5,
+      "mean_median_rounds": 2
+    },
+    {
+      "arm": "accept_ratio",
+      "jitter": 0.1,
+      "runs": 5,
+      "mean_negotiator_share": 0.30776353276353274,
+      "mean_lift": 1.0002314814814817,
+      "min_lift": 0.9844907407407407,
+      "max_lift": 1.0118055555555556,
+      "beats_baseline_in": 3,
+      "mean_median_rounds": 2
+    },
+    {
+      "arm": "accept_ratio",
+      "jitter": 0.25,
+      "runs": 5,
+      "mean_negotiator_share": 0.2998005698005698,
+      "mean_lift": 0.9743518518518519,
+      "min_lift": 0.9590277777777778,
+      "max_lift": 0.9895833333333334,
+      "beats_baseline_in": 0,
+      "mean_median_rounds": 2
+    }
+  ],
+  "passes": [
+    {
+      "jitter": 0.1,
+      "seed": 1,
+      "negotiator_share": 0.29074074074074074,
+      "accept_first_offer_share": 0.30491452991452994,
+      "lift": 0.9535155337537958,
+      "median_rounds": 2,
+      "loss_rate": 0.26296296296296295,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 2,
+      "negotiator_share": 0.28411680911680914,
+      "accept_first_offer_share": 0.303988603988604,
+      "lift": 0.9346298031865042,
+      "median_rounds": 2,
+      "loss_rate": 0.26728395061728394,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 3,
+      "negotiator_share": 0.2910968660968661,
+      "accept_first_offer_share": 0.304985754985755,
+      "lift": 0.9544605324614666,
+      "median_rounds": 2,
+      "loss_rate": 0.2654320987654321,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 4,
+      "negotiator_share": 0.2934472934472934,
+      "accept_first_offer_share": 0.3044159544159544,
+      "lift": 0.9639681796911558,
+      "median_rounds": 2,
+      "loss_rate": 0.26481481481481484,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 5,
+      "negotiator_share": 0.2898860398860399,
+      "accept_first_offer_share": 0.305982905982906,
+      "lift": 0.9473929236499069,
+      "median_rounds": 2,
+      "loss_rate": 0.2660493827160494,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 1,
+      "negotiator_share": 0.2774928774928775,
+      "accept_first_offer_share": 0.30448717948717946,
+      "lift": 0.9113450292397661,
+      "median_rounds": 2,
+      "loss_rate": 0.27901234567901234,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 2,
+      "negotiator_share": 0.26866096866096867,
+      "accept_first_offer_share": 0.30277777777777776,
+      "lift": 0.8873206304398965,
+      "median_rounds": 2,
+      "loss_rate": 0.2851851851851852,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 3,
+      "negotiator_share": 0.28076923076923077,
+      "accept_first_offer_share": 0.3054131054131054,
+      "lift": 0.9193097014925373,
+      "median_rounds": 2,
+      "loss_rate": 0.2765432098765432,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 4,
+      "negotiator_share": 0.2737891737891738,
+      "accept_first_offer_share": 0.3051994301994302,
+      "lift": 0.8970828471411902,
+      "median_rounds": 2,
+      "loss_rate": 0.2851851851851852,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 5,
+      "negotiator_share": 0.2708689458689459,
+      "accept_first_offer_share": 0.3074786324786325,
+      "lift": 0.8809358350706509,
+      "median_rounds": 2,
+      "loss_rate": 0.28703703703703703,
+      "arm": "all three"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 1,
+      "negotiator_share": 0.3210826210826211,
+      "accept_first_offer_share": 0.30491452991452994,
+      "lift": 1.053024994160243,
+      "median_rounds": 2,
+      "loss_rate": 0.24814814814814815,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 2,
+      "negotiator_share": 0.32065527065527066,
+      "accept_first_offer_share": 0.303988603988604,
+      "lift": 1.0548266166822868,
+      "median_rounds": 2,
+      "loss_rate": 0.24753086419753087,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 3,
+      "negotiator_share": 0.3207977207977208,
+      "accept_first_offer_share": 0.304985754985755,
+      "lift": 1.051844932274638,
+      "median_rounds": 2,
+      "loss_rate": 0.24876543209876542,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 4,
+      "negotiator_share": 0.3249287749287749,
+      "accept_first_offer_share": 0.3044159544159544,
+      "lift": 1.0673841834347215,
+      "median_rounds": 2,
+      "loss_rate": 0.24691358024691357,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 5,
+      "negotiator_share": 0.3264957264957265,
+      "accept_first_offer_share": 0.305982905982906,
+      "lift": 1.0670391061452513,
+      "median_rounds": 2,
+      "loss_rate": 0.2462962962962963,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 1,
+      "negotiator_share": 0.31794871794871793,
+      "accept_first_offer_share": 0.30448717948717946,
+      "lift": 1.0442105263157895,
+      "median_rounds": 2,
+      "loss_rate": 0.2580246913580247,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 2,
+      "negotiator_share": 0.3126780626780627,
+      "accept_first_offer_share": 0.30277777777777776,
+      "lift": 1.0326981886614914,
+      "median_rounds": 2,
+      "loss_rate": 0.2611111111111111,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 3,
+      "negotiator_share": 0.32094017094017097,
+      "accept_first_offer_share": 0.3054131054131054,
+      "lift": 1.0508395522388059,
+      "median_rounds": 2,
+      "loss_rate": 0.25617283950617287,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 4,
+      "negotiator_share": 0.31723646723646726,
+      "accept_first_offer_share": 0.3051994301994302,
+      "lift": 1.0394399066511084,
+      "median_rounds": 2,
+      "loss_rate": 0.25925925925925924,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 5,
+      "negotiator_share": 0.31866096866096866,
+      "accept_first_offer_share": 0.3074786324786325,
+      "lift": 1.0363678480426222,
+      "median_rounds": 2,
+      "loss_rate": 0.2598765432098765,
+      "arm": "anchor_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 1,
+      "negotiator_share": 0.33952991452991454,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.1034722222222222,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 2,
+      "negotiator_share": 0.33938746438746437,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.1030092592592593,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 3,
+      "negotiator_share": 0.33931623931623933,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.1027777777777779,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 4,
+      "negotiator_share": 0.33938746438746437,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.1030092592592593,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 5,
+      "negotiator_share": 0.33938746438746437,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.1030092592592593,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 1,
+      "negotiator_share": 0.33967236467236467,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.103935185185185,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 2,
+      "negotiator_share": 0.33903133903133903,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.1018518518518519,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 3,
+      "negotiator_share": 0.3387464387464387,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.1009259259259259,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 4,
+      "negotiator_share": 0.3388888888888889,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.101388888888889,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 5,
+      "negotiator_share": 0.33945868945868946,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.1032407407407407,
+      "median_rounds": 2,
+      "loss_rate": 0.23333333333333334,
+      "arm": "concession_rate"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 1,
+      "negotiator_share": 0.31132478632478633,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.0118055555555556,
+      "median_rounds": 2,
+      "loss_rate": 0.24691358024691357,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 2,
+      "negotiator_share": 0.30292022792022794,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 0.9844907407407407,
+      "median_rounds": 2,
+      "loss_rate": 0.25308641975308643,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 3,
+      "negotiator_share": 0.311039886039886,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.0108796296296296,
+      "median_rounds": 2,
+      "loss_rate": 0.24876543209876542,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 4,
+      "negotiator_share": 0.30982905982905984,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 1.0069444444444444,
+      "median_rounds": 2,
+      "loss_rate": 0.25,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.1,
+      "seed": 5,
+      "negotiator_share": 0.3037037037037037,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 0.987037037037037,
+      "median_rounds": 2,
+      "loss_rate": 0.25246913580246916,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 1,
+      "negotiator_share": 0.30448717948717946,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 0.9895833333333334,
+      "median_rounds": 2,
+      "loss_rate": 0.25123456790123455,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 2,
+      "negotiator_share": 0.2970797720797721,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 0.9655092592592592,
+      "median_rounds": 2,
+      "loss_rate": 0.25679012345679014,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 3,
+      "negotiator_share": 0.3022079772079772,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 0.982175925925926,
+      "median_rounds": 2,
+      "loss_rate": 0.25123456790123455,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 4,
+      "negotiator_share": 0.30014245014245017,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 0.975462962962963,
+      "median_rounds": 2,
+      "loss_rate": 0.25617283950617287,
+      "arm": "accept_ratio"
+    },
+    {
+      "jitter": 0.25,
+      "seed": 5,
+      "negotiator_share": 0.2950854700854701,
+      "accept_first_offer_share": 0.3076923076923077,
+      "lift": 0.9590277777777778,
+      "median_rounds": 2,
+      "loss_rate": 0.2574074074074074,
+      "arm": "accept_ratio"
+    }
+  ]
+}

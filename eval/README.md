@@ -17,7 +17,11 @@ pnpm --filter @owed/eval extraction  # H1: does the rule-based extractor read pr
 pnpm --filter @owed/eval breach      # H2: does the breach engine get it right, and hold back when it cannot?
 pnpm --filter @owed/eval recourse    # H3 single-shot: does negotiating beat taking the first offer?
 pnpm --filter @owed/eval learning    # H3 repeat games: does knowing who you are arguing with help?
+pnpm --filter @owed/eval latency     # p95 per tool, over Streamable HTTP against a real server
+pnpm --filter @owed/eval robustness  # does H3 survive merchants that do not behave exactly as configured?
 ```
+
+`pnpm eval:all` from the repository root runs all six in order.
 
 One more exists and is **not** run by default, because it costs money and calls a network
 service:
@@ -405,6 +409,45 @@ was fixed in advance and has not been revisited, which is the point of fixing it
 **The merchants are simulated.** No real merchant has implemented the recourse protocol.
 These are policy-driven agents, not observations of real conduct, and they are only as
 representative as the parameter space above.
+
+**And they were perfectly predictable, which turns out to carry the result.**
+`pnpm --filter @owed/eval robustness` re-runs the whole grid with each merchant's three
+continuous parameters drawn from a seeded source instead of taken exactly — five seeds, two
+jitter levels, 41 passes of 1,620 sessions. It does not touch the pre-registered run; a test
+pins that the two are byte-identical when no variability is supplied.
+
+| varying | jitter | negotiator | lift | beat the baseline |
+|---|---|---|---|---|
+| nothing (pre-registered) | — | 33.9% | **1.10×** | — |
+| `concession_rate` | 0.25 | 33.9% | 1.10× | 5 of 5 |
+| `anchor_ratio` | 0.25 | 31.7% | 1.04× | 5 of 5 |
+| `accept_ratio` | 0.10 | 30.8% | 1.00× | 3 of 5 |
+| `accept_ratio` | 0.25 | 30.0% | **0.97×** | 0 of 5 |
+| all three | 0.10 | 29.0% | **0.95×** | 0 of 5 |
+| all three | 0.25 | 27.4% | **0.90×** | 0 of 5 |
+
+**Read that honestly: once a merchant's acceptance threshold is uncertain, arguing loses to
+taking the first offer.** Not by much, and not in every cell, but the sign of the headline
+result flips. H3's 1.10× is a figure about merchants who behave exactly as their parameters
+say.
+
+The decomposition says why, and it is not a general fact about negotiating. The negotiator
+counters at exactly the reservation, and a merchant settles when the counter is at or below
+`stated × accept_ratio` where `stated` *is* the reservation — so **90 of the 270 policies
+settle at exact equality**, to the penny. Wobble that threshold down and those cells refuse
+instead of settling at the full published figure; wobble it up and nothing improves, because
+the negotiator never asks for more than the reservation. The effect is one-sided by
+construction. `concession_rate` moves the result by about two hundredths of a percentage
+point, because the counter arrives on the first reply and the merchant's later concession
+schedule hardly ever comes into it.
+
+So the strategy is knife-edged rather than wrong: asking for exactly the published figure
+wins against a merchant who honours it exactly and loses the moment they do not. A negotiator
+that countered a little under the reservation would trade a small amount of upside for a lot
+of robustness. That is a design change to the thing H3 measures, so it is named here and not
+made quietly: the pre-registered negotiator is the one every figure above was produced with.
+
+Numbers from `results/robustness.json`, seeds 1–5, listed in the file.
 
 **The negotiator cannot tell merchant types apart.** It counters whenever an offer falls
 below the published figure, because on the first reply it has no way to know whether it is

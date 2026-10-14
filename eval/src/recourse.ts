@@ -4,6 +4,7 @@ import {
   createMerchantAgent,
   generateGrid,
   type MerchantBehaviour,
+  type Variability,
 } from "@owed/merchant-agents";
 import {
   type BreachKind,
@@ -153,8 +154,22 @@ function median(values: readonly number[]): number {
     : (sorted[middle] as number);
 }
 
+export interface RecourseMatrixOptions {
+  /**
+   * Draw each merchant's temperament from a seeded source instead of taking its grid
+   * cell exactly.
+   *
+   * Absent is the pre-registered run and the one every published figure comes from.
+   * Supplying one answers the standing caveat in `eval/README.md` — that these merchants
+   * are deterministic, so the negotiator reaching the oracle is partly a property of the
+   * simulation — without touching the run that caveat is about.
+   */
+  variability?: Variability;
+}
+
 export async function runRecourseMatrix(
   grid: readonly MerchantBehaviour[] = generateGrid(),
+  options: RecourseMatrixOptions = {},
 ): Promise<MatrixReport> {
   const policies = builtinPolicies().all();
   const cells: Cell[] = [];
@@ -176,6 +191,7 @@ export async function runRecourseMatrix(
       const agent = createMerchantAgent({
         config: { merchant: policy.merchant, behaviour },
         lookup: () => ({ stated: remedy.reservation, clause_title: remedy.clause.title }),
+        ...(options.variability === undefined ? {} : { variability: options.variability }),
       });
 
       const session = await runSession(negotiator, agent);

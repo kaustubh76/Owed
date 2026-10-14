@@ -422,9 +422,34 @@ three encounters it stops arguing with merchants who punish it. Episode one stil
 the cold negotiator exactly, which is the check that proves nothing is leaking.
 
 The pre-registered hypothesis (H3: ≥ 60%, ≥ 1.5×, median ≤ 2 rounds) is met on the third
-criterion and **still not met** on the first two,
-and `eval/README.md` says so plainly — along with why reaching the oracle here is a property
-of simulated merchants being deterministic rather than a claim about the algorithm.
+criterion and **still not met** on the first two, and `eval/README.md` says so plainly.
+
+**And the merchants being deterministic turns out to carry the lift.** That used to be a
+caveat in a sentence; it is now a measurement. `pnpm --filter @owed/eval robustness` re-runs
+the whole grid with each merchant's three continuous parameters drawn from a seeded source
+instead of taken exactly — 41 passes of 1,620 sessions, five seeds, `eval/results/robustness.json`
+— without touching the pre-registered run, which a test pins as byte-identical when no
+variability is supplied.
+
+At 10% wobble the lift falls from 1.10× to **0.95×**, and at 25% to **0.90×**: **once a
+merchant's acceptance threshold is uncertain, arguing loses to taking the first offer.** The
+sign of the headline result flips.
+
+Varying one parameter at a time says why, and it is not a general fact about negotiating.
+The negotiator counters at exactly the reservation and a merchant settles at or below
+`stated × accept_ratio` where `stated` *is* the reservation, so **90 of the 270 policies
+settle at exact equality, to the penny**. Move that threshold down and they refuse instead of
+paying in full; move it up and nothing improves, because the negotiator never asks for more
+than the reservation. Varying `concession_rate` alone changes the result by two hundredths of
+a percentage point, because the counter arrives on the first reply and the merchant's later
+schedule hardly ever comes into it; varying `anchor_ratio` alone still beats the baseline in
+every run.
+
+So the strategy is knife-edged rather than wrong: it wins against a merchant who honours its
+published figure exactly and loses the moment they do not. Countering a little under the
+reservation would trade a little upside for a lot of robustness — a design change to the
+thing H3 measures, so it is named here rather than made quietly in the sitting that found
+it. This is the same discipline as the ±30 minute tolerance above, and the same reason.
 
 ---
 

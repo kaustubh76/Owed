@@ -18,7 +18,8 @@
     "breach": "node dist/bin/breach.js",
     "extraction": "node dist/bin/extraction.js",
     "extraction:bedrock": "node dist/bin/extraction-bedrock.js",
-    "latency": "node dist/bin/latency.js"
+    "latency": "node dist/bin/latency.js",
+    "robustness": "node dist/bin/robustness.js"
   },
   "dependencies": {
     "@owed/core": "workspace:*",

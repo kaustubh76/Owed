@@ -1,4 +1,4 @@
-import type { BreachKind, Money } from "@owed/policy-library";
+import { type BreachKind, BreachKindSchema, type Money } from "@owed/policy-library";
 import {
   type ClaimMessage,
   type CounterMessage,
@@ -9,7 +9,7 @@ import {
   type RespondentMessage,
   type Money as WireMoney,
 } from "@owed/recourse-protocol";
-import { behaviourFor, type MerchantConfig } from "./behaviour.js";
+import { behaviourFor, type MerchantConfig, type Variability, varyBehaviour } from "./behaviour.js";
 
 /** What the merchant's own policy says they owe for this breach. */
 export interface StatedRemedy {
@@ -27,6 +27,15 @@ export interface MerchantAgentOptions {
   lookup: RemedyLookup;
   /** Injected so a transcript is byte-identical on every run. */
   clock?: (step: number) => string;
+  /**
+   * Draw this merchant's temperament from a seeded source, instead of taking its
+   * configuration exactly.
+   *
+   * Absent — which is every caller that ships — leaves the behaviour precisely as
+   * configured, so the pre-registered grid and every number measured on it are unchanged.
+   * `eval/src/bin/robustness.ts` is the caller that supplies one.
+   */
+  variability?: Variability;
 }
 
 const BASE_INSTANT_MS = Date.parse("2026-01-01T00:00:00Z");
@@ -60,9 +69,34 @@ function lastOffer(transcript: readonly RecourseMessage[]): OfferMessage | undef
  * the demo runs the identical function behind an HTTP server so the inspector shows real
  * wire traffic. One strategy, two transports.
  */
-export function createMerchantAgent({ config, lookup, clock }: MerchantAgentOptions): Respondent {
+export function createMerchantAgent({
+  config,
+  lookup,
+  clock,
+  variability,
+}: MerchantAgentOptions): Respondent {
   const at = clock ?? ((step: number) => new Date(BASE_INSTANT_MS + step * 60_000).toISOString());
   const route = config.escalation_route ?? `${config.merchant} customer relations`;
+
+  /**
+   * Drawn once, here, rather than inside `respond`.
+   *
+   * A merchant that re-rolled its temperament on every reply would be noise, not
+   * variation: it could anchor low, concede generously and then refuse, which is not a
+   * merchant anyone has met. Once per agent means inconsistent between claims and
+   * consistent within one, and `respond` stays pure given the agent.
+   */
+  const temperament =
+    variability === undefined
+      ? undefined
+      : new Map(
+          // Every kind, eagerly and in the schema's own order, so which temperament a
+          // merchant draws does not depend on which claim happens to arrive first.
+          BreachKindSchema.options.map((kind) => [
+            kind,
+            varyBehaviour(behaviourFor(config, kind), variability),
+          ]),
+        );
 
   return {
     name: config.merchant,
@@ -75,7 +109,7 @@ export function createMerchantAgent({ config, lookup, clock }: MerchantAgentOpti
       const step = transcript.length;
       const envelope = { claim_id: claim.claim_id, at: at(step) };
       const breachKind = claim.breach_kind as BreachKind;
-      const behaviour = behaviourFor(config, breachKind);
+      const behaviour = temperament?.get(breachKind) ?? behaviourFor(config, breachKind);
       const remedy = lookup(breachKind, claim);
 
       if (remedy === undefined) {

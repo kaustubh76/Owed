@@ -25,7 +25,7 @@
     "verify:ui": "node scripts/verify-ui.mjs",
     "aws:smoke": "node scripts/aws-smoke.mjs",
     "eval": "pnpm --filter @owed/eval recourse",
-    "eval:all": "pnpm --filter @owed/eval extraction && pnpm --filter @owed/eval breach && pnpm --filter @owed/eval recourse && pnpm --filter @owed/eval learning && pnpm --filter @owed/eval latency"
+    "eval:all": "pnpm --filter @owed/eval extraction && pnpm --filter @owed/eval breach && pnpm --filter @owed/eval recourse && pnpm --filter @owed/eval learning && pnpm --filter @owed/eval latency && pnpm --filter @owed/eval robustness"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
