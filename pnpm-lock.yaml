@@ -100,6 +100,9 @@ importers:
 
   eval:
     dependencies:
+      '@modelcontextprotocol/client':
+        specifier: 2.1.0
+        version: 2.1.0
       '@owed/core':
         specifier: workspace:*
         version: link:../packages/core
@@ -112,6 +115,9 @@ importers:
       '@owed/extractor-bedrock':
         specifier: workspace:*
         version: link:../packages/extractor-bedrock
+      '@owed/mcp-server':
+        specifier: workspace:*
+        version: link:../packages/mcp-server
       '@owed/merchant-agents':
         specifier: workspace:*
         version: link:../packages/merchant-agents

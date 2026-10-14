@@ -1,7 +1,10 @@
 {
   "tuned": {
     "parameters": {
-      "sets": ["generated", "authored"],
+      "sets": [
+        "generated",
+        "authored"
+      ],
       "kinds": [
         "delivery_window",
         "eta",
@@ -123,14 +126,21 @@
         "id": "a_05",
         "set": "authored",
         "note": "two promises, different kinds",
-        "expected": ["warranty"],
-        "read": ["price_match"]
+        "expected": [
+          "warranty"
+        ],
+        "read": [
+          "price_match"
+        ]
       }
     ]
   },
   "held_out": {
     "parameters": {
-      "sets": ["generated", "authored"],
+      "sets": [
+        "generated",
+        "authored"
+      ],
       "kinds": [
         "delivery_window",
         "eta",
@@ -247,7 +257,9 @@
         "id": "h_39",
         "set": "authored",
         "note": "a conditional offer, not yet a promise about an order",
-        "read": ["eta"]
+        "read": [
+          "eta"
+        ]
       }
     ],
     "misses": [
@@ -255,63 +267,90 @@
         "id": "h_04",
         "set": "authored",
         "note": "abbreviated weekday, no cue noun",
-        "expected": ["delivery_window"],
-        "read": ["appointment_slot"]
+        "expected": [
+          "delivery_window"
+        ],
+        "read": [
+          "appointment_slot"
+        ]
       },
       {
         "id": "h_07",
         "set": "authored",
         "note": "formal guarantee, remedy phrased as a waiver",
-        "expected": ["appointment_slot", "guarantee"],
+        "expected": [
+          "appointment_slot",
+          "guarantee"
+        ],
         "read": []
       },
       {
         "id": "h_10",
         "set": "authored",
         "note": "consultation as an appointment",
-        "expected": ["appointment_slot"],
+        "expected": [
+          "appointment_slot"
+        ],
         "read": []
       },
       {
         "id": "h_11",
         "set": "authored",
         "note": "'booked in for' with no engineer noun",
-        "expected": ["appointment_slot"],
+        "expected": [
+          "appointment_slot"
+        ],
         "read": []
       },
       {
         "id": "h_12",
         "set": "authored",
         "note": "'guarantee' meaning warranty",
-        "expected": ["warranty"],
-        "read": ["guarantee"]
+        "expected": [
+          "warranty"
+        ],
+        "read": [
+          "guarantee"
+        ]
       },
       {
         "id": "h_18",
         "set": "authored",
         "note": "a day-level deadline",
-        "expected": ["eta"],
+        "expected": [
+          "eta"
+        ],
         "read": []
       },
       {
         "id": "h_25",
         "set": "authored",
         "note": "'slot is confirmed for'",
-        "expected": ["delivery_window"],
-        "read": ["appointment_slot"]
+        "expected": [
+          "delivery_window"
+        ],
+        "read": [
+          "appointment_slot"
+        ]
       },
       {
         "id": "h_27",
         "set": "authored",
         "note": "remedy with no word 'guarantee' anywhere",
-        "expected": ["guarantee"],
-        "read": ["eta"]
+        "expected": [
+          "guarantee"
+        ],
+        "read": [
+          "eta"
+        ]
       },
       {
         "id": "h_31",
         "set": "authored",
         "note": "compensation phrased as a payment",
-        "expected": ["refund_sla"],
+        "expected": [
+          "refund_sla"
+        ],
         "read": []
       }
     ]

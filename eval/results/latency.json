@@ -1,0 +1,73 @@
+{
+  "measured_at": "2026-10-14T10:50:17.062Z",
+  "environment": {
+    "node": "v26.10.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpus": 8,
+    "load_average_1m": 16.47
+  },
+  "target_ms": 500,
+  "samples_per_tool": 50,
+  "tools": [
+    {
+      "tool": "ledger_summary",
+      "samples": 50,
+      "min_ms": 3.3,
+      "median_ms": 6,
+      "p95_ms": 11.1,
+      "max_ms": 17.6,
+      "mean_ms": 6.6
+    },
+    {
+      "tool": "promises_list",
+      "samples": 50,
+      "min_ms": 2,
+      "median_ms": 2.8,
+      "p95_ms": 5.8,
+      "max_ms": 6.2,
+      "mean_ms": 3.3
+    },
+    {
+      "tool": "promise_check",
+      "samples": 50,
+      "min_ms": 2.2,
+      "median_ms": 5.6,
+      "p95_ms": 25.3,
+      "max_ms": 29.2,
+      "mean_ms": 8.9
+    },
+    {
+      "tool": "evidence_get",
+      "samples": 50,
+      "min_ms": 2,
+      "median_ms": 3.7,
+      "p95_ms": 8.6,
+      "max_ms": 18.3,
+      "mean_ms": 4.4
+    },
+    {
+      "tool": "claim_status",
+      "samples": 50,
+      "min_ms": 3,
+      "median_ms": 5,
+      "p95_ms": 14.9,
+      "max_ms": 18.4,
+      "mean_ms": 6.2
+    },
+    {
+      "tool": "claim_file",
+      "samples": 50,
+      "min_ms": 1.9,
+      "median_ms": 2.7,
+      "p95_ms": 4.4,
+      "max_ms": 6.5,
+      "mean_ms": 2.9
+    }
+  ],
+  "worst": {
+    "tool": "promise_check",
+    "p95_ms": 25.3
+  },
+  "met": true
+}

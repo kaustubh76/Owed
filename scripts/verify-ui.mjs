@@ -39,6 +39,8 @@ async function auditAccessibility(frame, label) {
     const doc = body.ownerDocument;
     const view = doc.defaultView;
     const problems = [];
+    /** @type {{ ratio: number, required: number, text: string } | undefined} */
+    let worst;
 
     const parse = (value) => {
       const parts = value.match(/[\d.]+/g);
@@ -69,7 +71,15 @@ async function auditAccessibility(frame, label) {
       return { r: 0, g: 0, b: 0, a: 1 };
     };
 
-    for (const element of doc.querySelectorAll("*")) {
+    // Rendered text only. `querySelectorAll("*")` reaches into <head>, so this used to
+    // measure the <title>, the inlined <style> and the whole bundled <script> as though
+    // they were visible copy — and with the fallback background that produced violations
+    // on text nobody can see. Elements with no client rect are skipped for the same
+    // reason: a contrast ratio for something that is not drawn is not a fact about it.
+    const SKIP = /^(script|style|title|template|noscript|head|meta|link)$/i;
+    for (const element of doc.body.querySelectorAll("*")) {
+      if (SKIP.test(element.tagName)) continue;
+      if (element.getClientRects().length === 0) continue;
       const text = [...element.childNodes]
         .filter((node) => node.nodeType === 3)
         .map((node) => node.textContent?.trim() ?? "")
@@ -96,6 +106,12 @@ async function auditAccessibility(frame, label) {
           `contrast ${ratio.toFixed(2)}:1 (needs ${required}:1) on "${text.slice(0, 40)}"`,
         );
       }
+      // The tightest *passing* element, which the README quotes and this gate previously
+      // never produced. Reporting only violations meant a figure had to be measured by
+      // hand and then taken on trust — the same defect as the 6.36:1 it replaced.
+      if (worst === undefined || ratio < worst.ratio) {
+        worst = { ratio, required, text: text.slice(0, 40) };
+      }
     }
 
     for (const control of doc.querySelectorAll("button, a, input, select, [role=button]")) {
@@ -112,7 +128,7 @@ async function auditAccessibility(frame, label) {
       else if (alt.length > 125) problems.push(`alt text ${alt.length} characters, over 125`);
     }
 
-    return problems;
+    return { problems, worst };
   });
 }
 
@@ -170,7 +186,13 @@ start("home", "pnpm", ["--filter", "@owed/home", "dev"]);
 await waitFor("home", () => reachable(HOME_URL));
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
-const page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
+const page = await browser.newPage({
+  viewport: { width: 1440, height: 980 },
+  // Stated, not inherited. Headless Chrome reports `prefers-color-scheme: light`, and now
+  // that the host passes the viewer's scheme to the card, leaving this unset would have
+  // silently made the main pass a light one and left dark untested.
+  colorScheme: "dark",
+});
 
 /**
  * Record what the page asks the browser to say.
@@ -198,6 +220,8 @@ page.on("console", (message) => {
 });
 
 const failures = [];
+/** Every card's tightest passing contrast, so the gate can report a number. */
+const contrastSeen = [];
 const check = (label, actual, expected) => {
   if (actual !== expected) failures.push(`${label}: expected ${expected}, got ${actual}`);
   else process.stdout.write(`  ok  ${label} — ${actual}\n`);
@@ -302,8 +326,9 @@ try {
     true,
   );
 
-  const evidenceProblems = await auditAccessibility(card(), "evidence card");
-  check("evidence card accessibility", evidenceProblems.join(" | ") || "clean", "clean");
+  const evidenceAudit = await auditAccessibility(card(), "evidence card");
+  check("evidence card accessibility", evidenceAudit.problems.join(" | ") || "clean", "clean");
+  if (evidenceAudit.worst) contrastSeen.push(evidenceAudit.worst);
 
   // --- the scrubber: move the household through its week -------------------
   const slider = page.locator(".scrub__range");
@@ -400,13 +425,15 @@ try {
     "Northwind Parcel",
   );
 
-  const claimProblems = await auditAccessibility(card(), "claim card");
-  check("claim card accessibility", claimProblems.join(" | ") || "clean", "clean");
+  const claimAudit = await auditAccessibility(card(), "claim card");
+  check("claim card accessibility", claimAudit.problems.join(" | ") || "clean", "clean");
+  if (claimAudit.worst) contrastSeen.push(claimAudit.worst);
 
   await page.getByRole("button", { name: "Alexa, what am I owed?" }).click();
   await cardText(".ledger__amount");
-  const ledgerProblems = await auditAccessibility(card(), "ledger card");
-  check("ledger card accessibility", ledgerProblems.join(" | ") || "clean", "clean");
+  const ledgerAudit = await auditAccessibility(card(), "ledger card");
+  check("ledger card accessibility", ledgerAudit.problems.join(" | ") || "clean", "clean");
+  if (ledgerAudit.worst) contrastSeen.push(ledgerAudit.worst);
 
   // --- the surface with no screen -----------------------------------------
   // Voice-only parity is a certification requirement and the easiest thing to fake.
@@ -428,6 +455,51 @@ try {
   const ledgerOnDot = (await page.textContent(".dot__speech")) ?? "";
   check("the ledger is answerable by voice alone", ledgerOnDot.includes("recovered"), true);
   check("and stands on its own", ledgerOnDot.includes("still open"), true);
+
+  // --- the light theme, which nothing used to render -----------------------
+  //
+  // `ui-views` ships a complete light palette and `applyTheme` has always honoured it,
+  // but the host sent a hardcoded `theme: "dark"`, so half the design system was
+  // unreachable and no check had ever drawn it. The host now passes the viewer's own
+  // `prefers-color-scheme` down, which is what a real host does — so this pass is both a
+  // second audit and the proof that the pass-through works.
+  const lightPage = await browser.newPage({
+    viewport: { width: 1440, height: 980 },
+    colorScheme: "light",
+  });
+  try {
+    await lightPage.goto(HOME_URL, { waitUntil: "networkidle" });
+    await lightPage.waitForSelector(".app__status--on", { timeout: 20_000 });
+    await lightPage.getByRole("button", { name: EXPECTED.utterance }).click();
+
+    const lightCard = lightPage.frameLocator("iframe.echo__screen");
+    await lightCard.locator(".ledger__amount").waitFor({ state: "visible", timeout: 20_000 });
+
+    const theme = await lightCard
+      .locator("body")
+      .evaluate((body) => body.ownerDocument.documentElement.dataset.theme);
+    check("the host passes the viewer's light theme to the card", theme, "light");
+
+    check(
+      "the card renders the same figure in light",
+      (await lightCard.locator(".ledger__amount").textContent())?.trim(),
+      EXPECTED.recovered,
+    );
+
+    const lightAudit = await auditAccessibility(lightCard, "ledger card (light)");
+    check("light-theme accessibility", lightAudit.problems.join(" | ") || "clean", "clean");
+    if (lightAudit.worst) contrastSeen.push({ ...lightAudit.worst, theme: "light" });
+  } finally {
+    await lightPage.close();
+  }
+
+  // The number the README quotes, produced by the gate rather than measured by hand.
+  if (contrastSeen.length > 0) {
+    const tightest = contrastSeen.reduce((a, b) => (b.ratio < a.ratio ? b : a));
+    process.stdout.write(
+      `  ok  worst passing contrast — ${tightest.ratio.toFixed(2)}:1 (needs ${tightest.required}:1) on "${tightest.text}"\n`,
+    );
+  }
 
   check("console clean", consoleErrors.length, 0);
   if (consoleErrors.length > 0) process.stdout.write(`${consoleErrors.join("\n")}\n`);

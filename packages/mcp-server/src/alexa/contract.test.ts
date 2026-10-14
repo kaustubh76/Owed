@@ -186,23 +186,47 @@ describe("latency", () => {
    * The threshold itself is untouched at 500 ms: a real regression fails all three attempts.
    * The numbers quoted in the README were taken on an idle machine and should be read that
    * way.
+   *
+   * Twenty samples per tool rather than forty of one: six tools at forty would triple the
+   * wall-clock for a quantity whose threshold is two orders of magnitude above the
+   * observed value. The gate is here to catch a regression, not to publish a figure —
+   * `eval/latency/` does that, and commits its result.
    */
-  it("answers well inside the documented target at p95", {
-    timeout: 60_000,
+  it("answers well inside the documented target at p95, across the whole tool surface", {
+    timeout: 120_000,
     retry: 2,
   }, async () => {
-    const samples: number[] = [];
-    for (let i = 0; i < 40; i += 1) {
-      const started = performance.now();
-      await client.callTool({ name: "ledger_summary", arguments: {} });
-      samples.push(performance.now() - started);
+    // Every advertised tool, not just the cheap one. `ledger_summary` is a projection of
+    // an in-memory replay; `claim_file` reports on an already-filed claim and
+    // `evidence_get` resolves an identifier first, so they are the ones that could
+    // plausibly be slow. Measuring only the first would have made "across the tool
+    // surface" an assumption rather than a result.
+    const { tools } = await client.listTools();
+    const perTool: Array<{ name: string; p95: number }> = [];
+
+    for (const tool of tools) {
+      const samples: number[] = [];
+      const args = await argumentsFor(tool.name);
+      for (let i = 0; i < 20; i += 1) {
+        const started = performance.now();
+        await client.callTool({ name: tool.name, arguments: args });
+        samples.push(performance.now() - started);
+      }
+      samples.sort((a, b) => a - b);
+      perTool.push({ name: tool.name, p95: samples[Math.floor(samples.length * 0.95)] ?? 0 });
     }
 
-    samples.sort((a, b) => a - b);
-    const p95 = samples[Math.floor(samples.length * 0.95)] ?? 0;
-    process.stdout.write(`    ledger_summary p95: ${p95.toFixed(1)} ms\n`);
+    for (const { name, p95 } of perTool) {
+      process.stdout.write(`    ${name.padEnd(16)} p95 ${p95.toFixed(1)} ms\n`);
+    }
 
-    expect(p95).toBeLessThan(500);
+    const worst = perTool.reduce((a, b) => (b.p95 > a.p95 ? b : a));
+    process.stdout.write(
+      `    worst across the surface: ${worst.name} at ${worst.p95.toFixed(1)} ms\n`,
+    );
+
+    expect(perTool).toHaveLength(6);
+    expect(worst.p95).toBeLessThan(500);
   });
 });
 

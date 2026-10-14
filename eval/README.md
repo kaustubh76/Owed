@@ -1,5 +1,14 @@
 # Evaluation
 
+> **`eval/results/` is excluded from `biome` (see `biome.json`).** These files are written by
+> the harnesses with `JSON.stringify(…, null, 2)`, which is not byte-identical to biome's
+> formatting — so formatting them once means the next `pnpm eval:all` leaves the tree dirty
+> and fails `pnpm lint`. That would make re-running the numbers a chore, which is the
+> opposite of the point. `docs/demo-capture.json` is excluded for the same reason. The
+> *corpora* under `data/` are not excluded: those are inputs, they are pinned to their
+> generators by tests, and they should never change without someone meaning it.
+
+
 Run it:
 
 ```bash

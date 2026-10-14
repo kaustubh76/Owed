@@ -300,7 +300,7 @@ Full write-up and the rules the scheduler keeps: **[docs/proactive.md](docs/proa
 React + Vite. One page:
 - **Surfaces**: an Echo Show 8 at its documented 768×480 base canvas, and an **Echo Dot with no screen at all**. The Dot is a proof rather than a decoration — voice-only parity is a certification requirement and the easiest thing to fake, so the only honest test is to take the card away and run the storyboard again. If a beat stops making sense there, the spoken line was a caption for a picture, which is a bug in the add-on. *(Fire TV overlay and phone rail: not built — first on the cut list, §13.)*
 - **Timeline scrubber**: drag through the seeded week. The clock moves, the ledger is replayed to that instant, and every tool answers for it without any tool knowing a scrubber exists — including whether it has anything to say unprompted. Dragging onto Sunday evening is what makes the proactive beat happen.
-- **Voice**: browser SpeechRecognition in, TTS out (browser default; ElevenLabs optional), barge-in supported.
+- **Voice**: real, and **opt-in**. A microphone button drives browser `SpeechRecognition` into the same path as the chips, a toggle speaks every reply through `speechSynthesis`, and speaking again cancels what is being said — barge-in, because a household that interrupts needs answering about the thing they just asked. Both controls render only where the browser has the API, and both default to off: the scripted chips carry the storyboard's exact lines so a recorded take is never hostage to a permission prompt or to whatever voice the host machine has installed. `pnpm verify:ui` asserts all of it, including instrumenting `speechSynthesis.speak` to prove the reply is actually spoken.
 - **Protocol inspector**: live JSON-RPC from simulator → Owed, and the recourse exchange with merchant agents. Every card on the Echo is traceable to a `_meta.ui.resourceUri` in the pane.
 
 The home talks to one thing: a WebSocket to the **Owed brain** (`apps/brain`), which is the Alexa+ stand-in. The brain links its own account over the real OAuth flow, holds an MCP client against the server, routes utterances to tools deterministically (`apps/brain/src/intents.ts` — a model would be the obvious choice and the wrong one for a demo that has to produce the same call every run), polls for anything Owed would say unprompted, and forwards every JSON-RPC frame it sees to the inspector.
@@ -317,7 +317,7 @@ Three hypotheses, pre-registered before the code that answers them, and referred
 | **H1** | Can a promise be extracted from what a merchant actually wrote? | 120 labelled messages + 40 held out, 7 promise kinds | `eval/src/extraction/` |
 | **H2** | Can a breach be detected reliably, per promise kind, without crying wolf? | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/src/breach/` |
 | **H3** | Does arguing recover more than accepting the merchant's first offer? | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
-| — | Does a tool answer fast enough for voice? | k6 against Streamable HTTP endpoint | `eval/latency/` |
+| — | Does a tool answer fast enough for voice? | all six tools, 50 calls each, driven by a real MCP client over Streamable HTTP against a booted server | `eval/latency/` |
 
 **Measured so far (promise extraction, `eval/README.md`):** the rule-based extractor
 reaches **100% precision and 99% recall** on the 120-message labelled corpus — and
@@ -572,13 +572,27 @@ state that is actually current, and §13 has what is still simulated.)*
 green check below is against the *documented* contract and the community conformance CLI. The
 contract suite asserts what Amazon publishes: every advertised tool invocable, one text block
 per result, nothing internal ever spoken, every `ui://` view readable and self-contained under a
-deny-by-default CSP, elicitation flat and primitive. Measured: **p95 4.7–35 ms** against a
-documented 500 ms target. Contrast and target size are computed from the colours the browser
-resolved rather than eyeballed, and the gate fails on any text under 4.5:1 (3:1 for large or
-bold) or any control under 48×48. Measured on the cards as rendered: **worst case 8.94:1 in
-dark and 5.33:1 in light**. (An earlier revision quoted 6.36:1 here. The gate reports only
-*violations*, so it never emits a worst case and that figure could not be reproduced from it;
-these two were measured with the same algorithm, by hand.)
+deny-by-default CSP, elicitation flat and primitive.
+
+**Latency: all six tools, gated under the documented 500 ms** — not just the cheapest one, which
+is what this section used to measure. No figure is quoted here on purpose. Latency is a property
+of the machine as much as the code, and this repo already stopped quoting a test count that
+drifted; a number in prose is a number nobody can re-derive. `pnpm --filter @owed/eval latency`
+drives all six over Streamable HTTP and commits the whole distribution — min, median, p95 and
+max per tool — to `eval/results/latency.json`, **together with the core count and load average
+it was taken under**, because a latency figure without those is not a figure. On an idle laptop
+the worst p95 sits in low single-digit milliseconds.
+
+**Contrast and target size are computed from the colours the browser resolved**, not eyeballed:
+the gate fails on any text under 4.5:1 (3:1 for large or bold) and any control under 48×48.
+`pnpm verify:ui` renders every card in **both themes** and reports the tightest *passing* ratio,
+so that figure is the gate's own output — currently **5.33:1** against the 3:1 its element needs.
+
+Two earlier revisions of that line could not be reproduced from the gate, which only ever
+emitted violations; a worst case had to be measured by hand and then taken on trust. It emits
+one now. And until the host started passing the viewer's `prefers-color-scheme` down to the
+card, **no check had ever rendered the light theme at all** — `ui-views` shipped a complete
+light palette that nothing selected.
 
 Those are real measurements of a real server. They are not evidence that it works on Alexa+, and
 nothing in this submission should be read as claiming otherwise.
@@ -606,7 +620,7 @@ nothing in this submission should be read as claiming otherwise.
 | Domain, ledger, breach engine, coverage accounting | done — property-tested, including the invariant that coverage and the gaps a card draws can never disagree |
 | MCP server: Streamable HTTP, own OAuth AS, six tools, three views | done — conformance green on every documented check |
 | Recourse protocol, negotiator, merchant agents over HTTP | done — extracted as `recourse-protocol`, packaged for publication; the inspector shows the argument |
-| Alexa+ contract suite, elicitation, accessibility | done — 13 contract tests, p95 4.7–35 ms (6.8 ms in CI), computed contrast and target-size gates, worst case measured 8.94:1 dark / 5.33:1 light |
+| Alexa+ contract suite, elicitation, accessibility | done — 13 contract tests, all six tools gated under 500 ms with the distribution committed to `eval/results/latency.json`, computed contrast and target-size gates in both themes |
 | Proactive `CommitmentEvent`, timeline scrubber, Echo Dot | done — asserted by the browser checks, including the beat where Owed speaks first |
 | H1 (extraction), H2 (breach detection), H3 (recourse) | done — all three measured against pre-registered corpora, **all three reported met or not** |
 | Clean-clone install → verify → demo → browser gate | done — run, not asserted (§12) |

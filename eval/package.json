@@ -17,7 +17,8 @@
     "learning": "node dist/bin/learning.js",
     "breach": "node dist/bin/breach.js",
     "extraction": "node dist/bin/extraction.js",
-    "extraction:bedrock": "node dist/bin/extraction-bedrock.js"
+    "extraction:bedrock": "node dist/bin/extraction-bedrock.js",
+    "latency": "node dist/bin/latency.js"
   },
   "dependencies": {
     "@owed/core": "workspace:*",
@@ -26,6 +27,8 @@
     "@owed/policy-library": "workspace:*",
     "@owed/recourse-protocol": "workspace:*",
     "@owed/extractor": "workspace:*",
-    "@owed/extractor-bedrock": "workspace:*"
+    "@owed/extractor-bedrock": "workspace:*",
+    "@owed/mcp-server": "workspace:*",
+    "@modelcontextprotocol/client": "2.1.0"
   }
 }
