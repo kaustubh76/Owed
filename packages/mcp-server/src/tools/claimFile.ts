@@ -16,6 +16,7 @@ import {
   formatMoney,
   isActionable,
   numberToWords,
+  type PromiseStatus,
 } from "@owed/domain";
 import { builtinPolicies, remedyFor } from "@owed/policy-library";
 import * as z from "zod/v4";
@@ -211,7 +212,10 @@ async function handleClaimFile(
    * of is never filed, and the refusal says how little was seen rather than going quiet.
    */
   if (assessment === undefined || !isActionable(assessment)) {
-    return { kind: "result", result: spokenError(refusalFor(view.promise.merchant, assessment)) };
+    return {
+      kind: "result",
+      result: spokenError(refusalFor(view.promise.merchant, view.status, assessment)),
+    };
   }
 
   const policy = builtinPolicies().get(view.promise.merchant);
@@ -361,8 +365,22 @@ function coverageStatement(coverage: number): string {
 
 function refusalFor(
   merchant: string,
+  status: PromiseStatus,
   assessment: { verdict: string; coverage: number } | undefined,
 ): string {
+  /**
+   * A promise Owed is not sure anybody made.
+   *
+   * `Candidate` means the extractor read it below `TRACKING_CONFIDENCE` — recorded so the
+   * household can see it and the sentence it came from, and not tracked. Saying "I haven't
+   * finished looking at it yet" would be untrue: Owed has finished, and the answer is that
+   * it is not confident this is a promise at all.
+   */
+  if (status === "Candidate") {
+    return assertSpeakable(
+      `I'm not tracking that one. I wasn't sure enough that ${merchant} actually promised it.`,
+    );
+  }
   if (assessment === undefined) {
     return assertSpeakable(`I haven't finished looking at that ${merchant} promise yet.`);
   }

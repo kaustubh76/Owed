@@ -79,6 +79,41 @@ describe("/control/* with a token configured", () => {
   });
 
   /**
+   * The newest write, and the one with the most reach: delivering a message appends
+   * `PromiseCaptured` to the household's ledger, so an ungated one would let a stranger
+   * put promises in it.
+   *
+   * It is gated by construction — `app.use("/control", …)` is mounted before any
+   * `/control` route is registered, with a comment saying a route added later cannot land
+   * outside the gate. This is that comment, checked.
+   */
+  it("refuses a delivered message without a token, and accepts it with one", async () => {
+    harness = await startHarness({ controlToken: TOKEN });
+    const body = JSON.stringify({
+      merchant: "Northwind Parcel",
+      text: "Your parcel will arrive on Tuesday between 1pm and 5pm.",
+    });
+
+    const denied = await fetch(new URL("/control/messages", harness.baseUrl), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body,
+    });
+    expect(denied.status).toBe(401);
+
+    const before = (await harness.deps.store.read(harness.deps.householdId)).length;
+    const allowed = await fetch(new URL("/control/messages", harness.baseUrl), {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${TOKEN}` },
+      body,
+    });
+    expect(allowed.status).toBe(200);
+
+    // And the refused one really wrote nothing, rather than being refused after the write.
+    expect((await harness.deps.store.read(harness.deps.householdId)).length).toBe(before + 1);
+  });
+
+  /**
    * The route that actually mutates shared state. A read leaking is bad; scenario time
    * being moved by a stranger changes what every other client is told.
    */

@@ -543,6 +543,30 @@ curl -X POST http://127.0.0.1:3939/control/clock \
   -d '{"instant":"2026-10-06T18:40:00-07:00"}'
 ```
 
+**Deliver a message and watch Owed read it.** A real add-on would read a linked inbox; a
+simulation delivers one, and this is where that happens — outside the MCP surface, like the
+clock, because it is a property of the simulated home and not of the add-on contract.
+
+```bash
+curl -X POST http://127.0.0.1:3939/control/messages \
+  -H 'content-type: application/json' \
+  -d '{"merchant":"Northwind Parcel","text":"Delivered between 1 and 5pm, guaranteed or your money back."}'
+```
+
+That one sentence comes back as **two** promises: a `delivery_window` at 0.95 confidence,
+which Owed tracks, and a `guarantee` at 0.8, which it records and does **not** track. The
+threshold is `TRACKING_CONFIDENCE` (0.85), and it is the whole reason `PromiseStatus` has
+`Captured` and `Candidate` — recorded-and-watched, and recorded-but-not-tracked. Over the
+120-message pre-registered corpus the rules extractor reads 89 promises at 0.95 and 11
+below, so the threshold splits real input rather than sitting somewhere nothing reaches.
+
+Asking Owed to file a `Candidate` gets a refusal that says what is actually true — *"I'm not
+tracking that one. I wasn't sure enough that Calder & Co. actually promised it."* — rather
+than claiming it is still looking. The extraction pipeline used to have no caller at all:
+the seeded week wrote its promises in directly and ran the extractor only to recover the
+sentence behind one of them, so both statuses had a label and a sort rank in `ui-views` and
+no producer anywhere.
+
 The ledger is in memory by default. To keep it across restarts:
 
 ```bash

@@ -1,8 +1,16 @@
 import { createMcpExpressApp } from "@modelcontextprotocol/express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
-import { type Clock, type FixedClock, project, SystemClock } from "@owed/core";
+import {
+  type Clock,
+  capturePromises,
+  type FixedClock,
+  project,
+  SystemClock,
+  TRACKING_CONFIDENCE,
+} from "@owed/core";
 import type { Instant } from "@owed/domain";
+import { extractPromises } from "@owed/extractor";
 import type { Express, NextFunction, Request, Response } from "express";
 import type { AuthConfig } from "./auth/config.js";
 import { householdFromAuth, requireOwedAuth, stripWwwAuthenticate } from "./auth/middleware.js";
@@ -11,6 +19,7 @@ import { requireControlToken } from "./control/auth.js";
 import type { OwedDeps } from "./deps.js";
 import type { RecourseLog } from "./merchants/log.js";
 import { commitmentsDue } from "./proactive/scheduler.js";
+import { CURRENCY, SEED_UTC_OFFSET } from "./seed/storyboard.js";
 import { createOwedServer } from "./server.js";
 
 export interface OwedAppOptions {
@@ -136,6 +145,69 @@ export function createOwedApp({
     const now = deps.clock.now();
     const state = project(await deps.store.read(deps.householdId, now));
     res.json({ now, events: commitmentsDue(state, now, deps.householdId) });
+  });
+
+  /**
+   * Deliver a message to the household's inbox, and record whatever Owed reads out of it.
+   *
+   * The extraction pipeline existed and nothing ran it: the seeded week writes its
+   * promises in directly and used the extractor only to recover the sentence behind one.
+   * So `PromiseStatus`'s `Candidate` and `Captured` — both of which have had a label and a
+   * sort rank in `ui-views` since they were declared — had no producer at all.
+   *
+   * This is the producer. A real add-on would read a linked inbox; a simulation delivers a
+   * message, and this is the seam where that happens, alongside the clock control and for
+   * the same reason: it is a property of the simulated home, not of the add-on contract,
+   * so it is deliberately outside the MCP surface.
+   *
+   * What comes back is what Owed made of it, which is the point — a household watching
+   * this sees that a weakly-read promise is recorded and *not* tracked, rather than
+   * silently either acted on or discarded.
+   */
+  app.post("/control/messages", async (req: Request, res: Response) => {
+    const body = req.body as Partial<Record<"id" | "merchant" | "subject" | "text", unknown>>;
+    const merchant = body?.merchant;
+    const text = body?.text;
+    if (typeof merchant !== "string" || merchant === "" || typeof text !== "string") {
+      res.status(400).json({ error: "expected { merchant: string, text: string, id?: string }" });
+      return;
+    }
+
+    const receivedAt = deps.clock.now();
+    const messageId = typeof body.id === "string" && body.id !== "" ? body.id : `msg_${receivedAt}`;
+    const reads = extractPromises({
+      id: messageId,
+      merchant,
+      received_at: receivedAt,
+      // The offset the household's own merchants write times in, as the seeded week does.
+      utc_offset: SEED_UTC_OFFSET,
+      subject: typeof body.subject === "string" ? body.subject : "",
+      body: text,
+    });
+
+    const { events, promises } = capturePromises({
+      householdId: deps.householdId,
+      messageId,
+      merchant,
+      receivedAt,
+      currency: CURRENCY,
+      reads,
+      idGen: deps.idGen,
+    });
+    await deps.store.append(events);
+
+    res.json({
+      received_at: receivedAt,
+      message_id: messageId,
+      tracking_confidence: TRACKING_CONFIDENCE,
+      promises: promises.map((promise) => ({
+        promise_id: promise.id,
+        kind: promise.kind,
+        status: promise.status,
+        confidence: promise.confidence,
+        promised_in: promise.source_quote,
+      })),
+    });
   });
 
   if (recourseLog) {

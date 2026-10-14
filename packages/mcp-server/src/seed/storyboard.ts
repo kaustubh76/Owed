@@ -29,9 +29,17 @@ export const MERCHANTS = {
 const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 export type Day = (typeof DAYS)[number];
 
+/**
+ * The fixed offset this household's merchants write times in — America/Los_Angeles in
+ * October. Named because the message-ingest control needs the same one the seeded week
+ * uses: a promise read from a delivered message has to land on the same clock as the
+ * promises already in the ledger, or the scrubber moves past it.
+ */
+export const SEED_UTC_OFFSET = "-07:00";
+
 /** Any calendar date in the household's timezone. */
 export function atDate(isoDate: string, hhmm: string): Instant {
-  return normalizeInstant(`${isoDate}T${hhmm}:00-07:00`);
+  return normalizeInstant(`${isoDate}T${hhmm}:00${SEED_UTC_OFFSET}`);
 }
 
 /** Week of Mon 2026-10-05, America/Los_Angeles. docs/contract-v1.md §6. */
