@@ -2,6 +2,7 @@
   "merchant": "Northwind Parcel",
   "currency": "USD",
   "retrieved_at": "2026-09-01",
+  "claims_contact": "claims@northwind-parcel.example",
   "clauses": [
     {
       "id": "northwind/delivery-guarantee#4.2",

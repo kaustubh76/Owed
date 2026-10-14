@@ -5,6 +5,7 @@ import { createOwedApp } from "../app.js";
 import { type AuthConfig, defaultAuthConfig } from "../auth/config.js";
 import { linkAccount } from "../auth/link.js";
 import type { OwedDeps } from "../deps.js";
+import type { MerchantDirectory } from "../merchants/directory.js";
 import { inProcessMerchants } from "../merchants/inProcess.js";
 import {
   CURRENCY,
@@ -29,6 +30,14 @@ export interface HarnessOptions {
   auth?: boolean;
   now?: string;
   secret?: string;
+  /**
+   * The merchant directory, for the tests that need one which cannot answer.
+   *
+   * Defaults to the in-process agents, which is what the server runs with. A directory
+   * returning `undefined` is how the agentless filing path — `ClaimRoute`'s `email` and
+   * `manual` — gets exercised without taking a real agent down.
+   */
+  merchants?: MerchantDirectory;
   /**
    * Bearer token required on `/control/*`. Unset leaves them open, which is what every
    * existing test expects — only the control-gate tests pass this.
@@ -56,7 +65,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
     householdId: HOUSEHOLD_ID,
     currency: CURRENCY,
     idGen,
-    merchants: inProcessMerchants(),
+    merchants: options.merchants ?? inProcessMerchants(),
   };
 
   // The port is only known after listen, so bind first and build the config against it.

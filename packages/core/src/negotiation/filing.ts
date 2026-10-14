@@ -54,6 +54,68 @@ export interface FileClaimResult {
   session: SessionResult;
 }
 
+export interface FileWithoutAgentInput {
+  householdId: string;
+  claimId: string;
+  promise: OwedPromise;
+  bounds: RemedyBounds;
+  /**
+   * How the household will have to pursue it. `agent` is not accepted here: if an agent
+   * answered, `fileClaim` is the function to call.
+   */
+  route: Exclude<ClaimRoute, "agent">;
+  proposedAt: Instant;
+  filedAt: Instant;
+  confirmedBy: string;
+  attachedEvidenceIds?: readonly string[];
+  idGen: IdGen;
+}
+
+/**
+ * Record a claim no agent answered.
+ *
+ * `ClaimRoute` has had three members since it was declared and only `agent` was ever
+ * written: `fileClaim` requires a `Respondent`, so a merchant with no reachable agent took
+ * the one path that produced no events at all. The tool said "I'll keep the claim open"
+ * and kept nothing — the household was told their claim was recorded, and it was not.
+ *
+ * So this is the other two members' site. It emits the same `ClaimProposed` and
+ * `ClaimFiled` pair as a negotiated claim, carrying the same ask, the same
+ * published-remedy figure and the same evidence, and no recourse messages — which
+ * projects to `Filed` with no rounds, because that is exactly what happened. The clause,
+ * the amount and the evidence are all in the ledger, where the household can act on them
+ * and where a later retry can find the claim rather than file a second one.
+ */
+export function fileWithoutAgent(input: FileWithoutAgentInput): LedgerEvent[] {
+  const envelope = (occurred_at: Instant) => ({
+    id: input.idGen.next("evt"),
+    household_id: input.householdId,
+    occurred_at,
+    recorded_at: occurred_at,
+  });
+
+  return [
+    {
+      ...envelope(input.proposedAt),
+      type: "ClaimProposed",
+      claim_id: input.claimId,
+      promise_id: input.promise.id,
+      merchant: input.promise.merchant,
+      ask: input.bounds.ceiling,
+      expected: input.bounds.reservation,
+      route: input.route,
+    },
+    {
+      ...envelope(input.filedAt),
+      type: "ClaimFiled",
+      claim_id: input.claimId,
+      promise_id: input.promise.id,
+      confirmed_by: input.confirmedBy,
+      attached_evidence_ids: [...(input.attachedEvidenceIds ?? [])],
+    },
+  ];
+}
+
 /**
  * File a claim and negotiate it, producing the ledger events that record what happened.
  *

@@ -78,6 +78,16 @@ export const MerchantPolicySchema = z.object({
   merchant: NonBlank,
   currency: z.string().regex(/^[A-Z]{3}$/),
   retrieved_at: z.string().optional(),
+  /**
+   * Where a claim goes when no agent answers.
+   *
+   * Optional, because most merchants publish a remedy without publishing anywhere to
+   * send it — and the difference matters to the household: with a contact, Owed can say
+   * who to send the claim to; without one, all it can honestly do is record what is owed
+   * and hand it over. That is the distinction `ClaimRoute`'s `email` and `manual` members
+   * were declared for.
+   */
+  claims_contact: NonBlank.optional(),
   clauses: z.array(PolicyClauseSchema).min(1),
 });
 export type MerchantPolicy = z.infer<typeof MerchantPolicySchema>;

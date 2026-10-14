@@ -2,12 +2,14 @@ import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { inputRequired, inputResponse, type McpServer } from "@modelcontextprotocol/server";
 import {
   fileClaim,
+  fileWithoutAgent,
   merchantPriors,
   priorKey,
   type RemedyBounds,
   remedyContextFor,
 } from "@owed/core";
 import {
+  type ClaimRoute,
   type ClaimView,
   ClaimViewSchema,
   coveragePercent,
@@ -23,6 +25,20 @@ import { VIEW_URIS } from "../views.js";
 import { assertSpeakable, joinSpoken, speakClaim } from "../voice.js";
 import { loadContext, NotFoundError, spokenError } from "./context.js";
 import { claimViewFor, findClaimForPromise } from "./projections.js";
+
+/**
+ * Which of the two agentless routes a merchant's own policy implies.
+ *
+ * Its own function because the seeded week has exactly one filable promise and it belongs
+ * to the merchant that publishes a contact — so the `manual` arm is not reachable through
+ * the tool without inventing a merchant, and a branch that cannot be reached by a test is
+ * a branch nobody has checked.
+ */
+export function routeWithoutAgent(
+  policy: { claims_contact?: string | undefined } | undefined,
+): Exclude<ClaimRoute, "agent"> {
+  return policy?.claims_contact === undefined ? "manual" : "email";
+}
 
 /** Deterministic and readable, so the same promise always yields the same claim id. */
 function claimIdFor(promiseId: string): string {
@@ -245,12 +261,47 @@ async function handleClaimFile(
     stated: bounds.reservation,
     clause_title: bounds.clause.title,
   });
+
+  /**
+   * No agent answered — so the claim is recorded anyway, and the household is told how
+   * they will have to pursue it.
+   *
+   * This used to return an error saying "I'll keep the claim open", and keep nothing: no
+   * events, no claim, nothing in the ledger. The household was told their claim had been
+   * recorded when it had not, and asking again filed it from scratch. It is also where
+   * `ClaimRoute`'s `email` and `manual` members belong; only `agent` had ever been
+   * written, because `fileClaim` requires a `Respondent` and this branch never reached it.
+   *
+   * Which of the two depends on the merchant's own published policy: with a
+   * `claims_contact` there is somewhere to send it, and without one all Owed can honestly
+   * do is record what is owed under the clause it found.
+   */
   if (respondent === undefined) {
+    const route = routeWithoutAgent(policy);
+    const events = fileWithoutAgent({
+      householdId: deps.householdId,
+      claimId: proposed.claim_id,
+      promise: view.promise,
+      bounds,
+      route,
+      proposedAt: context.now,
+      filedAt: context.now,
+      confirmedBy: "household",
+      idGen: deps.idGen,
+      ...(attachEvidence ? { attachedEvidenceIds: assessment.evidence_ids } : {}),
+    });
+    await deps.store.append(events);
+
+    const after = await loadContext(deps);
+    const filedWithoutAgent = after.state.claims.get(proposed.claim_id);
     return {
       kind: "result",
-      result: spokenError(
+      result: claimResult(
+        filedWithoutAgent === undefined ? proposed : claimViewFor(filedWithoutAgent),
         assertSpeakable(
-          `I can't reach ${view.promise.merchant} right now. I'll keep the claim open.`,
+          route === "email"
+            ? `I can't reach ${view.promise.merchant}'s agent, so I've filed it against the address they publish for claims.`
+            : `I can't reach ${view.promise.merchant}'s agent, so I've recorded what they owe you under their own policy, ready for you to send.`,
         ),
       ),
     };
@@ -330,9 +381,14 @@ function refusalFor(
   return assertSpeakable(`I'm still watching that ${merchant} promise.`);
 }
 
-function claimResult(view: ClaimView) {
+/**
+ * `spoken` overrides the claim's own summary, for the one case where the card is right and
+ * the sentence is not: a claim recorded with nobody to argue with has no rounds to read
+ * out, and what the household needs to hear is what happens next.
+ */
+function claimResult(view: ClaimView, spoken?: string) {
   return {
-    content: [{ type: "text" as const, text: speakClaim(view) }],
+    content: [{ type: "text" as const, text: spoken ?? speakClaim(view) }],
     structuredContent: view,
     _meta: { ui: { resourceUri: VIEW_URIS.claim }, "owed/data": view },
   };

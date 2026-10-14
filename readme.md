@@ -282,6 +282,16 @@ Rules: max N rounds (default 3); every message signed with the claim id; evidenc
 
 Merchant agents in `packages/merchant-agents` are configured per merchant *and breach kind*, because that is what is actually true of merchants: Calder & Co. settles its price promise on request and contests its refund timing, from one configuration. The eval harness runs the **full pre-registered grid of 270 policies × 6 breach kinds = 1,620 negotiations**, including merchants that withdraw an offer when countered.
 
+**When no agent answers, the claim is still recorded.** Almost no merchant implements this
+protocol, so this is the common case and not the edge one. Owed files the claim anyway —
+`ClaimProposed` and `ClaimFiled`, carrying the clause, the published figure and the
+evidence, projecting to `Filed` with one round that says it asked and nothing after it —
+and tells the household how they will have to pursue it. Where the merchant's own policy
+publishes a claims contact the route is `email`; where it publishes nowhere to send it, the
+route is `manual` and Owed says so rather than implying otherwise. Before this the branch
+returned "I'll keep the claim open" and kept nothing: no events, no claim, and asking again
+started from scratch.
+
 ---
 
 ## 8. Core engines
