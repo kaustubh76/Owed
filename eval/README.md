@@ -381,9 +381,19 @@ the strategy does not vary by breach kind, only the figures do.
 
 ### What this does not show
 
-**The pre-registered hypothesis is not met.** `product_ideation.md` H3 predicted ≥ 60% of
-owed value and ≥ 1.5× the accept-first-offer baseline. The measured figures are 33.9% and
-1.10×. Negotiating is worth doing — it beats the baseline, and it is far better than doing
+**The pre-registered hypothesis is met on one of its three criteria.**
+`product_ideation.md:162` predicted ≥ 60% of owed value, ≥ 1.5× the accept-first-offer
+baseline, **and a median of ≤ 2 rounds**. The median is two, so that one is met. The other
+two are not: the measured figures are 33.9% and 1.10×. All three come out of
+`results/recourse.json` — `negotiator_share`, `lift` and `median_rounds` — rather than out of
+this paragraph.
+
+Two of those three had been reported and the rounds criterion had not, which is an omission
+running against this project rather than for it. And the matrix is larger than the one
+pre-registered — 270 policies where the ideation said 20 — generated from five fixed
+parameters before the negotiator was tuned against them. Thirteen times the policies is a
+harder test, not a softer one, but it is still a change to a pre-registered quantity, so it
+is said here rather than left to be discovered. Negotiating is worth doing — it beats the baseline, and it is far better than doing
 nothing — but by much less than the hypothesis claimed, and it is actively harmful against
 merchants who penalise it.
 
@@ -458,7 +468,8 @@ certainty, so a mean is a perfect classifier. Against merchants who vary — who
 improve and sometimes withdraw — the learner would not converge this cleanly, and 100% of
 the available advantage is not a number to expect in the world.
 
-**The hypothesis is still not met.** H3 predicted ≥ 60% of owed and ≥ 1.5× the baseline.
+**The hypothesis is still not met on value.** H3 predicted ≥ 60% of owed, ≥ 1.5× the
+baseline, and a median of ≤ 2 rounds; the rounds criterion is met and the other two are not.
 Learning moves the result from 33.9% to 44.1% and from 1.10× to 1.43× — much closer, and
 still short on both counts. A third of the grid refuses every claim outright and is
 unrecoverable by anyone, which caps what any strategy can reach.

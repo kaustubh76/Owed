@@ -90,6 +90,7 @@ flowchart LR
         M1[Northwind Parcel]
         M2[Meridian Rides]
         M3[Alder Home Services]
+        M4["Calder & Co."]
     end
 
     ES & DOT & TL --> BRAIN
@@ -147,7 +148,14 @@ Every transition is an event in the ledger. The card and the "recovered this wee
 
 ---
 
-## 5. Sequence — the phantom-delivery claim
+## 5. Sequence — the claim the demo files
+
+Not an illustration. This is `clm_prm_011`, the claim the storyboard files at 0:45, and
+every id, instant and amount below is re-derivable from
+[`docs/demo-capture.json`](docs/demo-capture.json) — which `pnpm verify:ui` asserts against
+what the browser renders. An earlier version of this diagram was invented: it showed a
+`phantom_delivery` the recorded week does not contain, a `claim.file` tool that has never
+existed under that name, and amounts in rupees.
 
 ```mermaid
 sequenceDiagram
@@ -155,31 +163,39 @@ sequenceDiagram
     participant Inbox as Linked inbox
     participant EXT as Promise extractor
     participant LED as Ledger
-    participant Door as Doorbell events
     participant BRE as Breach engine
     participant Brain as Owed brain (Alexa+ stand-in)
     participant Echo as Echo Show
     participant MCP as Owed MCP server
     participant Merch as Merchant agent
 
-    Inbox->>EXT: "Your order will arrive Tue 12:00–16:00"
-    EXT->>LED: Promise{kind: delivery_window, window, order_id, merchant}
-    Inbox->>LED: carrier scan "delivered 14:12"
-    Door->>BRE: events 13:42–14:42 (no human, no package placed), coverage 82%
-    BRE->>LED: Breach{kind: phantom_delivery, confidence 0.91, coverage 0.82, evidence[2 snapshots]}
-    Brain->>Echo: proactive: "Scanned delivered at 14:12, nobody came. File it?"
-    Echo->>Brain: "Yes"
-    Brain->>MCP: tools/call claim.file {promise_id}
-    MCP-->>Brain: elicitation: attach doorbell clip? (yes)
-    MCP->>Merch: recourse: CLAIM {promise, evidence_pack, policy_ref}
-    Merch-->>MCP: OFFER ₹50 credit
-    MCP->>Merch: COUNTER ₹75 (Delivery Guarantee §4.2, coverage stmt)
-    Merch-->>MCP: SETTLE ₹75
-    MCP->>LED: Settled{amount 75, rounds 2, duration 9s}
+    Inbox->>EXT: order confirmation, msg_prm_011
+    EXT->>LED: Promise{id: prm_011, kind: delivery_window, merchant: Northwind Parcel, window 20:00Z–00:00Z}
+    Inbox->>LED: carrier scan evd_scan_012 at 01:20Z — after the window closed
+    BRE->>LED: Breach{kind: missed_window, coverage 1.0, evidence[evd_scan_012]}
+    Brain->>Echo: proactive: "Northwind Parcel missed the delivery window they promised. They owe you eight dollars under their own policy. Shall I file it?"
+    Echo->>Brain: "File it"
+    Brain->>MCP: tools/call claim_file {promise_id: prm_011}
+    MCP-->>Brain: inputRequired: "Northwind Parcel owes you $8.00 under their own policy. Shall I file it?" + attach the evidence?
+    Brain->>MCP: tools/call claim_file {promise_id: prm_011, confirm: true, attach_evidence: true}
+    MCP->>Merch: recourse: CLAIM $10.00 {promise, evidence_pack coverage 1.0, policy_ref delivery-guarantee 4.1}
+    Merch-->>MCP: OFFER $3.00 credit
+    MCP->>Merch: COUNTER $8.00 (Delivery Guarantee 4.1, "Coverage of the evaluated window was 100%.")
+    Merch-->>MCP: SETTLE $8.00 credit
+    MCP->>LED: Settled{amount 800 minor USD, round_count 2}
     MCP-->>Brain: result + _meta.ui.resourceUri = ui://owed/claim
-    Brain->>Echo: renders claim card (offer → counter → settled)
+    Brain->>Echo: renders claim card (Asked → They offered → Countered → Settled)
     Inbox->>LED: credit observed → Recovered
 ```
+
+The `policy_ref` on the wire is the full `northwind/delivery-guarantee#4.1`; the diagram
+drops the `#` because mermaid reads it as the start of an entity escape.
+
+The ask is the clause's **ceiling** and the counter is its **reservation** — Owed opens at
+the most the published policy allows and will not go below the least it allows, which is
+why a merchant's $3.00 opening offer is refused and $8.00 is where it lands — it accepts a
+standing offer only at or above the reservation, and otherwise counters at exactly it. §8
+has the negotiator.
 
 ---
 
@@ -190,18 +206,35 @@ Server: TypeScript, `@modelcontextprotocol/server` 2.x, **Streamable HTTP**, pro
 ### 6.1 Account linking
 OAuth 2.1 + PKCE (S256), discovery via RFC 9728 (protected resource metadata) and RFC 8414 (AS metadata), audience binding via RFC 8707, loopback redirects per RFC 8252. Owed runs **its own authorization server** — the MCP SDK ships none — and the brain walks the real authorization-code flow rather than being handed a token out of band.
 
-**Static clients, no dynamic registration.** Amazon's documentation says Alexa+ does not support RFC 7591, so the server does not offer it: a client is configured in advance or it does not link. Passes `npx mcp-voice-simulator-conformance` on every documented check (run inside `pnpm verify`).
+**Static clients, no dynamic registration.** Amazon's documentation says Alexa+ does not support RFC 7591, so the server does not offer it: a client is configured in advance or it does not link. Passes the community conformance checker on every documented check, run inside `pnpm verify`
+against a real booted server. The checker is the `mcp-voice-simulator-conformance` binary of
+the **`mcp-voice-simulator`** package (0.2.2) — so `npx mcp-voice-simulator-conformance`,
+which is what this line used to say, 404s: npx resolves a package name, and that is the name
+of a binary. `npx -p mcp-voice-simulator mcp-voice-simulator-conformance <url>` is the form
+that works, and `pnpm conformance` is the form that needs no arguments.
 
 ### 6.2 Tools
 
+Names are as registered — **snake_case**, which is what a client calls and what the
+inspector shows. Inputs and outputs are the zod schemas in `packages/mcp-server/src/tools/`
+and `packages/domain/src/views.ts`, not a paraphrase of them; `schemas.sync.test.ts` pins
+the parts that are declared twice.
+
 | Tool | Input | Output | UI |
 |---|---|---|---|
-| `ledger.summary` | `{period?: "week"\|"month"}` | `{recovered, open, kept, items[]}` | `ui://owed/ledger` |
-| `promises.list` | `{status?: PromiseStatus, merchant?}` | `{promises[]}` | `ui://owed/ledger` |
-| `promise.check` | `{promise_id}` | `{status, breach?, coverage, evidence[]}` | `ui://owed/evidence` |
-| `claim.file` | `{promise_id, attach_evidence?: boolean}` | `{claim_id, state, offer?, settled?}` (may elicit) | `ui://owed/claim` |
-| `claim.status` | `{claim_id}` | `{state, rounds[], amount?}` | `ui://owed/claim` |
-| `evidence.get` | `{evidence_id}` | `{kind, uri, captured_at, coverage}` | `ui://owed/evidence` |
+| `ledger_summary` | `{period?: "week"\|"month"}` | `LedgerSummaryView`: `{currency, recovered, open, kept, declined, items[], period, as_of}` | `ui://owed/ledger` |
+| `promises_list` | `{status?: PromiseStatus, merchant?: string}` | `LedgerSummaryView`, filtered — the same shape, so one card renders both | `ui://owed/ledger` |
+| `promise_check` | `{promise_id}` | `EvidenceView`: `{status, verdict?, coverage?, gaps[], promised_in?, explanation?, items[]}` | `ui://owed/evidence` |
+| `claim_file` | `{promise_id, confirm?: boolean, attach_evidence?: boolean}` | `ClaimView`: `{claim_id, state, ask, expected, settled_amount?, recovered_amount?, rounds[], round_count}` — or an `inputRequired` asking for the household's yes | `ui://owed/claim` |
+| `claim_status` | `{claim_id}` | `ClaimView` | `ui://owed/claim` |
+| `evidence_get` | `{evidence_id, promise_id}` | `EvidenceView` | `ui://owed/evidence` |
+
+`confirm` is the whole consent mechanism and was missing from this table: nothing is filed
+without it, and where a client cannot be asked — a 2025-revision connection with no
+elicitation capability — it is the *only* way to say yes. `evidence_get` needs the
+`promise_id` as well, because an evidence id alone does not say whose promise it belongs to.
+Both omissions mattered more than the dotted names: a reader following this table would
+have called a tool that does not exist, and then called it wrong.
 
 All tool results carry `content[]` (text fallback for voice-only devices), `structuredContent`, and `_meta.ui.resourceUri` per the Alexa+ client lifecycle. Tool signatures are frozen after v1 (Alexa+ locks them at certification).
 
@@ -317,6 +350,20 @@ Three hypotheses, pre-registered before the code that answers them, and referred
 | **H1** | Can a promise be extracted from what a merchant actually wrote? | 120 labelled messages + 40 held out, 7 promise kinds | `eval/src/extraction/` |
 | **H2** | Can a breach be detected reliably, per promise kind, without crying wolf? | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/src/breach/` |
 | **H3** | Does arguing recover more than accepting the merchant's first offer? | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
+
+H3 was pre-registered with **three** criteria, not two — `product_ideation.md:162`: ≥ 60% of
+owed value, ≥ 1.5× the accept-first-offer baseline, **and a median of ≤ 2 rounds**. The
+third one is met — `median_rounds: 2` in
+[`eval/results/recourse.json`](eval/results/recourse.json), which the harness has been
+emitting all along — and had been left out of the reporting, which is the wrong direction for
+an omission to run. It is in §10 and §15 now.
+
+The matrix is also larger than the one pre-registered: 270 policies where the ideation said
+20, generated from five fixed parameters before the negotiator was tuned against them
+(`data/policies/grid.json`, pinned by `eval/src/grid.test.ts` so it cannot drift). A grid
+thirteen times the size is a harder test, not a softer one — a third of it refuses every
+claim outright — but it is a change to a pre-registered quantity and is stated as such
+rather than left for a reader to notice.
 | — | Does a tool answer fast enough for voice? | all six tools, 50 calls each, driven by a real MCP client over Streamable HTTP against a booted server | `eval/latency/` |
 
 **Measured so far (promise extraction, `eval/README.md`):** the rule-based extractor
@@ -364,7 +411,8 @@ negotiator reaches **44.1%**, a **1.43× lift**, and its loss rate falls to **0%
 three encounters it stops arguing with merchants who punish it. Episode one still matches
 the cold negotiator exactly, which is the check that proves nothing is leaking.
 
-The pre-registered hypothesis (H3: ≥ 60% and ≥ 1.5×) is **still not met** on either figure,
+The pre-registered hypothesis (H3: ≥ 60%, ≥ 1.5×, median ≤ 2 rounds) is met on the third
+criterion and **still not met** on the first two,
 and `eval/README.md` says so plainly — along with why reaching the oracle here is a property
 of simulated merchants being deterministic rather than a claim about the algorithm.
 
@@ -384,7 +432,7 @@ owed/
 │  ├─ extractor-bedrock/    # the same job asked of a model; unrun, and says so
 │  ├─ mcp-server/           # the add-on: Streamable HTTP, OAuth AS, six tools, ui:// views, proactive
 │  ├─ recourse-protocol/    # open spec + types + conformance tests        (Open Source mini-challenge)
-│  ├─ merchant-agents/      # three merchant agents, served over MCP in their own process
+│  ├─ merchant-agents/      # four merchant agents, served over MCP in their own process
 │  ├─ policy-library/       # per-merchant remedy rules, open source
 │  └─ ui-views/             # the three MCP Apps views, bundled to single-file HTML
 ├─ data/
@@ -674,7 +722,7 @@ saying plainly when a hypothesis was not met.
 - [x] All three pre-registered hypotheses published met or not, with the numbers (§10):
   - **H1 — can a promise be extracted from what a merchant wrote?** 100% precision / 99% recall on the 120-message corpus it was tuned against, and **73.7% / 58.3%** on 40 held-out messages. **Met on the corpus it was tuned against, missed on data it had not seen** — and that gap is the most useful number in this repository.
   - **H2 — can a breach be detected reliably per promise kind?** 93.5% precision and 100% recall on cases with enough coverage, but an **8.7% false-positive rate** against a target of 0.9 precision per kind and under 5%. **Not met** — two kinds sit at 80% and 75%.
-  - **H3 — does arguing recover more than accepting the first offer?** Target was ≥60% recovery and ≥1.5× the baseline. **Not met** on either figure.
+  - **H3 — does arguing recover more than accepting the first offer?** Target was ≥60% recovery, ≥1.5× the baseline, and a median of ≤2 rounds. **Met on the rounds criterion** — the median is two — and **not met** on the other two: 33.9% of owed value at 1.10× the baseline single-shot, 44.1% at 1.43× once the learning loop has three encounters to work from.
 - [ ] Demo video: public YouTube, English, < 3 min, no third-party trademarks or music
 - [x] Judges can read the repo — it is **public** under Apache-2.0, so there is nothing to invite and nothing that expires. This line previously tracked seven-day collaborator invitations, which the visibility change made unnecessary.
 
