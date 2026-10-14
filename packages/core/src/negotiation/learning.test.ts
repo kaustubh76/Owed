@@ -1,7 +1,12 @@
 import type { BreachKind, LedgerEvent, OwedPromise, PromiseKind } from "@owed/domain";
 import { interval, usd } from "@owed/domain";
 import { describe, expect, it } from "vitest";
-import { merchantPriors, priorKey, project } from "../ledger/projections.js";
+import {
+  meanRealisedWhenCountered,
+  merchantPriors,
+  priorKey,
+  project,
+} from "../ledger/projections.js";
 import { MemoryEventStore } from "../ledger/store.js";
 import { counteringHasPaid, MIN_OBSERVATIONS } from "./negotiator.js";
 
@@ -237,5 +242,63 @@ describe("whether arguing with this merchant has paid", () => {
     // averaged $6: worth it against $5 on the table, not worth it against $8.
     expect(counteringHasPaid(prior, 500)).toBe(true);
     expect(counteringHasPaid(prior, 800)).toBe(false);
+  });
+});
+
+describe("what countering has averaged", () => {
+  /**
+   * `meanRealisedWhenCountered` names the division `counteringHasPaid` performs inline,
+   * and has no caller.
+   *
+   * It stays uncalled on purpose. Using it inside `counteringHasPaid` would make the
+   * negotiation layer import the ledger layer, and `negotiator.ts:27-28` declares
+   * `CounterExperience` structurally precisely so that it does not — the dependency would
+   * run the wrong way for a package whose point is that the strategy does not know where
+   * its history came from.
+   *
+   * So it is a ledger-side reporting helper: the figure you would show a household when
+   * they ask why Owed stopped arguing with a merchant. Tested rather than wired, because
+   * an untested helper is a promise nobody checked.
+   */
+  it("reports the mean a prior has realised by countering", async () => {
+    const priors = await priorsFrom([
+      ...counteredClaim("p1", "delivery_window", "phantom_delivery", 1, 8, 3),
+      ...counteredClaim("p2", "delivery_window", "phantom_delivery", 2, 8, 6),
+    ]);
+    const prior = priors.get(priorKey(MERCHANT, "phantom_delivery"));
+
+    // $3 and $6 over two counters.
+    expect(meanRealisedWhenCountered(prior)).toBe(450);
+  });
+
+  it("says nothing where countering has never been tried, rather than dividing by zero", () => {
+    expect(meanRealisedWhenCountered(undefined)).toBeUndefined();
+    expect(
+      meanRealisedWhenCountered({
+        merchant: MERCHANT,
+        breach_kind: "phantom_delivery",
+        countered: 0,
+        countered_realised_minor: 0,
+        countered_forgone_minor: 0,
+        accepted: 0,
+        accepted_realised_minor: 0,
+      }),
+    ).toBeUndefined();
+  });
+
+  it("agrees with the comparison the negotiator makes from the same numbers", async () => {
+    const priors = await priorsFrom([
+      ...counteredClaim("p1", "delivery_window", "phantom_delivery", 1, 8, 3),
+      ...counteredClaim("p2", "delivery_window", "phantom_delivery", 2, 8, 3),
+      ...counteredClaim("p3", "delivery_window", "phantom_delivery", 3, 8, 3),
+    ]);
+    const prior = priors.get(priorKey(MERCHANT, "phantom_delivery"));
+    const mean = meanRealisedWhenCountered(prior);
+    if (mean === undefined) throw new Error("three counters should have a mean");
+
+    // The two are separate implementations of the same division, in two layers that
+    // deliberately do not import each other. This is what keeps them honest.
+    expect(counteringHasPaid(prior, mean - 1)).toBe(true);
+    expect(counteringHasPaid(prior, mean + 1)).toBe(false);
   });
 });

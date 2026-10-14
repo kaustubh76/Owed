@@ -1,3 +1,4 @@
+import { MAX_NEGOTIATION_ROUNDS } from "@owed/domain";
 import {
   countRounds,
   type Justification,
@@ -48,7 +49,17 @@ export type NegotiatorAction =
   | { type: "COUNTER"; amount: Money; justification: Justification }
   | { type: "ESCALATE"; reason: string };
 
-export const DEFAULT_MAX_ROUNDS = 3;
+/**
+ * Re-exported from the domain rather than declared again.
+ *
+ * The cap was written out three times with the same value: here, in
+ * `domain/src/coverage.ts` as `MAX_NEGOTIATION_ROUNDS`, and in
+ * `recourse-protocol/src/session.ts`. The protocol's own copy has to stay — it is a
+ * published package and `@owed/domain` is `private: true` — but this one does not, and
+ * `schemas.sync.test.ts` pins it against the protocol's so the three cannot drift apart
+ * silently.
+ */
+export const DEFAULT_MAX_ROUNDS = MAX_NEGOTIATION_ROUNDS;
 
 /**
  * How many times countering must have been tried before its record is trusted.

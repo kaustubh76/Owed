@@ -5,6 +5,7 @@ import {
   type Interval,
   intersect,
   interval,
+  isEmptyInterval,
   toEpochMs,
 } from "@owed/domain";
 
@@ -50,8 +51,11 @@ export function observedWithin(intervals: readonly Interval[], evaluation: Inter
  * been missed.
  */
 export function measureCoverage(uptime: readonly Interval[], evaluation: Interval): Coverage {
+  // Named rather than written as `durationMs(...) === 0`, because the comment above is
+  // about an *empty interval* and the code should say the same thing. The domain declared
+  // the predicate and nothing used it.
+  if (isEmptyInterval(evaluation)) return 1;
   const total = durationMs(evaluation);
-  if (total === 0) return 1;
   return Math.min(1, measuredMs(observedWithin(uptime, evaluation)) / total);
 }
 

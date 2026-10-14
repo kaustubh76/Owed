@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { builtinPolicies, PolicyParseError, parsePolicies } from "./load.js";
-import { remedyFor } from "./resolve.js";
+import { findClause, nothingOwed, remedyFor } from "./resolve.js";
 import type { MerchantPolicy, Money } from "./schema.js";
 
 const usd = (major: number): Money => ({ minor: Math.round(major * 100), currency: "USD" });
@@ -11,6 +11,56 @@ const policy = (merchant: string): MerchantPolicy => {
   if (!found) throw new Error(`no policy for ${merchant}`);
   return found;
 };
+
+/**
+ * The two helpers this package publishes and does not itself call.
+ *
+ * `policy-library` is a published, Apache-2.0 package, so an export with no internal
+ * caller is not dead code — it is API surface a consumer is invited to rely on. Both of
+ * these were untested and undocumented, which makes them a promise nobody checked.
+ *
+ * Neither has a natural call site inside Owed, and that is deliberate rather than an
+ * oversight: where no clause applies, the add-on says so in words and stops
+ * (`claimFile.ts:206`, `scheduler.ts:64`) instead of carrying a zero around. A consumer
+ * building a table or a dashboard wants the typed zero; Owed wants the sentence.
+ */
+describe("the helpers a consumer of this library gets", () => {
+  it("reports nothing owed in the policy's own currency, not a bare zero", () => {
+    const northwind = policy("Northwind Parcel");
+    const nothing = nothingOwed(northwind);
+
+    expect(nothing.minor).toBe(0);
+    // The currency is the point. A consumer formatting this must not have to guess, and
+    // a zero with the wrong currency would format as the wrong symbol.
+    expect(nothing.currency).toBe(northwind.currency);
+  });
+
+  it("finds a clause by the id its own policy document uses", () => {
+    const northwind = policy("Northwind Parcel");
+    const first = northwind.clauses[0];
+    if (first === undefined) throw new Error("the shipped policy has no clauses");
+
+    const found = findClause(northwind, first.id);
+    expect(found?.id).toBe(first.id);
+    // Returned whole, so a consumer can cite the title and the source it came from —
+    // which is what makes a claim checkable against the merchant's own wording.
+    expect(found?.title).toBe(first.title);
+  });
+
+  it("returns undefined for a clause the policy does not contain, rather than throwing", () => {
+    expect(findClause(policy("Northwind Parcel"), "no-such-clause")).toBeUndefined();
+  });
+
+  it("finds every clause the shipped policies declare, by id", () => {
+    // A lookup that works for one id and not the rest would pass the test above.
+    for (const merchant of library.merchants()) {
+      const p = policy(merchant);
+      for (const clause of p.clauses) {
+        expect(findClause(p, clause.id), `${merchant} ${clause.id}`).toBeDefined();
+      }
+    }
+  });
+});
 
 describe("the shipped library", () => {
   it("loads every merchant in the storyboard", () => {

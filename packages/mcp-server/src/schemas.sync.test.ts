@@ -1,9 +1,13 @@
 import {
   BreachKindSchema as DomainBreachKind,
   RemedyFormSchema as DomainRemedyForm,
+  MAX_NEGOTIATION_ROUNDS,
 } from "@owed/domain";
 import { BreachKindSchema as PolicyBreachKind } from "@owed/policy-library";
-import { RemedyFormSchema as ProtocolRemedyForm } from "@owed/recourse-protocol";
+import {
+  DEFAULT_MAX_ROUNDS as PROTOCOL_MAX_ROUNDS,
+  RemedyFormSchema as ProtocolRemedyForm,
+} from "@owed/recourse-protocol";
 import { VIEW_NAMES } from "@owed/ui-views";
 import { describe, expect, it } from "vitest";
 import { VIEW_URIS } from "./views.js";
@@ -59,6 +63,17 @@ describe("schemas that are declared twice on purpose", () => {
     for (const name of VIEW_NAMES) {
       expect(VIEW_URIS[name]).toBe(`ui://owed/${name}`);
     }
+  });
+
+  it("agrees on the negotiation round cap, across the domain and the protocol", () => {
+    // Written out three times with the same value: `domain/src/coverage.ts`,
+    // `core/src/negotiation/negotiator.ts` and `recourse-protocol/src/session.ts`. Core's
+    // now re-exports the domain's, which leaves two — and the protocol's has to stay,
+    // because it is a published package and `@owed/domain` is private. So this pins them.
+    //
+    // It matters: the claimant deciding to stop arguing at a different round from the
+    // session that cuts the exchange off would strand a negotiation mid-sentence.
+    expect(PROTOCOL_MAX_ROUNDS).toBe(MAX_NEGOTIATION_ROUNDS);
   });
 
   it("rejects a value neither side knows, so the test would catch a one-sided addition", () => {

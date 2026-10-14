@@ -1,6 +1,6 @@
 import { type LedgerState, remedyContextFor } from "@owed/core";
 import type { BreachKind, Instant } from "@owed/domain";
-import { speakMoney, toEpochMs } from "@owed/domain";
+import { isActionable, speakMoney, toEpochMs } from "@owed/domain";
 import { builtinPolicies, remedyFor } from "@owed/policy-library";
 import { VIEW_URIS } from "../views.js";
 import { assertSpeakable, joinSpoken } from "../voice.js";
@@ -46,7 +46,7 @@ export function commitmentsDue(
     const assessment = view.assessment;
     // Only a promise Owed is sure about. `Suspected` is exactly the case where Owed
     // stays quiet, and speaking first is the last place to start guessing.
-    if (assessment === undefined || assessment.verdict !== "Breached") continue;
+    if (assessment === undefined || !isActionable(assessment)) continue;
     // Already filed: the household knows. Nothing to raise.
     if (view.claim_id !== undefined) continue;
 

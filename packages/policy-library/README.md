@@ -98,6 +98,30 @@ The six breach kinds — `late_eta`, `missed_window`, `phantom_delivery`, `no_sh
 `late_refund`, `price_drop` — are redeclared here rather than imported, so the library
 does not drag a claimant's domain model along with it and interoperates structurally.
 
+## The rest of the API
+
+`remedyFor` is the function this library exists for, and two helpers go with it.
+
+```ts
+import { findClause, nothingOwed, remedyFor } from "@owed/policy-library";
+
+// What the merchant published for this breach, or undefined when nothing covers it.
+const remedy = remedyFor(policy, "phantom_delivery", context);
+
+// A typed zero in the policy's own currency, for the case where nothing applies.
+// The currency matters: a bare 0 formats as the wrong symbol.
+const owed = remedy?.reservation ?? nothingOwed(policy);
+
+// The clause behind a citation, resolved back from the id a claim carries — which is
+// what lets a recipient check a claim against the merchant's own wording.
+const clause = findClause(policy, "delivery-guarantee-4-1");
+```
+
+Owed itself calls neither helper, and that is deliberate rather than an oversight: where
+no clause applies it says so in a sentence and stops, instead of carrying a zero around.
+A consumer building a table or a dashboard wants the typed zero; a voice assistant wants
+the sentence. Both are tested.
+
 ## What this is not
 
 It is not legal advice, and none of these merchants exist. A real deployment would need

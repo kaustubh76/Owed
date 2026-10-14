@@ -5,6 +5,7 @@ import {
   type Detection,
   type Evidence,
   formatMoney,
+  HOUR_MS,
   type Instant,
   type Interval,
   interval,
@@ -26,7 +27,15 @@ import {
 } from "./types.js";
 
 /** How far either side of a claimed moment counts as "around" it. */
-export const TOLERANCE_MS = 30 * MINUTE_MS;
+/**
+ * Half an hour either side, which makes the evaluated window exactly an hour.
+ *
+ * Written as half of `HOUR_MS` rather than `30 * MINUTE_MS` because that is the
+ * relationship that matters and the one the explanation states out loud: `phantom_delivery`
+ * tells the household the door "was watched for N% of **the hour** around that scan". The
+ * two have to move together or the sentence stops being true.
+ */
+export const TOLERANCE_MS = HOUR_MS / 2;
 
 const byTime = (a: Evidence, b: Evidence) => compareInstants(a.captured_at, b.captured_at);
 

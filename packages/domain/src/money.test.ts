@@ -3,6 +3,8 @@ import {
   addMoney,
   compareMoney,
   formatMoney,
+  maxMoney,
+  minMoney,
   money,
   numberToWords,
   scaleMoney,
@@ -110,5 +112,49 @@ describe("speakMoney", () => {
     for (const amount of [usd(0), usd(1), usd(8.5), usd(47), usd(1340.25)]) {
       expect(speakMoney(amount)).not.toMatch(/[0-9$.,]/);
     }
+  });
+});
+
+/**
+ * The comparison pair the domain publishes and nothing inside Owed calls.
+ *
+ * `@owed/domain` is `private: true`, so unlike the policy library's helpers these are not
+ * API surface for anyone outside — they are vocabulary, and they stay because the one
+ * place that genuinely needs them cannot have them: `policy-library/src/resolve.ts`
+ * clamps a remedy between a floor and a ceiling with local `lower`/`higher` functions,
+ * and it is a published package that must not depend on a private one.
+ *
+ * So rather than force a call site where none belongs, these are guaranteed. An untested
+ * helper is a promise nobody checked, and `assertSameCurrency` underneath them means they
+ * are not as trivial as they look.
+ */
+describe("choosing between two amounts", () => {
+  it("takes the smaller and the larger", () => {
+    expect(minMoney(money(300, "USD"), money(800, "USD"))).toStrictEqual(money(300, "USD"));
+    expect(maxMoney(money(300, "USD"), money(800, "USD"))).toStrictEqual(money(800, "USD"));
+  });
+
+  it("is stable when the two are equal, returning the first", () => {
+    const a = money(500, "USD");
+    const b = money(500, "USD");
+    // `<=` and `>=` both pick `a`, which matters for a clamp: an equal floor and ceiling
+    // must not flip the result depending on which comparison ran.
+    expect(minMoney(a, b)).toBe(a);
+    expect(maxMoney(a, b)).toBe(a);
+  });
+
+  it("refuses to compare different currencies rather than guessing a rate", () => {
+    expect(() => minMoney(money(300, "USD"), money(300, "EUR"))).toThrow();
+    expect(() => maxMoney(money(300, "USD"), money(300, "EUR"))).toThrow();
+  });
+
+  it("clamps the way a remedy is clamped, floor then ceiling", () => {
+    const floor = money(500, "USD");
+    const ceiling = money(1500, "USD");
+    const clamp = (v: ReturnType<typeof money>) => minMoney(maxMoney(v, floor), ceiling);
+
+    expect(clamp(money(200, "USD"))).toStrictEqual(floor);
+    expect(clamp(money(900, "USD"))).toStrictEqual(money(900, "USD"));
+    expect(clamp(money(9000, "USD"))).toStrictEqual(ceiling);
   });
 });

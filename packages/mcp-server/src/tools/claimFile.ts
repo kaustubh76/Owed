@@ -12,6 +12,7 @@ import {
   ClaimViewSchema,
   coveragePercent,
   formatMoney,
+  isActionable,
   numberToWords,
 } from "@owed/domain";
 import { builtinPolicies, remedyFor } from "@owed/policy-library";
@@ -21,7 +22,7 @@ import type { ProtocolEra } from "../server.js";
 import { VIEW_URIS } from "../views.js";
 import { assertSpeakable, joinSpoken, speakClaim } from "../voice.js";
 import { loadContext, NotFoundError, spokenError } from "./context.js";
-import { claimViewFor } from "./projections.js";
+import { claimViewFor, findClaimForPromise } from "./projections.js";
 
 /** Deterministic and readable, so the same promise always yields the same claim id. */
 function claimIdFor(promiseId: string): string {
@@ -179,11 +180,12 @@ async function handleClaimFile(
   if (view === undefined) throw new NotFoundError(promiseId);
 
   // Already filed: say where it got to rather than filing it twice.
-  const existingId = view.claim_id;
-  if (existingId !== undefined) {
-    const existing = context.state.claims.get(existingId);
-    if (existing !== undefined)
-      return { kind: "result", result: claimResult(claimViewFor(existing)) };
+  //
+  // `findClaimForPromise` does the promise-then-claim hop in one place; this spelled it
+  // out, which is how the named version ended up with no caller.
+  const existing = findClaimForPromise(context.state, promiseId);
+  if (existing !== undefined) {
+    return { kind: "result", result: claimResult(claimViewFor(existing)) };
   }
 
   const assessment = view.assessment;
@@ -192,7 +194,7 @@ async function handleClaimFile(
    * The restraint that the whole product rests on. A promise Owed could not see enough
    * of is never filed, and the refusal says how little was seen rather than going quiet.
    */
-  if (assessment === undefined || assessment.verdict !== "Breached") {
+  if (assessment === undefined || !isActionable(assessment)) {
     return { kind: "result", result: spokenError(refusalFor(view.promise.merchant, assessment)) };
   }
 
