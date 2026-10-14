@@ -759,11 +759,16 @@ nothing in this submission should be read as claiming otherwise.
 | Persistence behind the same port, on Node's built-in SQLite | done — append-only, parsed on read, survives restart |
 | Docker, moderated walkthroughs (H4) | **not done** |
 | Real Echo, Fire TV, phone rail | **cut** |
-| AWS | **done after the fact** — the ledger runs on DynamoDB with an append-only guarantee from one conditional write and an atomic sequence counter (§12), verified against the real service in `us-east-1`; also the SDK v3 clients, the `aws` CLI, an eight-action IAM policy scoped to one table, Amazon Linux 2023 and CloudShell. `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
+| AWS | **done after the fact** — the ledger runs on DynamoDB with an append-only guarantee from one conditional write and an atomic sequence counter (§12), verified against the real service in `us-east-1`; also the SDK v3 clients, the `aws` CLI, a nine-action IAM policy — eight on DynamoDB tables named `owed-*`, one `sts:GetCallerIdentity` — Amazon Linux 2023 and CloudShell. `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
+| The deployment, checked like the code | done — 35 structural checks on the four units and the Caddyfile, plus `shellcheck`, `systemd-analyze verify` and `caddy validate` in CI. It was the one directory with nothing automated pointed at it, and both defects found by reading it by hand are now checks (§12) |
+| H3 under merchants that are not perfectly predictable | done, and it does not flatter the result — **the 1.10× lift becomes 0.95× at 10% wobble and 0.90× at 25%**: once a merchant's acceptance threshold is uncertain, arguing loses to taking the first offer. Decomposed to the parameter that causes it and the knife-edge that explains it (§10) |
 
 **Never cut, and not cut:** the three numbers on the ledger card, the claim card, the
 protocol inspector, the storyboard golden test, the contract suite, the friction log, and
-saying plainly when a hypothesis was not met.
+saying plainly when a hypothesis was not met — including the run that turned this project's
+own headline number from 1.10× into 0.95× once the merchants stopped being predictable. That
+one was found by wiring up a seam that had sat unused since the first week, and it is in §10
+rather than in a drawer.
 
 ---
 
