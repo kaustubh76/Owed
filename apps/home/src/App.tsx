@@ -86,11 +86,35 @@ export function App() {
             for add-ons and a judge must never have to guess which part of this is real.
           */}
           {turn?.proactive ? (
-            <p className={`app__proactive app__proactive--${turn.proactive.urgency}`}>
-              <span className="app__proactive-badge">simulated proactive</span>
-              Owed spoke first &middot; {turn.proactive.kind.replace(/_/g, " ")} &middot;{" "}
-              {turn.proactive.urgency} urgency
-            </p>
+            <div className={`app__proactive app__proactive--${turn.proactive.urgency}`}>
+              <p className="app__proactive-line">
+                <span className="app__proactive-badge">simulated proactive</span>
+                Owed spoke first &middot; {turn.proactive.kind.replace(/_/g, " ")} &middot;{" "}
+                {turn.proactive.urgency} urgency &middot; stale after{" "}
+                {formatScenarioTime(turn.proactive.expires_at)}
+              </p>
+              {/*
+                The offer, from the event rather than from a script.
+                `docs/proactive.md` calls this the field without which an announcement is a
+                dead end, and the household answering it is the whole beat: a reply that
+                routes to `claim_file` with the promise the event was about.
+              */}
+              {turn.proactive.offer ? (
+                <button
+                  type="button"
+                  className="app__proactive-offer"
+                  disabled={!connected}
+                  title={`${turn.proactive.offer.tool} ${JSON.stringify(turn.proactive.offer.arguments)}`}
+                  onClick={() => {
+                    const offer = turn.proactive?.offer;
+                    if (offer) speak(offer.utterance);
+                  }}
+                >
+                  {turn.proactive.offer.utterance}
+                  <span className="app__proactive-tool">{turn.proactive.offer.tool}</span>
+                </button>
+              ) : null}
+            </div>
           ) : null}
 
           {surface === "show" ? (

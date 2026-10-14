@@ -309,6 +309,7 @@ body {
 
 .app__proactive {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   margin: 0;
@@ -320,7 +321,35 @@ body {
   border-radius: var(--radius);
 }
 
+.app__proactive-line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; }
+
 .app__proactive--high { border-color: color-mix(in srgb, var(--accent-out) 70%, transparent); }
+
+/* The household's way of answering an announcement, driven by the event's own `offer`
+   rather than by a scripted chip. */
+.app__proactive-offer {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  /* 48px minimum target, per the Alexa+ accessibility guidance. */
+  min-height: 48px;
+  margin-left: auto;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--accent-out) 55%, transparent);
+  background: var(--panel);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.app__proactive-offer:hover:not(:disabled) { border-color: var(--accent-out); }
+.app__proactive-offer:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.app__proactive-tool {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
 
 .app__proactive-badge {
   font-size: 11px;

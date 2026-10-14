@@ -30,6 +30,16 @@ export interface Announcement {
   kind: string;
   urgency: string;
   expires_at: string;
+  /**
+   * What the household can say back, and the tool it maps to.
+   *
+   * `docs/proactive.md` calls this the field without which an announcement is a dead end:
+   * somebody hears that something is wrong and has to work out for themselves how to ask
+   * for it to be fixed. The server produces it, the brain carries the event whole, and
+   * this used to drop it on the floor — the demo only looked complete because a scripted
+   * chip happened to contain the same words.
+   */
+  offer?: { utterance: string; tool: string; arguments: Record<string, unknown> };
 }
 
 export interface Turn {
@@ -152,6 +162,7 @@ export function useBrain(): BrainState {
             kind: message.event.kind,
             urgency: message.event.urgency,
             expires_at: message.event.expires_at,
+            ...(message.event.offer ? { offer: message.event.offer } : {}),
           },
         });
         return;

@@ -386,6 +386,27 @@ try {
     .waitFor({ timeout: 10_000 })
     .catch(() => {});
   const announced = (await page.textContent(".voice__reply")) ?? "";
+  // The offer, which docs/proactive.md calls the field without which an announcement is a
+  // dead end. It was produced, tested, carried over the socket and then dropped by the
+  // home — and the beat still looked right because a scripted chip held the same words.
+  // Asserting it from the event is what stops that happening again.
+  check("the announcement carries its offer", await page.locator(".app__proactive-offer").count(), 1);
+  check(
+    "the offer is the household's way to answer it",
+    (await page.textContent(".app__proactive-offer"))?.includes("File it"),
+    true,
+  );
+  check(
+    "the offer names the tool it routes to",
+    (await page.textContent(".app__proactive-tool"))?.trim(),
+    "claim_file",
+  );
+  check(
+    "the announcement says when it goes stale",
+    (await page.textContent(".app__proactive-line"))?.includes("stale after"),
+    true,
+  );
+
   check("announcement names the breach", announced.includes("missed the delivery window"), true);
   check("announcement has no digits", /[0-9]/.test(announced), false);
   check(
@@ -395,7 +416,12 @@ try {
   );
 
   // --- the hero interaction: say yes, and watch it settle -----------------
-  await page.getByRole("button", { name: "File it" }).click();
+  // The event's own offer, not the scripted chip. Both say "File it" now — the chip
+  // always did, and the announcement carries the same words in its `offer`, which is the
+  // point of the field. Answering the announcement is the beat the storyboard describes,
+  // so this clicks the offer and proves the household can act on what Owed said rather
+  // than on a button that happens to agree with it.
+  await page.locator(".app__proactive-offer").click();
 
   check("claim settles", await cardText(".claim__amount"), "$8.00");
   const steps = await card().locator(".claim__step-label").allTextContents();
