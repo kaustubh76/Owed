@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { viewEntry } from "@owed/ui-views";
 
 /** The three `ui://` views — frozen, docs/contract-v1.md §3. */
 export const VIEW_URIS = {
@@ -20,7 +21,11 @@ const require = createRequire(import.meta.url);
  * fetch anything else.
  */
 export async function loadViewHtml(name: ViewName): Promise<string> {
-  const specifier = `@owed/ui-views/views/${name}/index.html`;
+  // `viewEntry` is `@owed/ui-views`'s own statement of where a built view lands. Spelling
+  // the path out here instead left two definitions of it, one of them in a barrel that
+  // said it existed so a host "does not have to spell the URIs out and get them subtly
+  // wrong" — while this file did exactly that.
+  const specifier = `@owed/ui-views/${viewEntry(name)}`;
   let path: string;
   try {
     path = require.resolve(specifier);

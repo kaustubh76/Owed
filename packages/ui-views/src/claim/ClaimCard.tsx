@@ -1,6 +1,7 @@
-import { type ClaimView, formatMoney } from "@owed/domain";
+import { type ClaimState, type ClaimView, formatMoney } from "@owed/domain";
 
-const STATE_LABEL: Readonly<Record<ClaimView["state"], string>> = {
+/** Keyed by the named union rather than by reaching through `ClaimView` for it. */
+const STATE_LABEL: Readonly<Record<ClaimState, string>> = {
   Proposed: "ready to file",
   Filed: "filed",
   Negotiating: "being argued",

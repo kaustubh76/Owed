@@ -1,13 +1,20 @@
-import { coveragePercent, type EvidenceView } from "@owed/domain";
+import { coveragePercent, type EvidenceKind, type EvidenceView, type Verdict } from "@owed/domain";
 
-const VERDICT_LABEL: Readonly<Record<string, string>> = {
+/**
+ * Both maps are keyed by the domain's own unions rather than by `string`.
+ *
+ * As `Record<string, string>` a new evidence kind or verdict compiled fine and rendered
+ * `undefined` on the card — which is the failure a label map exists to prevent.
+ * `ledger/labels.ts` was already keyed this way; these two were not.
+ */
+const VERDICT_LABEL: Readonly<Record<Verdict, string>> = {
   Kept: "kept",
   Suspected: "not enough to claim",
   Breached: "broken",
   Undetermined: "still watching",
 };
 
-const KIND_LABEL: Readonly<Record<string, string>> = {
+const KIND_LABEL: Readonly<Record<EvidenceKind, string>> = {
   timestamp: "timestamp",
   carrier_scan: "carrier scan",
   doorbell_event: "doorbell",

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { behaviourId, GRID_PARAMETERS, generateGrid } from "@owed/merchant-agents";
+import { behaviourId, GRID_PARAMETERS, GRID_SIZE, generateGrid } from "@owed/merchant-agents";
 import { describe, expect, it } from "vitest";
 
 const committed = JSON.parse(
@@ -32,6 +32,21 @@ describe("the pre-registered grid", () => {
 
     expect(committed.size).toBe(generated.length);
     expect(committed.policies).toEqual(JSON.parse(JSON.stringify(generated)));
+  });
+
+  /**
+   * The size the parameters imply, which is the one check the other two cannot make.
+   *
+   * `GRID_SIZE` is the product of the five parameter lists. Comparing the committed file
+   * to `generateGrid()` catches an edited file; comparing both to `GRID_SIZE` catches a
+   * *generator* that stopped producing every combination — it would agree with a file
+   * regenerated from itself, and the pre-registration would quietly shrink. The constant
+   * existed and nothing read it.
+   */
+  it("produces every combination its parameters imply, and no more", () => {
+    expect(generateGrid()).toHaveLength(GRID_SIZE);
+    expect(committed.size).toBe(GRID_SIZE);
+    expect(GRID_SIZE).toBe(270);
   });
 
   it("still includes merchants that punish a counter", () => {

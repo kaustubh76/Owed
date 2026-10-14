@@ -3,10 +3,18 @@ import { checkMerchantConformance, sampleClaim } from "./conformance.js";
 import {
   type ClaimMessage,
   countRounds,
+  type DeclineMessage,
+  DeclineMessageSchema,
+  type EvidencePack,
+  EvidencePackSchema,
   isTerminal,
   type Money,
+  type PromiseRef,
+  PromiseRefSchema,
   type RecourseMessage,
   type RespondentMessage,
+  type SettleMessage,
+  SettleMessageSchema,
   TERMINAL_MESSAGE_TYPES,
 } from "./messages.js";
 import { recourseJsonSchema } from "./schema.js";
@@ -253,6 +261,71 @@ describe("merchant conformance suite", () => {
     };
 
     expect((await checkMerchantConformance(forgetful)).passed).toBe(false);
+  });
+});
+
+/**
+ * The types this package publishes, used the way a consumer would use them.
+ *
+ * `@owed/recourse-protocol` is published, so its exported types *are* the contract — and
+ * four of them were referenced nowhere, not even by a test: `PromiseRef`, `EvidencePack`,
+ * `SettleMessage` and `DeclineMessage`. A type alias cannot be asserted at runtime, but it
+ * can be used, and `tsc -b` checks the use. These annotations fail to compile if a field
+ * is renamed, loses its optionality, or changes shape — which is the thing worth catching
+ * in a package somebody else builds against.
+ *
+ * The literals are also parsed, so the schema and the type cannot drift apart silently in
+ * the one direction a type annotation alone would miss.
+ */
+describe("the types this package publishes", () => {
+  it("describes a promise and its evidence the way the schemas parse them", () => {
+    const promise: PromiseRef = {
+      id: "prm_001",
+      kind: "delivery_window",
+      merchant: "Northwind Parcel",
+      made_at: "2026-10-11T04:15:00-07:00",
+      source_ref: "msg_prm_001",
+      window: {
+        start: "2026-10-11T20:00:00.000Z",
+        end: "2026-10-12T00:00:00.000Z",
+      },
+      amount_at_stake: { minor: 5400, currency: "USD" },
+    };
+    const pack: EvidencePack = {
+      items: [{ id: "evd_scan_012", kind: "carrier_scan", captured_at: "2026-10-12T01:20:00Z" }],
+      coverage: 1,
+      evaluation_interval: {
+        start: "2026-10-11T20:00:00.000Z",
+        end: "2026-10-12T00:00:00.000Z",
+      },
+    };
+
+    expect(PromiseRefSchema.parse(promise)).toStrictEqual(promise);
+    expect(EvidencePackSchema.parse(pack)).toStrictEqual(pack);
+  });
+
+  it("describes the two ways an exchange ends", () => {
+    const settle: SettleMessage = {
+      claim_id: "clm_001",
+      at: "2026-10-12T02:30:00.000Z",
+      type: "SETTLE",
+      amount: { minor: 800, currency: "USD" },
+      form: "credit",
+    };
+    const decline: DeclineMessage = {
+      claim_id: "clm_004",
+      at: "2026-10-08T19:16:00.000Z",
+      type: "DECLINE",
+      reason: "We do not consider this claim to fall within the policy as written.",
+      escalation_route: "Calder & Co. customer relations",
+    };
+
+    expect(SettleMessageSchema.parse(settle)).toStrictEqual(settle);
+    expect(DeclineMessageSchema.parse(decline)).toStrictEqual(decline);
+
+    // And the pair a respondent must not be able to continue past.
+    expect(isTerminal(settle)).toBe(true);
+    expect(isTerminal(decline)).toBe(true);
   });
 });
 
