@@ -172,6 +172,25 @@ await waitFor("home", () => reachable(HOME_URL));
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
 
+/**
+ * Record what the page asks the browser to say.
+ *
+ * `speechSynthesis.speak` does not announce itself and headless Chrome has no audio
+ * device, so the only way to assert "TTS out" is to watch the call. Installed before any
+ * document runs, and it still calls through, so the page behaves normally.
+ */
+await page.addInitScript(() => {
+  const spoken = [];
+  Object.defineProperty(window, "__spoken", { get: () => spoken });
+  if ("speechSynthesis" in window) {
+    const real = window.speechSynthesis.speak.bind(window.speechSynthesis);
+    window.speechSynthesis.speak = (utterance) => {
+      spoken.push(utterance.text);
+      real(utterance);
+    };
+  }
+});
+
 const consoleErrors = [];
 page.on("pageerror", (error) => consoleErrors.push(`pageerror: ${error.message}`));
 page.on("console", (message) => {
@@ -223,6 +242,49 @@ try {
   const spoken = (await page.textContent(".voice__reply")) ?? "";
   check("spoken line has no digits", /[0-9]/.test(spoken), false);
   check("spoken line offers the waiting claim", spoken.includes("one more I can file"), true);
+
+  // --- voice in and out ---------------------------------------------------
+  //
+  // readme §9 claims browser speech recognition in, TTS out and barge-in. Both halves are
+  // real and both are opt-in, so this asserts the capability is offered, that it is off
+  // until asked for — a recorded take must not depend on a permission prompt — and that
+  // turning it on actually makes the browser speak.
+  const hasRecognition = await page.evaluate(
+    () => "SpeechRecognition" in window || "webkitSpeechRecognition" in window,
+  );
+  check("browser offers speech recognition", hasRecognition, true);
+  check("the microphone control is present", await page.locator(".voice__mic").count(), 1);
+  check(
+    "the microphone is off until asked",
+    await page.locator(".voice__mic").getAttribute("aria-pressed"),
+    "false",
+  );
+
+  check("the spoken-replies toggle is present", await page.locator(".voice__tts input").count(), 1);
+  check("spoken replies are off by default", await page.locator(".voice__tts input").isChecked(), false);
+  check("nothing was spoken while the toggle was off", (await page.evaluate(() => window.__spoken.length)), 0);
+
+  // Turn it on, ask again, and watch the browser be told to speak.
+  await page.locator(".voice__tts input").check();
+  await page.getByRole("button", { name: EXPECTED.utterance }).click();
+  await page.waitForFunction(() => window.__spoken.length > 0, undefined, { timeout: 10_000 });
+  const said = await page.evaluate(() => window.__spoken.at(-1));
+  check("TTS out speaks the reply", said?.includes("recovered forty-seven dollars"), true);
+
+  // Barge-in: speaking again cancels what is being said rather than queueing behind it.
+  const cancelled = await page.evaluate(() => {
+    let calls = 0;
+    const real = window.speechSynthesis.cancel.bind(window.speechSynthesis);
+    window.speechSynthesis.cancel = () => {
+      calls += 1;
+      real();
+    };
+    document.querySelector(".voice__chip")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    return calls;
+  });
+  check("barge-in cancels the reply in progress", cancelled > 0, true);
+
+  await page.locator(".voice__tts input").uncheck();
 
   // --- the trust beat: what Owed did not see ------------------------------
   await page.getByRole("button", { name: "Why aren't you claiming that?" }).click();

@@ -135,6 +135,57 @@ body {
   font: inherit;
 }
 
+/* The live voice controls. Present only where the browser has the API, and off by
+   default — a recorded take must not depend on a permission prompt. */
+.voice__live { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+
+.voice__mic {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  /* 48px minimum target, per the Alexa+ accessibility guidance. */
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--panel-edge);
+  background: var(--panel);
+  color: var(--fg-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.voice__mic:hover:not(:disabled) { border-color: var(--accent-in); }
+.voice__mic:disabled { opacity: 0.45; cursor: not-allowed; }
+.voice__mic--on { color: var(--fg); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+
+.voice__mic-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--fg-dim, var(--fg-muted));
+}
+.voice__mic--on .voice__mic-dot { background: var(--accent); animation: voice-pulse 1.4s ease-in-out infinite; }
+
+@keyframes voice-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice__mic--on .voice__mic-dot { animation: none; }
+}
+
+.voice__tts {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  color: var(--fg-muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+.voice__tts input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+.voice__mic-error { color: var(--accent-out); font-size: 13px; }
+
 .voice__reply {
   margin: 0;
   padding: 14px 16px;
