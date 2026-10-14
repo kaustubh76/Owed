@@ -77,8 +77,20 @@ jobs:
       # The external Alexa+ conformance checker, run against a real booted server.
       - run: pnpm conformance
 
+      # Caddy, so the deployment gate below can validate the Caddyfile rather than report
+      # it as skipped. Lifted out of the official image at a pinned version instead of
+      # added as an apt repository: one file, no third-party source list, and the runner
+      # already has Docker. `caddy validate` adapts the Caddyfile and builds the whole
+      # config, which is the only thing that reads those 150 lines at all.
+      - name: Provide caddy to the deployment gate
+        run: |
+          docker create --name caddy-bin caddy:2.11.4-alpine
+          docker cp caddy-bin:/usr/bin/caddy /usr/local/bin/caddy
+          docker rm caddy-bin
+          caddy version
+
       # The deployment, which until now was the one directory with nothing automated
-      # pointed at it. The structural checks run anywhere; this runner is also where
-      # shellcheck and systemd-analyze exist, so it is the only place the real validators
-      # get to see these files at all — a Mac reports them as skipped.
+      # pointed at it. The structural checks run anywhere; this runner is where all three
+      # real validators exist, so it is the only place those files get genuinely read — a
+      # Mac reports the validators as skipped.
       - run: pnpm verify:deploy

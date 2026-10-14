@@ -266,8 +266,9 @@ if (validated !== undefined) {
 if (skipped.length > 0) {
   process.stdout.write(
     `\n  not run here (binary absent): ${[...new Set(skipped)].join(", ")}\n` +
-      "  The structural checks above do not depend on them. GitHub's ubuntu runners have\n" +
-      "  shellcheck and systemd-analyze, so CI covers those two.\n",
+      "  The structural checks above do not depend on them. CI runs all three: its runners\n" +
+      "  carry shellcheck and systemd-analyze, and the workflow lifts caddy out of the\n" +
+      "  official image before this step.\n",
   );
 }
 
