@@ -36,8 +36,8 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { setTimeout as delay } from "node:timers/promises";
 import { createRequire } from "node:module";
+import { setTimeout as delay } from "node:timers/promises";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import * as z from "zod/v4";
 import { linkAccount } from "../packages/mcp-server/dist/index.js";
@@ -49,7 +49,9 @@ import { linkAccount } from "../packages/mcp-server/dist/index.js";
  * rather than from anything I typed. Resolved through the mcp-server package because
  * that is the workspace member that depends on it.
  */
-const fromServerPkg = createRequire(new URL("../packages/mcp-server/package.json", import.meta.url));
+const fromServerPkg = createRequire(
+  new URL("../packages/mcp-server/package.json", import.meta.url),
+);
 // The SDK does not export its own package.json, so the version comes from the manifest
 // that depends on it — which is the version actually installed.
 const ownPkg = JSON.parse(
@@ -123,13 +125,13 @@ const POSITIONS = [
     id: "proactive",
     instant: "2026-10-12T01:25:00.000Z",
     label: "Sun 18:25",
-    note: "prm_011 is Breached and unfiled. This is where Owed speaks first — a `promise_breached` commitment whose offer is \"File it\". We found no documented proactive channel for add-ons, so the home badges every one of these `simulated proactive`.",
+    note: 'prm_011 is Breached and unfiled. This is where Owed speaks first — a `promise_breached` commitment whose offer is "File it". We found no documented proactive channel for add-ons, so the home badges every one of these `simulated proactive`.',
   },
   {
     id: "query",
     instant: "2026-10-12T02:30:00.000Z",
     label: "Sun 19:30",
-    note: "The storyboard's starting point: \"Alexa, what am I owed?\"",
+    note: 'The storyboard\'s starting point: "Alexa, what am I owed?"',
   },
 ];
 
@@ -542,7 +544,9 @@ process.stdout.write(
 // it would produce a replay that looks complete and shows nothing.
 const problems = [];
 if (capture.recourse.length === 0) {
-  problems.push("no recourse frames — was OWED_MERCHANTS_URL set? in-process merchants log nothing");
+  problems.push(
+    "no recourse frames — was OWED_MERCHANTS_URL set? in-process merchants log nothing",
+  );
 }
 if (capture.claim_file.accepted?.structuredContent?.state !== "Settled") {
   problems.push(

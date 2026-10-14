@@ -8,15 +8,17 @@
  * hunting for Chrome before they have seen anything work.
  */
 import { execSync } from "node:child_process";
-import { createServer } from "node:net";
 import { readFileSync } from "node:fs";
+import { createServer } from "node:net";
 
 const results = [];
 const record = (name, ok, detail, fix) => results.push({ name, ok, detail, fix });
 
 function version(command) {
   try {
-    return execSync(command, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+    return execSync(command, { stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
   } catch {
     return undefined;
   }
@@ -112,13 +114,15 @@ for (const [port, what] of PORTS) {
 
 // --- optional ---------------------------------------------------------------
 
-const chrome = version("node -e \"import('playwright-core').then(p => process.stdout.write(p.chromium.executablePath({channel:'chrome'})))\"");
+const chrome = version(
+  "node -e \"import('playwright-core').then(p => process.stdout.write(p.chromium.executablePath({channel:'chrome'})))\"",
+);
 record(
   "Chrome (optional)",
   chrome !== undefined && chrome.length > 0,
   chrome && chrome.length > 0 ? "found" : "not found",
   "Only needed for `pnpm verify:ui`, which drives the cards in a real browser. The demo and `pnpm verify` do not use it.",
-  );
+);
 
 // --- report -----------------------------------------------------------------
 

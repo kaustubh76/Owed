@@ -4,6 +4,7 @@
     "includes": [
       "**/*.ts",
       "**/*.tsx",
+      "**/*.mjs",
       "**/*.json",
       "!**/dist",
       "!**/node_modules",

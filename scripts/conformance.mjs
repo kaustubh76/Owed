@@ -51,11 +51,9 @@ async function waitForServer() {
 
 await waitForServer();
 
-const checker = spawn(
-  "./apps/brain/node_modules/.bin/mcp-voice-simulator-conformance",
-  [MCP_URL],
-  { stdio: "inherit" },
-);
+const checker = spawn("./apps/brain/node_modules/.bin/mcp-voice-simulator-conformance", [MCP_URL], {
+  stdio: "inherit",
+});
 
 const code = await new Promise((resolve) => checker.on("close", resolve));
 

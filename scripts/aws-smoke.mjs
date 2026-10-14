@@ -77,7 +77,9 @@ function fail(message) {
 }
 
 if (TABLE === undefined) {
-  fail("OWED_DYNAMO_TABLE is not set — this script writes to a real table, so it will not guess one");
+  fail(
+    "OWED_DYNAMO_TABLE is not set — this script writes to a real table, so it will not guess one",
+  );
 }
 if (REGION === undefined) {
   fail("AWS_REGION is not set — the region decides which account's table this is");
@@ -110,9 +112,14 @@ const isLocal = LOCAL_ENDPOINT !== undefined;
 
 const identity = isLocal
   ? { Account: EXPECTED_ACCOUNT, Arn: `local:${LOCAL_ENDPOINT}` }
-  : awsJson(["sts", "get-caller-identity"], "aws sts get-caller-identity — is the CLI authenticated?");
+  : awsJson(
+      ["sts", "get-caller-identity"],
+      "aws sts get-caller-identity — is the CLI authenticated?",
+    );
 
-process.stdout.write(isLocal ? "Owed — smoke test, LOCAL DRY RUN\n" : "Owed — real-AWS smoke test\n");
+process.stdout.write(
+  isLocal ? "Owed — smoke test, LOCAL DRY RUN\n" : "Owed — real-AWS smoke test\n",
+);
 process.stdout.write(`  account  ${identity.Account}\n`);
 process.stdout.write(`  identity ${identity.Arn}\n`);
 process.stdout.write(`  region   ${REGION}\n`);
@@ -138,7 +145,11 @@ const described = awsJson(
 
 const keys = (described.Table?.KeySchema ?? []).map((k) => `${k.AttributeName}:${k.KeyType}`);
 const expectedKeys = ["household_id:HASH", "sk:RANGE"];
-deepStrictEqual(keys, expectedKeys, `table key schema is ${keys.join(", ")}, expected ${expectedKeys.join(", ")}`);
+deepStrictEqual(
+  keys,
+  expectedKeys,
+  `table key schema is ${keys.join(", ")}, expected ${expectedKeys.join(", ")}`,
+);
 process.stdout.write(`✓ table exists, keys ${keys.join(" + ")}\n`);
 
 // ── 3. Boot the server against it, which seeds the week to real DynamoDB ─────────────

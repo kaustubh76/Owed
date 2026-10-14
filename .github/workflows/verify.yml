@@ -70,3 +70,9 @@ jobs:
 
       # The external Alexa+ conformance checker, run against a real booted server.
       - run: pnpm conformance
+
+      # The deployment, which until now was the one directory with nothing automated
+      # pointed at it. The structural checks run anywhere; this runner is also where
+      # shellcheck and systemd-analyze exist, so it is the only place the real validators
+      # get to see these files at all — a Mac reports them as skipped.
+      - run: pnpm verify:deploy

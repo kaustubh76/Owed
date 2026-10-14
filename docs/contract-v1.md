@@ -138,7 +138,7 @@ proposes in words and waits for `confirm`. Both paths are tested; see docs/frict
 | Target | Documented | Measured |
 |---|---|---|
 | Tool round trip | under 500 ms | **all six tools**, 50 calls each over Streamable HTTP; distribution and the machine it was measured on in `eval/results/latency.json` |
-| Text contrast | 4.5:1 (3:1 for large or bold) | gate fails on any violation and reports the tightest pass, in both themes; **worst passing 5.33:1** |
+| Text contrast | 4.5:1 (3:1 for large or bold) | gate fails on any violation and reports the tightest pass, in both themes; **worst passing 5.33:1**, on the recovered total on the light ledger card |
 | Touch targets | 48×48 px | all controls pass |
 | Spoken answer | self-sufficient, no digits, ≤ 240 chars | enforced on every result |
 

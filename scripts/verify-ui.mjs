@@ -26,7 +26,6 @@ const EXPECTED = {
   utterance: "Alexa, what am I owed?",
 };
 
-
 /**
  * Accessibility, computed rather than eyeballed.
  *
@@ -35,7 +34,7 @@ const EXPECTED = {
  * the colours the browser actually resolved.
  */
 async function auditAccessibility(frame, label) {
-  return frame.locator("body").evaluate((body) => {
+  const audit = await frame.locator("body").evaluate((body) => {
     const doc = body.ownerDocument;
     const view = doc.defaultView;
     const problems = [];
@@ -130,6 +129,13 @@ async function auditAccessibility(frame, label) {
 
     return { problems, worst };
   });
+
+  // `label` used to be accepted and dropped, which is how the contrast figure the README
+  // quotes could be reported without saying which surface produced it — and that silence
+  // is what let an earlier version of this gate measure the light figure on a surface no
+  // gate rendered. The number now names where it came from.
+  if (audit.worst !== undefined) audit.worst.surface = label;
+  return audit;
 }
 
 const children = [];
@@ -285,8 +291,16 @@ try {
   );
 
   check("the spoken-replies toggle is present", await page.locator(".voice__tts input").count(), 1);
-  check("spoken replies are off by default", await page.locator(".voice__tts input").isChecked(), false);
-  check("nothing was spoken while the toggle was off", (await page.evaluate(() => window.__spoken.length)), 0);
+  check(
+    "spoken replies are off by default",
+    await page.locator(".voice__tts input").isChecked(),
+    false,
+  );
+  check(
+    "nothing was spoken while the toggle was off",
+    await page.evaluate(() => window.__spoken.length),
+    0,
+  );
 
   // Turn it on, ask again, and watch the browser be told to speak.
   await page.locator(".voice__tts input").check();
@@ -303,7 +317,9 @@ try {
       calls += 1;
       real();
     };
-    document.querySelector(".voice__chip")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    document
+      .querySelector(".voice__chip")
+      ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     return calls;
   });
   check("barge-in cancels the reply in progress", cancelled > 0, true);
@@ -313,9 +329,21 @@ try {
   // --- the trust beat: what Owed did not see ------------------------------
   await page.getByRole("button", { name: "Why aren't you claiming that?" }).click();
 
-  check("evidence card states the coverage", (await cardText(".evidence__coverage-label")).includes("20%"), true);
-  check("evidence card names the gaps", (await cardText(".evidence__gaps")).startsWith("Not watched:"), true);
-  check("evidence card gives the verdict", await cardText(".evidence__verdict"), "not enough to claim");
+  check(
+    "evidence card states the coverage",
+    (await cardText(".evidence__coverage-label")).includes("20%"),
+    true,
+  );
+  check(
+    "evidence card names the gaps",
+    (await cardText(".evidence__gaps")).startsWith("Not watched:"),
+    true,
+  );
+  check(
+    "evidence card gives the verdict",
+    await cardText(".evidence__verdict"),
+    "not enough to claim",
+  );
 
   // The provenance beat: the one line on the card Owed did not write.
   const quoted = await cardText(".evidence__quote");
@@ -390,7 +418,11 @@ try {
   // dead end. It was produced, tested, carried over the socket and then dropped by the
   // home — and the beat still looked right because a scripted chip held the same words.
   // Asserting it from the event is what stops that happening again.
-  check("the announcement carries its offer", await page.locator(".app__proactive-offer").count(), 1);
+  check(
+    "the announcement carries its offer",
+    await page.locator(".app__proactive-offer").count(),
+    1,
+  );
   check(
     "the offer is the household's way to answer it",
     (await page.textContent(".app__proactive-offer"))?.includes("File it"),
@@ -459,7 +491,11 @@ try {
 
   check("claim settles", await cardText(".claim__amount"), "$8.00");
   const steps = await card().locator(".claim__step-label").allTextContents();
-  check("claim shows the exchange", steps.map((step) => step.trim()).join(" "), "Asked They offered Countered Settled");
+  check(
+    "claim shows the exchange",
+    steps.map((step) => step.trim()).join(" "),
+    "Asked They offered Countered Settled",
+  );
   check(
     "counter cites the merchant's own clause",
     await cardText(".claim__step-clause"),
@@ -481,7 +517,9 @@ try {
   check("inspector shows the recourse exchange", recourseRows > 0, true);
   check(
     "recourse rows name the merchant",
-    (await page.locator(".inspector__line--recourse .inspector__channel").first().textContent())?.trim(),
+    (
+      await page.locator(".inspector__line--recourse .inspector__channel").first().textContent()
+    )?.trim(),
     "Northwind Parcel",
   );
 
@@ -548,7 +586,7 @@ try {
 
     const lightAudit = await auditAccessibility(lightCard, "ledger card (light)");
     check("light-theme accessibility", lightAudit.problems.join(" | ") || "clean", "clean");
-    if (lightAudit.worst) contrastSeen.push({ ...lightAudit.worst, theme: "light" });
+    if (lightAudit.worst) contrastSeen.push(lightAudit.worst);
   } finally {
     await lightPage.close();
   }
@@ -557,7 +595,7 @@ try {
   if (contrastSeen.length > 0) {
     const tightest = contrastSeen.reduce((a, b) => (b.ratio < a.ratio ? b : a));
     process.stdout.write(
-      `  ok  worst passing contrast — ${tightest.ratio.toFixed(2)}:1 (needs ${tightest.required}:1) on "${tightest.text}"\n`,
+      `  ok  worst passing contrast — ${tightest.ratio.toFixed(2)}:1 (needs ${tightest.required}:1) on "${tightest.text}" (${tightest.surface})\n`,
     );
   }
 

@@ -395,6 +395,8 @@ owed/
 │  ├─ preflight.mjs         # can this machine run it?
 │  ├─ conformance.mjs       # the published-requirements check
 │  ├─ verify-ui.mjs         # drives the whole storyboard in a real browser
+│  ├─ verify-deploy.mjs     # the units, the Caddyfile and the shell, checked like code
+│  ├─ capture-demo.mjs      # records the storyboard to docs/demo-capture.json
 │  └─ aws-smoke.mjs         # proves the ledger against real DynamoDB, in a named account
 ├─ deploy/                  # one box: Caddyfile, four systemd units, bootstrap, IAM policy
 ├─ docs/
@@ -444,7 +446,8 @@ else's machine is a port already in use, and the failure that causes is confusin
 names what it looked for, what it found and what to do about it.
 
 **Checked from a clean clone**, not asserted: `git clone` → `pnpm install` (3.4s) →
-`pnpm verify` (build, lint, the whole test suite, conformance — all green) → `pnpm demo` (all
+`pnpm verify` (build, lint, the whole test suite, conformance, the deployment gate — all
+green) → `pnpm demo` (all
 four services answering in **4 seconds**) → `pnpm verify:ui` (every browser check,
 green) → all four evaluations run and write their results.
 
@@ -452,9 +455,26 @@ Open http://127.0.0.1:5173 and ask *"Alexa, what am I owed?"*.
 
 ```bash
 pnpm verify         # build + lint + the whole test suite + the conformance probe
+                    # + the deployment gate
                     # the same sequence .github/workflows/verify.yml runs on every push
 pnpm test           # unit, property, storyboard golden, and tool-contract tests
+pnpm verify:deploy  # the four systemd units, the Caddyfile and the two shell scripts
 ```
+
+**The deployment is checked like the code is.** `deploy/` was the one directory with
+nothing automated pointed at it, and that is a bad place for a blind spot: its failures
+surface as a service restart-looping with the reason in `journalctl` on a host nobody is
+watching. Both defects found by reading those files by hand were that shape — `caddy.service`
+carried no `Restart=` at all, so the only public listener stayed down for good if it died,
+and `bootstrap.sh`'s own pre-flight checked the ExecStart *interpreter* and never the script
+it was handed, so a missing `dist/main.js` passed. `verify-deploy.mjs` now checks every unit
+has a restart policy and an entry point that exists, that every port Caddy proxies to is one
+something in this repo actually listens on, and that the merchant agents stay off the public
+listener. It runs `shellcheck` and `systemd-analyze verify` where those exist — CI's runners
+have both, a Mac reports them as skipped — and the filtering is built from what they were
+measured to do rather than what they are assumed to do: a missing interpreter exits 1 on
+every machine that is not the target box, while a directive systemd cannot parse exits **0**
+and only says so on stderr.
 
 The demo runs on **scenario time**, not wall time: the server holds a fixed clock parked
 in the seeded week and answers truthfully for wherever that clock is moved to.
@@ -586,7 +606,10 @@ the worst p95 sits in low single-digit milliseconds.
 **Contrast and target size are computed from the colours the browser resolved**, not eyeballed:
 the gate fails on any text under 4.5:1 (3:1 for large or bold) and any control under 48×48.
 `pnpm verify:ui` renders every card in **both themes** and reports the tightest *passing* ratio,
-so that figure is the gate's own output — currently **5.33:1** against the 3:1 its element needs.
+so that figure is the gate's own output — currently **5.33:1** against the 3:1 its element needs,
+on the recovered total on the light ledger card. The gate names that surface in the same line it
+prints the number, because a contrast figure that does not say what it was measured on is how
+the previous two came to be wrong.
 
 Two earlier revisions of that line could not be reproduced from the gate, which only ever
 emitted violations; a worst case had to be measured by hand and then taken on trust. It emits
