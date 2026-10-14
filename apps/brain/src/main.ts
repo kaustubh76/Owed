@@ -264,8 +264,17 @@ let primed = false;
  *
  * Skipping a tick costs nothing — the endpoint is a projection, not a queue, so the next
  * poll sees exactly the same thing.
+ *
+ * This is the variable the paragraph above has pointed at since it was written, through
+ * every revision of this file: it did not exist, and the three call sites below — the
+ * timer, every utterance, and every scrub — were free to overlap exactly as described.
  */
+let polling = false;
+
+/** Read the commitments the server is projecting, and announce whatever is new. */
 async function pollCommitments(): Promise<void> {
+  if (polling) return;
+  polling = true;
   try {
     const response = await controlFetch(COMMITMENTS_URL);
     if (!response.ok) {
@@ -289,8 +298,8 @@ async function pollCommitments(): Promise<void> {
     for (const event of events) {
       if (announced.has(event.event_id)) continue;
 
-      // Shown on the inspector as its own channel: the point of the beat is that a
-      // judge can read the shape Alexa+ would have to emit, on the wire, in context.
+      // Marked before it is sent, not after: a broadcast that throws half way through
+      // must not leave the event looking unannounced to the next pass.
       announced.add(event.event_id);
 
       // Shown on the inspector as its own channel: the point of the beat is that a
@@ -308,6 +317,8 @@ async function pollCommitments(): Promise<void> {
     // The proactive channel is a stand-in for one that does not exist. Losing it must
     // never break a turn — but it should still be visible.
     complain("proactive poll", error);
+  } finally {
+    polling = false;
   }
 }
 

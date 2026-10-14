@@ -94,6 +94,56 @@ describe("a merchant agent over HTTP", () => {
     expect(session.settled).toEqual({ minor: 1200, currency: "USD" });
   });
 
+  /**
+   * Shutdown, from the directory's side.
+   *
+   * `shutdown()` in `main.ts` closed the listener and the ledger and left a live MCP
+   * client per merchant behind; `close()` is the missing half. What is asserted here is
+   * the part that could break something: closing must not leave the directory holding
+   * dead sessions, because a shutdown can race a claim that is already in flight, and a
+   * directory that answered every later claim through a closed client would fail for ever
+   * — the same shape as the cached-rejection bug the brain's session had.
+   *
+   * It deliberately does not assert that a socket went away. Sockets here belong to the
+   * runtime's global pool: `server.getConnections()` reads the same before and after a
+   * close, so a test claiming otherwise would be measuring the pool, not this code.
+   */
+  it("closes its sessions on the way out and stays usable afterwards", async () => {
+    const directory = httpMerchants({ baseUrl, log });
+    const before = required(
+      directory.respondentFor("Northwind Parcel", {
+        stated: { minor: 1200, currency: "USD" },
+        clause_title: "Delivery Guarantee 4.2",
+      }),
+    );
+    expect(await before.respond([sampleClaim()])).toBeDefined();
+
+    await directory.close?.();
+
+    const after = required(
+      directory.respondentFor("Northwind Parcel", {
+        stated: { minor: 1200, currency: "USD" },
+        clause_title: "Delivery Guarantee 4.2",
+      }),
+    );
+    expect(await after.respond([sampleClaim()])).toBeDefined();
+  });
+
+  /** Teardown gets called twice, and on things that never started. Neither may throw. */
+  it("can be closed twice, and closed having never connected", async () => {
+    const used = httpMerchants({ baseUrl, log });
+    await required(
+      used.respondentFor("Northwind Parcel", {
+        stated: { minor: 1200, currency: "USD" },
+        clause_title: "Delivery Guarantee 4.2",
+      }),
+    ).respond([sampleClaim()]);
+
+    await expect(used.close?.()).resolves.toBeUndefined();
+    await expect(used.close?.()).resolves.toBeUndefined();
+    await expect(httpMerchants({ baseUrl, log }).close?.()).resolves.toBeUndefined();
+  });
+
   it("records the exchange on the wire, where the inspector can read it", async () => {
     const before = log.since(0).next;
     await northwind().respond([sampleClaim()]);

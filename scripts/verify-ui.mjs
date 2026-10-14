@@ -409,10 +409,44 @@ try {
 
   check("announcement names the breach", announced.includes("missed the delivery window"), true);
   check("announcement has no digits", /[0-9]/.test(announced), false);
+  // This count is the double-announce detector, so it is worth saying so: the brain's
+  // `polling` guard exists because two overlapping polls both see the same event as
+  // unannounced and send it twice, and a duplicate would push this past three.
+  const proactiveFrames = await page.locator(".inspector__line--proactive").count();
+  check("inspector shows the commitment event", proactiveFrames, 3);
+
+  /**
+   * Cross the moment again, and again, and make sure nothing is said twice.
+   *
+   * Every scrub forces a poll on top of the 1500 ms timer, so this drives the path the
+   * `polling` guard protects. Each hop goes through `scrubTo`, which waits for the clock
+   * the server echoed back — fighting the scrubber's own debounce with raw `fill` calls
+   * just disables the control mid-drag.
+   *
+   * The property is **one announcement per crossing**, not a frozen count.
+   *
+   * Scrubbing back before the breach genuinely un-announces it: the commitments endpoint
+   * is a projection of the ledger rather than a queue, so an event that is no longer due
+   * leaves `announced` and will be said again when the household crosses the moment once
+   * more (readme §8.4). Re-announcing is correct. Announcing *twice for one crossing* is
+   * the bug the `polling` guard prevents, and two overlapping polls would show up here as
+   * two frames for a single hop.
+   *
+   * So: two forward crossings must add exactly two frames. My first version of this check
+   * asserted the count never moved, which was wrong about the product rather than about
+   * the code — the gate said 5 and the gate was right.
+   */
+  const breachAt = weekStart + 6 * 24 * HOUR + 19.5 * HOUR;
+  const crossings = 2;
+  for (let i = 0; i < crossings; i += 1) {
+    await scrubTo(breachAt - 2 * HOUR);
+    await scrubTo(breachAt);
+  }
+  await page.waitForTimeout(2000);
   check(
-    "inspector shows the commitment event",
+    "each crossing of the breach announces exactly once",
     await page.locator(".inspector__line--proactive").count(),
-    3,
+    proactiveFrames + crossings,
   );
 
   // --- the hero interaction: say yes, and watch it settle -----------------

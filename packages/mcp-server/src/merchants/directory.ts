@@ -14,4 +14,12 @@ export interface StatedRemedy {
  */
 export interface MerchantDirectory {
   respondentFor(merchant: string, remedy: StatedRemedy): Respondent | undefined;
+  /**
+   * Release whatever the directory is holding.
+   *
+   * Optional because the in-process implementation holds nothing — it answers from
+   * objects in this process and has nothing to hang up. The HTTP one keeps a live MCP
+   * client per merchant, and `shutdown()` used to leave every one of them open.
+   */
+  close?(): Promise<void>;
 }

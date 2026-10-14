@@ -85,12 +85,57 @@ export function httpMerchants({ baseUrl, log }: HttpMerchantsOptions): MerchantD
     return created;
   }
 
-  /** Forget a session so the next claim reconnects. */
+  /**
+   * Forget a session so the next claim reconnects — and close the one being dropped.
+   *
+   * The close was missing. `forget` runs on every failed negotiation round, so each one
+   * abandoned a live `Client` and its `StreamableHTTPClientTransport`, with nothing to
+   * abort an in-flight request or close a stream it still held.
+   *
+   * Not a file-descriptor leak, which is worth saying plainly because it would be the
+   * easy thing to claim: sockets here belong to the runtime's global connection pool, and
+   * measuring `server.getConnections()` across a negotiation and a close shows the same
+   * count either way. What leaked is the client and whatever it was still waiting on.
+   *
+   * Nothing on these clients is wired to `onclose`, so unlike the brain's session there is
+   * no handler to detach first.
+   */
   function forget(merchant: string): void {
+    const dropped = clients.get(merchant);
     clients.delete(merchant);
+    // A close that fails is not news: the usual reason to be here is that the merchant
+    // already went away.
+    void dropped?.then((client) => client.close()).catch(() => {});
   }
 
   return {
+    /**
+     * Close every merchant session on the way out.
+     *
+     * `shutdown()` closed the HTTP listener and the ledger and left these open, which is
+     * why `readme.md` could say "all three services close their listeners and the store"
+     * and be exactly, narrowly true.
+     *
+     * The map is cleared, so the directory is still usable afterwards rather than left
+     * holding closed clients — a shutdown that raced an in-flight claim would otherwise
+     * leave every later claim talking to a dead session. `http.test.ts` pins that, and
+     * that this is safe to call twice, and on a directory that never connected to
+     * anything.
+     */
+    async close(): Promise<void> {
+      const open = [...clients.values()];
+      clients.clear();
+      await Promise.all(
+        open.map((client) =>
+          client
+            .then((c) => c.close())
+            .catch(() => {
+              // Teardown reports nothing: a merchant that has already gone is the common case.
+            }),
+        ),
+      );
+    },
+
     respondentFor(merchant: string): Respondent {
       return {
         name: merchant,

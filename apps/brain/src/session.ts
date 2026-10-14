@@ -100,12 +100,63 @@ export function openSession(options: SessionOptions): SessionHandle {
     renewTimer = undefined;
   }
 
+  /**
+   * Let go of a session, handlers first.
+   *
+   * The detach is not tidiness. `establish` points the client's `onclose` at
+   * `invalidate`, so closing a session we have already replaced makes the *old*
+   * transport's close event invalidate the *new* session a moment after it was built —
+   * a self-inflicted outage roughly 48 minutes into a demo.
+   *
+   * Until now that could not happen, because nothing ever closed a replaced client.
+   * Which is precisely why one leaked on every renewal and every error.
+   */
+  function discard(closing: Promise<Client>): void {
+    void closing
+      .then((client) => {
+        // Replaced rather than deleted: `exactOptionalPropertyTypes` will not take
+        // `undefined` here, and a no-op detaches just as well.
+        client.onclose = () => {};
+        client.onerror = () => {};
+        return client.close();
+      })
+      // A close that fails during teardown must not mask whatever started it.
+      .catch(() => {});
+  }
+
   function invalidate(reason: string): void {
     if (session === undefined) return;
+    const closing = session;
     session = undefined;
     clearRenew();
+    discard(closing);
     process.stderr.write(`owed brain: session lost (${reason})\n`);
     announce("lost", reason);
+  }
+
+  /**
+   * Replace the session before its token expires, without telling the household anything
+   * is wrong.
+   *
+   * The timer used to call `invalidate("token nearing expiry")`, which announces `"lost"`
+   * — and the home renders that as **"add-on unreachable"** in red. Nothing re-links
+   * except `call()` or `ready()`, and neither the commitment poll nor the recourse drain
+   * uses the MCP session, so an idle demo sat there claiming the add-on was unreachable
+   * over a perfectly healthy server until somebody spoke to it. With a 3600s token and
+   * `RENEW_AT` that is 48 minutes in — an unattended judging window.
+   *
+   * A scheduled renewal is not a loss, so it announces `"linking"` and re-links at once.
+   * `onclose` and `onerror` still go through `invalidate`, because those are real.
+   */
+  function renew(): void {
+    if (stopped || session === undefined) return;
+    const closing = session;
+    session = undefined;
+    clearRenew();
+    discard(closing);
+    process.stderr.write("owed brain: renewing the session before the token expires\n");
+    // Eagerly, so the status returns to live without waiting for an utterance.
+    void ensure().catch(() => {});
   }
 
   async function establish(): Promise<Client> {
@@ -118,10 +169,7 @@ export function openSession(options: SessionOptions): SessionHandle {
     if (expiresInSeconds !== undefined && expiresInSeconds > 0) {
       clearRenew();
       // Unref'd: a pending renewal must never be the reason the process stays alive.
-      renewTimer = setTimeout(
-        () => invalidate("token nearing expiry"),
-        Math.max(1, Math.floor(expiresInSeconds * RENEW_AT)) * 1000,
-      );
+      renewTimer = setTimeout(renew, Math.max(1, Math.floor(expiresInSeconds * RENEW_AT)) * 1000);
       renewTimer.unref?.();
     }
 
@@ -187,7 +235,7 @@ export function openSession(options: SessionOptions): SessionHandle {
       clearRenew();
       const closing = session;
       session = undefined;
-      void closing?.then((client) => client.close()).catch(() => {});
+      if (closing !== undefined) discard(closing);
     },
   };
 }

@@ -215,8 +215,34 @@ for unit in "$REPO_DIR"/deploy/owed-*.service "$REPO_DIR/deploy/caddy.service"; 
 		echo "    node is at: $(command -v node || echo 'not found')" >&2
 		exit 1
 	fi
+
+	# And the script it hands that interpreter.
+	#
+	# Checking only a[1] meant `ExecStart=/usr/local/bin/node .../dist/main.js` passed on
+	# the strength of node existing, while the thing it was told to run was absent. That is
+	# not hypothetical: when `tsc -b` and Vite both wrote to `dist`, the build replaced the
+	# server's entry point — and this check said every binary resolved, then the unit
+	# restart-looped with 'Cannot find module' buried in journalctl.
+	script=$(awk -F'=' '/^ExecStart=/ {split($2, a, " "); print a[2]; exit}' "$unit")
+	case "$script" in
+		"" | -*) ;;
+		/*)
+			if [ ! -f "$script" ]; then
+				echo "    FATAL: $(basename "$unit") runs '${script}', which does not exist." >&2
+				exit 1
+			fi
+			;;
+		*)
+			# Relative to WorkingDirectory, which every owed unit sets to $REPO_DIR.
+			if [ ! -f "$REPO_DIR/$script" ]; then
+				echo "    FATAL: $(basename "$unit") runs '${script}', missing from $REPO_DIR." >&2
+				echo "    Did 'pnpm build' produce it? Check that nothing else writes to dist/." >&2
+				exit 1
+			fi
+			;;
+	esac
 done
-echo "    every ExecStart binary resolves"
+echo "    every ExecStart binary and script resolves"
 
 install -m 0644 "$REPO_DIR"/deploy/owed-*.service /etc/systemd/system/
 systemctl daemon-reload

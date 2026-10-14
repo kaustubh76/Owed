@@ -12,6 +12,13 @@ User=caddy
 Group=caddy
 ExecStart=/usr/local/bin/caddy run --environ --config /etc/caddy/Caddyfile
 ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile --force
+# This unit had no restart policy at all, which is the worst place in the deployment to
+# lack one: Caddy is the *only* public listener, so if it died the box went dark for good
+# while the three services behind it restarted forever in a loop nobody could reach. The
+# upstream unit this is modelled on carries `on-abnormal`, and so does this now — not
+# `always`, because a clean exit here means a deliberate stop.
+Restart=on-abnormal
+RestartSec=2s
 TimeoutStopSec=5s
 LimitNOFILE=1048576
 PrivateTmp=true

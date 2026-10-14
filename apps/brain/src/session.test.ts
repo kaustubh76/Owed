@@ -12,12 +12,25 @@ import { type Established, openSession, RENEW_AT, type SessionStatus } from "./s
  * fake establishment step: fast, deterministic, and no credentials.
  */
 
-/** Minimal stand-in. The manager only ever assigns `onclose`/`onerror` and calls `close`. */
+/**
+ * Minimal stand-in. The manager only ever assigns `onclose`/`onerror` and calls `close`.
+ *
+ * `close()` fires `onclose`, because the real one does: the SDK's `Protocol.close()` closes
+ * the transport, and a transport's `close()` invokes `onclose`, which `Client` forwards.
+ * This double used to just set a flag — and that unfaithfulness hid a live hazard, because
+ * `establish` points `onclose` at `invalidate`. Closing a session we had already replaced
+ * would therefore have invalidated its *replacement*, and a test with an inert `close()`
+ * reported no such thing. Deleting the handler detach in `discard` must fail a test here;
+ * with a flag-only fake it did not.
+ */
 function fakeClient(): Client & { closed: boolean } {
   const client = {
     closed: false,
+    onclose: undefined as (() => void) | undefined,
+    onerror: undefined as ((error: Error) => void) | undefined,
     close() {
       client.closed = true;
+      client.onclose?.();
       return Promise.resolve();
     },
   };
@@ -208,17 +221,37 @@ describe("token expiry", () => {
    *
    * A one-second lifetime renews at 0.8s, so this is a real timer rather than a mocked one.
    */
-  it("drops the session before the token expires", async () => {
+  it("renews before the token expires without ever reporting a loss", async () => {
     const { h, connect } = harness({ expiresInSeconds: 1 });
     const session = open(connect, h);
     await session.ready();
 
     expect(h.statuses).toEqual(["linking", "live"]);
-    await new Promise((resolve) => setTimeout(resolve, RENEW_AT * 1000 + 250));
+    await new Promise((resolve) => setTimeout(resolve, RENEW_AT * 1000 + 350));
 
-    expect(h.statuses).toEqual(["linking", "live", "lost"]);
+    // A scheduled renewal is not a loss. It used to announce "lost", which the home
+    // renders as "add-on unreachable" in red — so an idle demo accused a healthy server
+    // of being unreachable 48 minutes in, and only an utterance cleared it. This test's
+    // own comment already claimed "the household never sees it"; now that is true.
+    expect(h.statuses).toEqual(["linking", "live", "linking", "live"]);
 
-    // And the next call transparently re-links, so the household never sees it.
+    // Re-linked eagerly, so it is already live rather than waiting to be asked.
+    expect(h.connects).toBe(2);
+
+    /**
+     * The replaced client is released, and the live one is not.
+     *
+     * Both halves matter. Nothing used to close a replaced client, so every renewal and
+     * every error abandoned one. And closing it naively is worse than the leak: the
+     * client's `onclose` is pointed at `invalidate`, so the old transport's close event
+     * would tear down the session that had *just* been built — which the status list
+     * above would show as a trailing "lost". Handlers are detached before the close for
+     * exactly that reason.
+     */
+    expect(h.clients[0]?.closed).toBe(true);
+    expect(h.clients[1]?.closed).toBe(false);
+
+    // And still usable, on the new session rather than a third one.
     await session.call(() => Promise.resolve("ok"));
     expect(h.connects).toBe(2);
     session.stop();

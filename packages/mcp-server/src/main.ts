@@ -231,8 +231,15 @@ const http = createOwedApp({
 function shutdown(signal: string): void {
   process.stdout.write(`owed server: ${signal}, closing\n`);
   http.close(() => {
-    if ("close" in store && typeof store.close === "function") store.close();
-    process.exit(0);
+    void (async () => {
+      // The merchant sessions too. This used to close the listener and the ledger and
+      // leave a live MCP client per merchant open — which is how the README could say
+      // "all three services close their listeners and the store" and be narrowly,
+      // exactly true.
+      await merchants.close?.().catch(() => {});
+      if ("close" in store && typeof store.close === "function") store.close();
+      process.exit(0);
+    })();
   });
   // Do not hang forever on a connection that will not drain.
   setTimeout(() => process.exit(0), 5000).unref();
