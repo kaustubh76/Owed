@@ -1,6 +1,12 @@
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { inputRequired, inputResponse, type McpServer } from "@modelcontextprotocol/server";
-import { fileClaim, type RemedyBounds, remedyContextFor } from "@owed/core";
+import {
+  fileClaim,
+  merchantPriors,
+  priorKey,
+  type RemedyBounds,
+  remedyContextFor,
+} from "@owed/core";
 import {
   type ClaimView,
   ClaimViewSchema,
@@ -248,6 +254,23 @@ async function handleClaimFile(
     };
   }
 
+  /**
+   * What the ledger already knows about arguing with this merchant about this.
+   *
+   * The projection, the structural type the negotiator accepts, and the comment saying
+   * one satisfies the other all existed; nothing joined them, so every claim the shipped
+   * add-on filed was a cold one no matter how much history the household had. This is the
+   * join.
+   *
+   * It stays silent until `MIN_OBSERVATIONS` tries, because you cannot learn that a
+   * merchant punishes negotiation without negotiating with them — so on the seeded week,
+   * where no `(merchant, kind)` pair has more than two concluded claims, this changes
+   * nothing. It starts mattering on the third encounter, which is the point.
+   */
+  const experience = merchantPriors(context.state).get(
+    priorKey(view.promise.merchant, assessment.kind),
+  );
+
   const filed = await fileClaim({
     householdId: deps.householdId,
     claimId: proposed.claim_id,
@@ -256,6 +279,7 @@ async function handleClaimFile(
     evidence: view.evidence,
     bounds,
     respondent,
+    ...(experience === undefined ? {} : { experience }),
     proposedAt: context.now,
     filedAt: context.now,
     confirmedBy: "household",

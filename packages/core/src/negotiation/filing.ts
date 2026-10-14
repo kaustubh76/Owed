@@ -10,7 +10,7 @@ import {
 import { type Respondent, runSession, type SessionResult } from "@owed/recourse-protocol";
 import type { IdGen } from "../time/determinism.js";
 import { buildClaim } from "./claim.js";
-import { createNegotiator, type RemedyBounds } from "./negotiator.js";
+import { type CounterExperience, createNegotiator, type RemedyBounds } from "./negotiator.js";
 
 /** A minute between messages unless the caller knows better. */
 export const DEFAULT_REPLY_INTERVAL_MS = 60_000;
@@ -32,6 +32,16 @@ export interface FileClaimInput {
   /** Negotiations take time; spacing messages is what lets a replay catch one mid-flight. */
   replyIntervalMs?: number;
   maxRounds?: number;
+  /**
+   * What this household has learned about arguing with this merchant about this kind of
+   * broken promise. Absent means a cold start.
+   *
+   * `merchantPriors` produces exactly this from the ledger, and `MerchantPrior`
+   * structurally satisfies `CounterExperience`, so a prior passes straight through with
+   * no adapter. The negotiator has always accepted it; nothing used to supply it, which
+   * made every filed claim a cold one however much the ledger already knew.
+   */
+  experience?: CounterExperience;
   route?: ClaimRoute;
   /** When the credit was actually observed. Absent means it has not arrived. */
   recoveredAt?: Instant;
@@ -85,6 +95,7 @@ export async function fileClaim(input: FileClaimInput): Promise<FileClaimResult>
       ...(input.coverageStatement === undefined
         ? {}
         : { coverageStatement: input.coverageStatement }),
+      ...(input.experience === undefined ? {} : { experience: input.experience }),
     }),
     open: () => claim,
   };
