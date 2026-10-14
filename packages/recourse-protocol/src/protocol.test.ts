@@ -3,9 +3,11 @@ import { checkMerchantConformance, sampleClaim } from "./conformance.js";
 import {
   type ClaimMessage,
   countRounds,
+  isTerminal,
   type Money,
   type RecourseMessage,
   type RespondentMessage,
+  TERMINAL_MESSAGE_TYPES,
 } from "./messages.js";
 import { recourseJsonSchema } from "./schema.js";
 import {
@@ -72,6 +74,42 @@ const counterOnce = (amount: Money) =>
         }
       : { type: "ACCEPT" },
   );
+
+describe("the protocol's terminal messages and the loop that honours them", () => {
+  /**
+   * `TERMINAL_MESSAGE_TYPES` declares which replies end an exchange. `runSession`
+   * hardcoded the same two in separate branches, and nothing tied the two facts together
+   * — so a third terminal type added to the protocol would have left the loop arguing
+   * with a merchant who had already finished, and every other check in the session would
+   * still have passed.
+   *
+   * The session now guards that with `isTerminal`. This is the other half: proof that
+   * every declared terminal type is actually one the loop stops for.
+   */
+  it("stops for every message type it calls terminal", async () => {
+    const endings: Record<string, () => RespondentMessage> = {
+      SETTLE: () => settle(usd(12)),
+      DECLINE: () => decline(),
+    };
+
+    // The assertion that makes this test keep working: adding a terminal type to the
+    // protocol without covering it here fails immediately, rather than quietly leaving
+    // the new type untested.
+    expect(Object.keys(endings).sort()).toStrictEqual([...TERMINAL_MESSAGE_TYPES].sort());
+
+    for (const type of TERMINAL_MESSAGE_TYPES) {
+      const build = endings[type];
+      if (build === undefined) throw new Error(`no ending built for ${type}`);
+
+      const result = await runSession(alwaysAccept, respondent("ends it", [build()]));
+      const last = result.transcript.at(-1);
+
+      expect(last?.type, `${type} should be the last message`).toBe(type);
+      expect(isTerminal(last as RecourseMessage), `${type} should be terminal`).toBe(true);
+      expect(["settled", "escalated"]).toContain(result.outcome);
+    }
+  });
+});
 
 describe("runSession", () => {
   it("settles when the claimant accepts the offer", async () => {

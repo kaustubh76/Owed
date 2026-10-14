@@ -2,6 +2,7 @@ import {
   type ClaimMessage,
   countRounds,
   isRespondentMessage,
+  isTerminal,
   type Justification,
   type Money,
   type OfferMessage,
@@ -120,6 +121,24 @@ export async function runSession(
     if (reply.type === "SETTLE") return finish("settled", "the merchant settled", reply.amount);
     if (reply.type === "DECLINE") {
       return finish("escalated", `declined: ${reply.reason}`);
+    }
+
+    /**
+     * The two branches above are the terminal message types, and this is what keeps them
+     * honest.
+     *
+     * `TERMINAL_MESSAGE_TYPES` declares which messages end an exchange and `isTerminal`
+     * reads it; the loop hardcodes the same two and nothing connected the two facts, so a
+     * third terminal type added to the protocol would have left this loop arguing with a
+     * merchant who had already finished — silently, because every other check here passes.
+     *
+     * Reaching this line with a terminal reply is a bug in the protocol's own
+     * exhaustiveness rather than bad input, which is why it throws rather than finishing.
+     */
+    if (isTerminal(reply)) {
+      throw new ProtocolViolation(
+        `${reply.type} ends an exchange but this session did not stop for it`,
+      );
     }
 
     const decision = await claimant.react(transcript);
