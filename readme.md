@@ -479,13 +479,16 @@ owed/
 │  ├─ conformance.mjs       # the published-requirements check
 │  ├─ verify-ui.mjs         # drives the whole storyboard in a real browser
 │  ├─ verify-deploy.mjs     # the units, the Caddyfile and the shell, checked like code
+│  ├─ verify-docs.mjs       # entry counts, citations by number, and every relative link
+│  ├─ verify-graph.mjs      # every cross-package import declared *and* referenced
 │  ├─ capture-demo.mjs      # records the storyboard to docs/demo-capture.json
 │  └─ aws-smoke.mjs         # proves the ledger against real DynamoDB, in a named account
 ├─ deploy/                  # one box: Caddyfile, four systemd units, bootstrap, IAM policy
 ├─ docs/
 │  ├─ contract-v1.md        # the frozen v1 contract, with its amendments recorded
 │  ├─ proactive.md          # the one primitive Alexa+ is missing, written as a schema
-│  ├─ friction-log.md       # per-tool friction, fourteen entries
+│  ├─ friction-log.md       # per-tool friction, nineteen entries
+│  ├─ product-feedback.md   # submission requirement (d), per tool and SDK
 │  ├─ demo-script.md        # what to say, and what not to claim, while recording
 │  └─ policies/             # the merchant policy documents the claims are argued from
 ├─ LICENSE                  # Apache-2.0, verbatim
@@ -537,11 +540,13 @@ green) → all four evaluations run and write their results.
 Open http://127.0.0.1:5173 and ask *"Alexa, what am I owed?"*.
 
 ```bash
-pnpm verify         # build + lint + the whole test suite + the conformance probe
-                    # + the deployment gate
+pnpm verify         # the project graph + the documents + build + lint + the whole test
+                    # suite + the conformance probe + the deployment gate
                     # the same sequence .github/workflows/verify.yml runs on every push
 pnpm test           # unit, property, storyboard golden, and tool-contract tests
 pnpm verify:deploy  # the four systemd units, the Caddyfile and the two shell scripts
+pnpm verify:docs    # the friction log's structure, its entry count where it is quoted,
+                    # every citation of it by number, and every relative link
 ```
 
 **The deployment is checked like the code is.** `deploy/` was the one directory with
@@ -779,7 +784,7 @@ rather than in a drawer.
 - [x] Open Source: **the whole repository is public under Apache-2.0** — `LICENSE`, `NOTICE`, and GitHub detecting the licence. Within it, **three** packages are self-contained enough to lift out as they stand: `recourse-protocol` (no workspace dependencies at all), `policy-library` and `merchant-agents`, each Apache-2.0 with `files`, `exports` and a README. `extractor` and `extractor-bedrock` are Apache-2.0 and `files`-ready too, but both depend on `@owed/domain`, which is `private: true`, so **they cannot be lifted out without extracting the domain types first**. An earlier draft claimed all five, and claimed they were published to a registry; neither was true.
 - [x] The repo calls MCP in code — server entry point, `_meta.ui` on every tool, elicitation, `ui://` resources — not just in this README
 - [x] **(d) Product feedback** for every tool, API and SDK used — what it was used for, what worked well, what needs work, how onboarding felt, whether we would build with it again, **and the AWS services described in that same answer**: **[docs/product-feedback.md](docs/product-feedback.md)**. Only tools this repo actually imports or invokes appear in it; where something was written but never executed against the service — Bedrock — it says so.
-- [x] **(g) Friction log**, the optional one: **[docs/friction-log.md](docs/friction-log.md)**, fourteen entries, each with the task, what was expected, what happened, severity, the workaround and what would have prevented it. An earlier draft of this README offered this file as the answer to (d) as well. It was not: it is the right shape for (g) and the wrong shape for (d), and it mentioned no AWS service at all.
+- [x] **(g) Friction log**, the optional one: **[docs/friction-log.md](docs/friction-log.md)**, nineteen entries, each with the task, what was expected, what happened, severity, the workaround and what would have prevented it. An earlier draft of this README offered this file as the answer to (d) as well. It was not: it is the right shape for (g) and the wrong shape for (d), and it mentioned no AWS service at all.
 - [x] Built entirely inside the submission window — first commit 2026-09-28, nothing pre-existing to declare
 - [x] Feature request, written as a schema rather than a paragraph: **[docs/proactive.md](docs/proactive.md)** — `CommitmentEvent` and the proactive channel Alexa+ add-ons do not have
 - [x] Real-vs-simulated map (§13), and the statement that **none of this has run against the real Alexa+ client** because it is partner-gated

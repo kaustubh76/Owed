@@ -60,6 +60,11 @@ jobs:
       # It cost three green runs and one red one to notice.
       - run: pnpm verify:graph
 
+      # The documents, which nothing read until now. Entry numbers in the friction log are
+      # cited from two other files, so renumbering one breaks a reference that looks fine
+      # in every diff. Structure only — whether any of it is true is still a person's job.
+      - run: pnpm verify:docs
+
       # Views must be built before the server can serve them, and before the
       # contract test can read one back over the wire.
       - run: pnpm build

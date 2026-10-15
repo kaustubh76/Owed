@@ -18,7 +18,7 @@ integration is written and tested either side of the model call, and the model c
 never executed. That is stated in its own section rather than buried.
 
 The sharper, reproduction-shaped version of the defects below is
-**[friction-log.md](friction-log.md)** — fourteen entries, each with the task, what was
+**[friction-log.md](friction-log.md)** — nineteen entries, each with the task, what was
 expected, what happened, severity, the workaround, and what would have prevented it. This
 document is the wider judgement: what each tool was *for*, and whether we would choose it
 again.
@@ -182,9 +182,17 @@ access, a bad model id and malformed credentials, fails identically on every att
 retrying it only delays the error.
 
 **This has never executed against the service.** We do not have model access on this account.
-The prompt construction and the response parsing are unit-tested, the retry predicate is
-tested, and the boundary — the `ConverseCommand` itself — is not. We are not claiming a
-working Bedrock integration, and the README's real-vs-simulated map says the same.
+We are not claiming a working Bedrock integration, and the README's real-vs-simulated map
+says the same.
+
+What *is* tested is more than this section used to claim, and the claim has been corrected
+rather than left: the prompt construction, the response parsing and the retry predicate are
+unit-tested, and so is the boundary. `bedrock.test.ts` points a real `BedrockRuntimeClient`
+at a local server that speaks Converse over h2c — so what reaches the wire, how the envelope
+is read back, and which failures are retried are all asserted, including on a
+`ThrottlingException` the SDK deserialised itself from a 429. **No model has run**, and that
+is the part that matters: none of it says anything about whether a model's answers would be
+any good.
 
 **Feedback we can honestly give, which is about getting to the API rather than using it.** The
 Converse API is the right abstraction: one request shape across model families means the
@@ -196,6 +204,21 @@ credentials resolve, and the first thing that tells you access was never granted
 error on the first call. A check in the console's getting-started path — or a clearer named
 error distinguishing "not enabled for this account" from "model not found" — would have moved
 this discovery to the beginning of the work instead of the end.
+
+*The client speaks HTTP/2, and nothing says so where it would help.* Pointing it at a local
+`node:http` server to test the adapter offline fails with `ERR_HTTP2_ERROR: Protocol error`
+before the request handler is reached, and the error names a transport fault rather than a
+protocol mismatch. `node:http2` is the answer; finding that out cost an afternoon of
+suspecting the port, the host, the credentials and the region in turn. One sentence beside
+`endpoint` about which services default to the HTTP/2 handler would have covered it.
+
+*`maxAttempts` composes multiplicatively with a retry loop above it.* The default of three
+is not visible from code that reads as though it owns the retrying. Measured against a
+server that throttles everything, one `send()` reached the wire three times over 849 ms —
+which made our own adapter's documented "zero disables retrying" false, and turned its
+default of four retries into up to fifteen requests with two compounding backoffs. See
+friction-log §17. This is a different complaint from the knob-discoverability one above: the
+knob was findable, its composition was not.
 
 **Would we build with it again.** The design, yes, and we would keep the port so the
 deterministic extractor stays the default. Next time we would request model access on day one,
@@ -446,17 +469,18 @@ have import sites or are invoked by `pnpm verify`.
 |---|---|---|---|
 | **zod 4** | Every schema in the project — domain types, tool inputs and outputs, policy definitions. Declared in ten packages. | The one dependency we would call load-bearing. `.transform()` interacting badly with JSON Schema generation (above) is an MCP-side problem, but it is the only time zod surprised us. | Yes |
 | **Node 26** | Runtime for all three services. `node:sqlite` is the second `EventStore` adapter, so persistence needs no native module and no dependency. | `node:sqlite` is a genuinely significant addition — an append-only store that survives restart, with nothing in `package.json`. Needs work: `corepack` removal breaks existing bootstrap scripts silently (above), and `fetch` silently drops a forbidden `Host` header, which made one of our security tests pass vacuously until we rewrote it on `node:http`. | Yes |
-| **TypeScript 7** | Project references across every workspace member, `strict` everywhere. | Build-mode references keep the package graph honest — a missing dependency is a compile error, which is how we know the port boundaries hold. Needs work: `tsc -b` and Vite both defaulting to `dist` let two tools fight over one directory, which replaced our deployed site with ES modules and no `index.html`. Not TypeScript's fault, but a louder default would have helped. | Yes |
+| **TypeScript 7** | Project references across every workspace member, `strict` everywhere. | `strict` plus `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess` caught things vitest could not — a green test run is not a compile, twice this month. Needs work, and the sharper of the two is that build-mode references do **not** keep the graph honest the way we assumed: an import with no `references` entry resolves through the workspace symlink to the other package's `dist`, and TS 7 builds unrelated projects concurrently, so it fails only when that package loses the race. Three green pushes then one red one, same code (friction-log §15). Separately, `tsc -b` and Vite both defaulting to `dist` let two tools fight over one directory and replaced our deployed site with ES modules and no `index.html`. | Yes |
 | **Vitest 5** | The whole suite: unit, property, contract-over-HTTP, and a storyboard golden test. | Fast, and the worker-per-file default is correct until the host is under load. Needs work: no built-in way to cap workers relative to machine state; we pinned `maxWorkers` by hand after a run drove the load average into the hundreds. | Yes |
 | **fast-check 4** | Property tests over ledger replay and the coverage engine. | Shrinking found an ordering bug a hand-written case would not have. Nothing to criticise. | Yes |
 | **Express 5** | The HTTP surface the MCP transport, OAuth endpoints and discovery documents share. | Stable and unremarkable, which is the compliment. Needs work: async error handling still requires an explicit error middleware to avoid an unhandled rejection taking the process down — we lost a running server to exactly that. | Yes |
 | **`jose` 6** | HS256 token signing and verification for the authorization server; the household identity is the token's `sub`. | Correct, modern, no surprises, and the API makes the safe thing the easy thing. | Yes |
 | **React 19 + Vite 8** | The simulated home, and the three `ui://` views built as single files via `vite-plugin-singlefile`. | Single-file output is exactly right for a view that must be one resource. Needs work: `VITE_*` variables are inlined at build time, so a site built without `VITE_BRAIN_URL` told every visitor to connect to their own localhost — a build-time/deploy-time mismatch with no runtime warning. | Yes |
 | **Playwright** | `pnpm verify:ui` drives the whole storyboard in a real browser, including the voice-only Echo Dot path. | The only way to assert that a spoken line still makes sense when the card is removed. Needs work: `channel: "chrome"` requires a Chrome install that is not a declared prerequisite anywhere — including, until now, in our own README. | Yes |
-| **Biome 2** | Lint and format, one tool, in `pnpm verify`. | Fast enough to be unnoticeable and replaced two tools. No complaints. | Yes |
+| **Biome 2** | Lint and format, one tool, in `pnpm verify`. | Fast enough to be unnoticeable and replaced two tools. One default worth questioning: `files.includes` covered no `.mjs`, so 1,662 lines sat outside the linter — including `verify-ui.mjs`, the browser gate the whole demo is asserted by. Adding `**/*.mjs` found a real defect in the gate on the first run. A tool that lints what you point it at is defensible; a tool whose default quietly excludes a whole extension is how you end up with an unchecked 575-line file you believed was checked. 2,145 lines covered now. | Yes |
 | **pnpm** | The workspace — nine packages, two apps and the eval harness, linked with `workspace:*`. | Strict resolution is why the `@modelcontextprotocol/client` misplacement described in our own notes was findable at all — a flat installer would have hidden it. Needs work: nothing. | Yes |
-| **Caddy 2** | TLS and the entire public surface of the deployment. | Automatic certificates and a config file short enough to review in one screen. Needs work, and this one was expensive: `health_uri` sends `Host: <upstream-address>`, which our DNS-rebinding protection answers with 403, so Caddy pulled the only upstream and served a bare 503 for all MCP traffic — a healthy server taken off the air by its own monitoring. The health checker should send the configured upstream hostname, or document that it does not. | Yes |
-| **systemd** | Three units, one process each, so a crash is visible and restartable. | Restart policy and resource limits for free. Needs work: `systemd-analyze verify` exiting 0 on a directive in the wrong section (above). A verifier that warns and passes is a verifier you stop reading. | Yes |
+| **Caddy 2** | TLS and the entire public surface of the deployment. | Automatic certificates, a config file short enough to review in one screen, and `caddy validate` adapts and builds the whole config rather than checking syntax — the only thing that reads those 150 lines, now in CI. Needs work, and this one was expensive: `health_uri` sends `Host: <upstream-address>`, which our DNS-rebinding protection answers with 403, so Caddy pulled the only upstream and served a bare 503 for all MCP traffic — a healthy server taken off the air by its own monitoring. The health checker should send the configured upstream hostname, or document that it does not. | Yes |
+| **shellcheck** | Both deployment shell scripts, in CI via `scripts/verify-deploy.mjs`. | Clean at every severity across 400 lines on the first run, which is the most useful thing a linter can say — it meant the two defects we did find in `deploy/` were logic, not shell. Nothing to report, which is why it is here: the scripts had no automated reader at all until this was added. | Yes |
+| **systemd** | Four units, one process each, so a crash is visible and restartable; validated in CI by `systemd-analyze verify`. | Restart policy and resource limits for free. Needs work, both halves of the same thing: `systemd-analyze verify` exits 0 on a directive in the wrong section (above) *and* on one it cannot parse at all, while exiting 1 for an `ExecStart` binary that is simply absent — which is every unit of ours on any machine that is not the deployment target. So the exit code fails where nothing is wrong and passes where something is, and everything it has to say goes to stderr (friction-log §19). A verifier that warns and passes is a verifier you stop reading. | Yes |
 | **GitHub Actions** | `pnpm verify` plus the conformance check on every push, with DynamoDB Local as a service container. | Service containers made the ledger adapter testable in CI, which it previously was not. Needs work: a service with no usable `--health-cmd` — DynamoDB Local answers HTTP 400 to a bare `GET` — forces the polling into the test file, where it is easy to turn into a silent skip. We set `OWED_REQUIRE_DYNAMO` to make that skip impossible. | Yes |
 
 ---

@@ -6,9 +6,14 @@ what would have prevented it.
 
 Tools covered: MCP TypeScript SDK v2 (`@modelcontextprotocol/client|server|node|express`),
 `@modelcontextprotocol/ext-apps`, `mcp-voice-simulator`'s conformance CLI, and the published
-Alexa+ add-on documentation. `@modelcontextprotocol/core` is **not** covered: it is declared
-as a dependency in three packages and imported in none, so there is nothing here we actually
-learned about it.
+Alexa+ add-on documentation — entries 1–14. Then the toolchain and the deployment, which
+cost just as much time and had nothing written down about them: TypeScript 7,
+`@aws-sdk/client-bedrock-runtime`, npm, and systemd — entries 15–19.
+`@modelcontextprotocol/core` is **not** covered: it is declared as a dependency in three
+packages and imported in none, so there is nothing here we actually learned about it.
+
+Entries are numbered in the order they were hit and **never renumbered**, because
+`readme.md` and `docs/contract-v1.md` both cite them by number.
 
 This file is the friction log — the things that cost time, and what would have prevented
 them. It is not the product feedback: for what each tool was used for, what worked well, how
@@ -396,3 +401,134 @@ are easy to leave out and expensive to add later:
 
 The schema, the rules a scheduler should keep, and a working implementation behind all of
 it: **docs/proactive.md**.
+
+---
+
+## 15. `tsc -b` builds independent project references concurrently, so a missing one fails only sometimes
+
+**Tool:** TypeScript 7 · **Severity: high**
+
+**Task.** Build a pnpm workspace of twelve composite projects with `tsc -b`, where
+`packages/mcp-server` imports `@owed/ui-views`.
+
+**Expected.** A cross-package import without a `references` entry is either always an error
+or always fine. Project references exist precisely so the build graph is declared.
+
+**Actual.** It is a race. The import resolves through the workspace symlink to the other
+package's `dist`, so it succeeds whenever that package happened to finish first — and TS 7
+builds projects with no declared dependency between them concurrently. `mcp-server`
+imported `@owed/ui-views` with no reference for four commits: three pushes went green and
+the fourth failed on a clean checkout with `TS2307: Cannot find module '@owed/ui-views'`,
+from a tree that built fine on two other machines, with no change to any file involved.
+Nothing in the output suggests a missing reference; `TS2307` reads as a typo or a bad path.
+
+**Workaround.** Add the reference, then assert the whole graph: a 60-line script checks that
+every `@owed/*` import is both declared in `dependencies` and present in `references`, and
+runs before the build it protects.
+
+**Suggestion.** When a resolved module belongs to a composite project that is not in the
+importer's `references`, say so. The compiler knows both facts at that moment, and the
+diagnostic would have turned a three-day intermittent into a one-line fix.
+
+---
+
+## 16. The Bedrock Runtime client speaks HTTP/2, so a `node:http` test double fails before any assertion
+
+**Tool:** `@aws-sdk/client-bedrock-runtime` · **Severity: medium**
+
+**Task.** Test the Converse adapter offline by pointing a real `BedrockRuntimeClient` at a
+local server, the way DynamoDB Local lets the storage adapter be tested without AWS.
+
+**Expected.** `endpoint` accepts an `http://` URL, so an `http.createServer()` double on
+loopback should answer it.
+
+**Actual.** Every request dies with `Error [ERR_HTTP2_ERROR]: Protocol error` from
+`node:internal/http2`, before the handler is ever reached. The client uses an HTTP/2 handler
+for this service and speaks h2c to a plaintext endpoint. Nothing in the error names HTTP/2
+as the cause — it surfaces as a transport failure that reads like a closed socket, and the
+obvious next guesses are all wrong: the port, the host, the credentials, the region.
+
+**Workaround.** `node:http2.createServer()` instead, responding on the `stream` event with
+`:status` and the Converse JSON envelope. Once that is right the whole adapter is testable
+offline, including a genuine SDK-deserialised `ThrottlingException` from a 429 plus
+`x-amzn-errortype`.
+
+**Suggestion.** Name the protocol in the error, or document which services default to the
+HTTP/2 handler. One sentence next to `endpoint` would have saved the afternoon.
+
+---
+
+## 17. `maxAttempts` silently multiplies any retry loop written on top of it
+
+**Tool:** `@aws-sdk/client-bedrock-runtime` · **Severity: medium**
+
+**Task.** Retry Converse calls on throttling and nothing else, with a documented bound, for
+a 160-call evaluation run.
+
+**Expected.** A client constructed as `new BedrockRuntimeClient({})` makes one request per
+`send()`, so a retry policy written around it is the only one in play.
+
+**Actual.** The default is three attempts with its own backoff, underneath yours. Measured
+against a local server that throttles everything: one `send()` reached the wire **three
+times over 849 ms** with the default config and **once** with `maxAttempts: 1`. Our adapter
+documented "Retries on throttling only. Zero disables" — and `maxRetries: 0` sent three
+requests, while the default of four meant five of our attempts times three of the SDK's, up
+to fifteen requests with two compounding backoffs. None of that is visible from the code
+that reads as though it owns the retrying.
+
+**Workaround.** `maxAttempts: 1` on the client the adapter builds for itself, so the policy
+lives in the one place that documents it, and a test that fails if the default returns.
+
+**Suggestion.** This is a default worth surfacing where a retry loop is being written. The
+docs describe `maxAttempts` as a knob; what matters is that it composes multiplicatively
+with anything above it.
+
+---
+
+## 18. `npx <binary>` cannot run a binary whose package has a different name
+
+**Tool:** npm · **Severity: low**
+
+**Task.** Document a one-line command a judge can run to check the server against the
+community conformance CLI.
+
+**Expected.** `npx mcp-voice-simulator-conformance <url>` to work, since that is the name of
+the executable on `PATH` after installing.
+
+**Actual.** `npm error 404 Not Found - GET https://registry.npmjs.org/mcp-voice-simulator-conformance`.
+`npx` resolves a *package* name; that is a *binary* shipped by the `mcp-voice-simulator`
+package, which also ships a differently-named one. The 404 reads as "this tool does not
+exist", which is the wrong conclusion and the one our own README drew — it carried a command
+that cannot run for several weeks.
+
+**Workaround.** `npx -p mcp-voice-simulator mcp-voice-simulator-conformance <url>`, or a
+`package.json` script so nobody has to know.
+
+**Suggestion.** On a 404, check whether the registry has a package providing a binary of
+that name and say so. npm already has the data; the error is one lookup away from being
+actionable.
+
+---
+
+## 19. `systemd-analyze verify` exits 1 for an absent binary and 0 for a directive it cannot parse
+
+**Tool:** systemd · **Severity: medium**
+
+**Task.** Validate four unit files in CI, on a runner that is not the deployment target.
+
+**Expected.** A non-zero exit for anything wrong with a unit, and a zero exit otherwise.
+
+**Actual.** Measured against systemd 255 in a container. A unit whose `ExecStart`
+interpreter is absent exits **1** — which is every unit here on any machine that is not the
+target box, because they name `/usr/local/bin/node`. And `Restart=nonsense-value` exits
+**0**, printing `Failed to parse service restart specifier, ignoring: nonsense-value` to
+stderr. So the exit code fails everywhere for a reason that is not a defect, and passes on a
+directive systemd has already given up on. Everything it says goes to stderr; stdout is
+empty either way. This is the same shape as the misplaced-directive finding in
+`product-feedback.md` — a verifier that warns and passes — with the opposite half attached.
+
+**Workaround.** Ignore the exit code. Filter stderr for the lines that only mean "not the
+target box" — `is not executable`, `Unknown user` — and fail on anything left.
+
+**Suggestion.** Separate "this unit is malformed" from "this host is not where it runs",
+with distinct exit codes. A `--offline` mode that skips executable checks would do it.
