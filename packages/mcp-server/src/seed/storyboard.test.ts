@@ -97,6 +97,28 @@ describe("storyboard week", () => {
     expect(coveragePercent(view?.assessment?.coverage ?? 0)).toBe(20);
   });
 
+  /**
+   * The sentence sent to the merchant has to state the figure the engine measured.
+   *
+   * `storyboard.ts` writes the coverage statement by hand — "Doorbell coverage of the scan
+   * window was 82%, including the moment of the scan." — and nothing compared it to what
+   * `assessPromise` actually computes. The two agree today at 82%, and they agree because
+   * somebody typed the right number, not because anything checked. A claim that quotes a
+   * coverage figure the engine no longer produces is the add-on misrepresenting its own
+   * evidence to the party it is arguing with, which is the one thing this product cannot do.
+   */
+  it("quotes the coverage it measured in the claim it sends", async () => {
+    const state = await stateAt(STORYBOARD_QUERY_AT);
+    const measured = coveragePercent(state.promises.get("prm_002")?.assessment?.coverage ?? 0);
+
+    const claim = state.claims.get("clm_002");
+    const counter = claim?.rounds.find((round) => round.type === "COUNTER");
+    const quoted = counter?.justification?.coverage_statement ?? "";
+
+    expect(quoted, "the counter must carry a coverage statement").not.toBe("");
+    expect(quoted).toContain(`${measured}%`);
+  });
+
   it("only marks money recovered once the credit has been observed", async () => {
     const beforeCredit = await stateAt(at("wed", "09:00"));
     const afterCredit = await stateAt(at("wed", "11:00"));

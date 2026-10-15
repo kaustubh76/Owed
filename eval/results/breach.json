@@ -45,12 +45,12 @@
       "kind": "phantom_delivery",
       "observable_cases": 7,
       "true_positive": 4,
-      "false_positive": 1,
+      "false_positive": 0,
       "false_negative": 0,
-      "precision": 0.8,
+      "precision": 1,
       "recall": 1,
       "kept_cases": 3,
-      "kept_false_positive_rate": 0.3333333333333333,
+      "kept_false_positive_rate": 0,
       "held_back": 3,
       "held_back_cases": 3,
       "kind_agreement": 1
@@ -59,12 +59,12 @@
       "kind": "no_show",
       "observable_cases": 7,
       "true_positive": 3,
-      "false_positive": 1,
+      "false_positive": 0,
       "false_negative": 0,
-      "precision": 0.75,
+      "precision": 1,
       "recall": 1,
       "kept_cases": 4,
-      "kept_false_positive_rate": 0.25,
+      "kept_false_positive_rate": 0,
       "held_back": 3,
       "held_back_cases": 3,
       "kind_agreement": 1
@@ -99,9 +99,9 @@
     }
   ],
   "overall": {
-    "precision": 0.9354838709677419,
+    "precision": 1,
     "recall": 1,
-    "kept_false_positive_rate": 0.08695652173913043,
+    "kept_false_positive_rate": 0,
     "held_back_share": 1
   },
   "mislabelled": [],
@@ -345,7 +345,7 @@
       "target": "phantom_delivery",
       "label": "kept",
       "observable": true,
-      "verdict": "Breached",
+      "verdict": "Kept",
       "detected_kind": "phantom_delivery",
       "coverage": 1
     },
@@ -435,7 +435,7 @@
       "target": "no_show",
       "label": "kept",
       "observable": true,
-      "verdict": "Breached",
+      "verdict": "Kept",
       "detected_kind": "no_show",
       "coverage": 1
     },

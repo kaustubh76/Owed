@@ -260,12 +260,15 @@ Every one is a boundary, and they fall into three groups.
    instant of a price-match window reads as no drop at all. Two cases, opposite directions.
 2. **A partial refund counts as a refund.** Half the money, on time, reads as kept. The
    detector asks whether *something* arrived and never compares it to what was owed.
-3. **Evidence one minute outside the tolerance is discarded entirely.** A parcel placed 31
-   minutes after the scan, and somebody turning up 29 minutes before an appointment slot
-   opened. The detector looks in a ±30 minute window and anything outside it does not exist.
+3. **Two cases around the ±30 minute tolerance.** A parcel placed 31 minutes after the
+   scan, and somebody turning up 29 minutes before an appointment slot opened. Both were
+   read here as the same thing — evidence outside the tolerance being discarded — and
+   **that was wrong about the second one.** See the third stage below: they had different
+   causes, and neither was the parameter.
 
-The first two are plainly wrong and were fixed. The third is a declared parameter rather
-than a defect, and moving it to make a number go up would be marking our own homework.
+The first two were plainly wrong and were fixed immediately. The third was left, because at
+the time it looked like a declared parameter rather than a defect, and moving a threshold to
+make a number go up is marking your own homework.
 
 ### Results — after fixing the two defects
 
@@ -291,20 +294,84 @@ reference to any number:
   Telling somebody their refund arrived when half of it did is the one answer they would
   call a lie.
 
-**H2 is still not met.** Two kinds remain below the 0.9 precision bar and the
-false-positive rate on kept scenarios is 8.7% against a limit of 5%.
+**H2 was still not met at this stage.** Two kinds remained below the 0.9 precision bar and
+the false-positive rate on kept scenarios was 8.7% against a limit of 5%. Both failures were
+false positives on promises the merchant had kept, which is the worst direction for this
+product to be wrong in: the household got what it was promised and Owed would have filed a
+claim saying otherwise.
 
-Both remaining failures are the same thing: **evidence one minute outside the ±30 minute
-tolerance is discarded entirely.** A parcel placed 31 minutes after the scan reads as a
-phantom delivery; somebody turning up 29 minutes before an appointment slot opened reads
-as a no-show. In both cases the household got what they were promised and Owed would file
-a claim saying otherwise.
+This write-up then said the two were *the same thing* — evidence outside the tolerance being
+discarded. **That was true of one of them.** Reading the code case by case, rather than
+trusting the summary, found three defects where it claimed one parameter, and one of them had
+been masking another.
 
-That is a real defect and we are naming it rather than fixing it in the same sitting that
-found it. Fixing it means deciding what a tolerance is *for* — clock skew between a
-carrier and a camera, or the window in which a sighting counts as the same event — and
-that is a design decision, not a threshold to nudge. The ideation's own pivot trigger is
-"H1 or H2 below threshold **after two iterations**". This is the first.
+### Results — after fixing the three detector defects
+
+| kind | precision | recall | kept FPR | held back |
+|---|---|---|---|---|
+| late_eta | 100.0% | 100.0% | 0.0% | — |
+| missed_window | 100.0% | 100.0% | 0.0% | 2/2 |
+| phantom_delivery | **100.0%** | 100.0% | **0.0%** | 3/3 |
+| no_show | **100.0%** | 100.0% | **0.0%** | 3/3 |
+| late_refund | 100.0% | 100.0% | 0.0% | — |
+| price_drop | 100.0% | 100.0% | 0.0% | — |
+| **overall** | **100.0%** | **100.0%** | **0.0%** | **100%** |
+
+**H2 is met.** And because that sentence is worth less than the order it arrived in:
+
+1. The corpus was committed first, in `2fe6ad2`, and **has not been touched since**. A
+   coordinated edit to the generator and the artefact would pass every test in this
+   repository — `corpus.test.ts` defends the file against being edited alone, not the pair
+   against being edited together — so the only thing standing behind "we did not move the
+   goalposts" is the git history, and it is checkable.
+2. **The harness was corrected before the detectors**, in its own commit. It printed
+   "≥ 0.9 precision *per kind*" and tested `overall.precision`, the pooled figure, which was
+   already 93.5% and passing. Had the false positives been fixed first, it would have printed
+   "met" without ever evaluating the per-kind bar it advertised. It now names every kind
+   below the bar, and it was re-run before anything else changed, still NOT met.
+3. **The detectors changed last**, after reading which two cases failed and why.
+
+The **±30 minute tolerance is unchanged**. So is every figure the demo rests on. The three
+corrections are about which question each detector was asking:
+
+- **An arrival is evidence something arrived, wherever it falls.** `phantomDelivery`
+  filtered doorbell sightings to the scan's ±30 minute window, which is the right window for
+  "are these the same event" and the wrong one for "did this parcel ever turn up". A parcel
+  photographed on the doorstep at +31 minutes produced a claim stating the door "recorded
+  nobody arriving", at confidence 1.0, with the photograph one `filter` call upstream. The
+  matching window still distinguishes "the scan is corroborated" from "it arrived, 31 minutes
+  from the scan" — both of which are *kept*.
+- **`no_show` asks whether anybody came. `missed_window` asks whether they came in time.**
+  `no_show` was answering both and getting the second wrong: it widened the slot by the
+  tolerance to look for an arrival, then judged the arrival it found against the un-widened
+  slot. An arrival 29 minutes early produced `Breached` carrying the explanation "Somebody
+  arrived for the appointment." Lateness is `missedWindow`'s question, it applies to
+  appointment slots too, and `assess` already takes the most severe answer — so the fix is
+  for this detector to stop guessing.
+- **A window is missed by being late, not early.** `missedWindow` treated anything not
+  `withinWindow` as broken and computed lateness as `arrival − window.end`, so an early
+  arrival was reported as a breach with a *negative* number of minutes:
+  *"Arrived -149 minutes after the window closed."* This one was masking the `no_show` fix —
+  correcting `no_show` alone would have changed nothing, because `missedWindow` reached
+  `Breached` on the same case and outranks it.
+
+Each is a correctness argument that stands without knowing what it does to a number, which
+is the bar the two earlier fixes were held to. **Recall was already 100% on all six kinds and
+stayed there**, so no precision was bought with a miss. Exactly one case in the sixty has an
+early arrival and it is labelled `kept`; every late arrival is labelled `broken`.
+
+**What this now rests on, stated plainly.** An arrival sighting attached to a promise is
+taken as evidence that promise was fulfilled, at any offset. That is sound while evidence
+carries a `promise_id` — the corpus tags all 56 of its items and the seeded week tags every
+one of its doorbell events — but `engine.ts` also passes *untagged* evidence to every
+promise, so a household whose doorbell events arrived untagged would have one promise
+exculpated by another's sighting. That is a property of the evidence contract rather than of
+these detectors, it is not exercised by this corpus, and it is the next thing to look at
+rather than something this result has disposed of.
+
+The ideation's pivot trigger was "H1 or H2 below threshold **after two iterations**". H2 took
+three, and the third one is the first time the engine was changed on the strength of reading
+the failures rather than the summary of them.
 
 ### What this does not show
 

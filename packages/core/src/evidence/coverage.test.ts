@@ -1,5 +1,6 @@
 import { around, coveragePercent, interval, MINUTE_MS } from "@owed/domain";
 import { describe, expect, it } from "vitest";
+import { TOLERANCE_MS } from "../breach/detectors.js";
 import { coverageGaps, measureCoverage, measuredMs, unionIntervals } from "./coverage.js";
 
 const t = (hhmm: string) => `2026-10-06T${hhmm}:00-07:00`;
@@ -64,7 +65,7 @@ describe("measureCoverage", () => {
   // The storyboard's hero claim: carrier scan at 14:12, evaluated over 14:12 +/- 30 min,
   // camera up throughout except a gap 13:51-14:02. docs/contract-v1.md §6.
   it("yields the storyboard's 82% for the phantom-delivery claim", () => {
-    const evaluation = around(t("14:12"), 30 * MINUTE_MS);
+    const evaluation = around(t("14:12"), TOLERANCE_MS);
     const uptime = [interval(t("13:42"), t("13:51")), interval(t("14:02"), t("14:42"))];
 
     expect(coveragePercent(measureCoverage(uptime, evaluation))).toBe(82);
@@ -72,7 +73,7 @@ describe("measureCoverage", () => {
 
   it("leaves the moment of the scan itself inside a watched stretch", () => {
     const uptime = [interval(t("13:42"), t("13:51")), interval(t("14:02"), t("14:42"))];
-    const gaps = coverageGaps(uptime, around(t("14:12"), 30 * MINUTE_MS));
+    const gaps = coverageGaps(uptime, around(t("14:12"), TOLERANCE_MS));
 
     expect(gaps).toEqual([interval(t("13:51"), t("14:02"))]);
   });

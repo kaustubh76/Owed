@@ -19,6 +19,7 @@ import {
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { coverageGaps, measuredMs } from "../evidence/coverage.js";
+import { missedWindow } from "./detectors.js";
 import { assessPromise } from "./engine.js";
 import { conclude } from "./types.js";
 
@@ -352,6 +353,166 @@ describe("price drop", () => {
     });
 
     expect(detection?.verdict).toBe("Kept");
+  });
+});
+
+/**
+ * The boundary of the tolerance, which was unpinned in both directions.
+ *
+ * `TOLERANCE_MS` decided three different things at once, and two of them were the wrong
+ * question. H2's only two failures lived here, and **nothing tested either shape** — no
+ * assertion anywhere said what should happen to a sighting just outside the window, so the
+ * behaviour was free to be wrong for as long as nobody ran the corpus.
+ *
+ * The tolerance itself is unchanged. What changed is which questions it is asked.
+ */
+describe("evidence outside the matching tolerance", () => {
+  const delivery = promise("delivery_window", {
+    window: interval(at("12:00"), at("16:00")),
+  });
+  const slot = promise("appointment_slot", {
+    window: interval(at("13:00"), at("15:00")),
+  });
+
+  /**
+   * The parcel is on the doorstep and there is a photograph of it arriving. Whether that
+   * placement is "the same event" as the scan is a matching question; whether the parcel
+   * was delivered is not, and the second is the one a claim rests on.
+   */
+  it("counts a placement 31 minutes after the scan as delivered", () => {
+    const detection = assess({
+      promise: delivery,
+      evidence: [scan("14:00"), sawPackage("14:31")],
+      uptime: uptime(["13:30", "15:00"]),
+      now: "16:30",
+    });
+
+    expect(detection?.verdict).toBe("Kept");
+    // And it says which it was, rather than overstating a match it did not have.
+    expect(detection?.explanation).toContain("31 minutes from the scan");
+  });
+
+  it("still calls it a match when the placement is inside the tolerance", () => {
+    const detection = assess({
+      promise: delivery,
+      evidence: [scan("14:00"), sawPackage("14:05")],
+      uptime: uptime(["13:30", "15:00"]),
+      now: "16:30",
+    });
+
+    expect(detection?.verdict).toBe("Kept");
+    expect(detection?.explanation).toBe("The scan matches what the door recorded.");
+  });
+
+  /** The half that must not move: no sighting at all is still a phantom delivery. */
+  it("still claims a phantom delivery when the door recorded nothing", () => {
+    const detection = assess({
+      promise: delivery,
+      evidence: [scan("14:00")],
+      uptime: uptime(["13:30", "14:30"]),
+      now: "16:30",
+    });
+
+    expect(detection?.verdict).toBe("Breached");
+    expect(detection?.kind).toBe("phantom_delivery");
+  });
+
+  /**
+   * Twenty-nine minutes early, through the whole engine rather than one detector.
+   *
+   * This is the case that had three causes stacked on it. `noShow` admitted the sighting
+   * and then judged it against the bare slot, so it reported `Breached` carrying the
+   * explanation "Somebody arrived for the appointment." Underneath that, `missedWindow`
+   * also applies to an appointment slot and read an early arrival as late — so fixing
+   * `noShow` alone would have been masked by `assess` taking the more severe answer.
+   */
+  it("counts somebody arriving 29 minutes early as kept, through the whole engine", () => {
+    const detection = assess({
+      promise: slot,
+      evidence: [sawPerson("12:31")],
+      uptime: uptime(["12:30", "15:30"]),
+      now: "16:00",
+    });
+
+    expect(detection?.verdict).toBe("Kept");
+    // Whichever detector answers, it must not be a claim, and the sentence must agree
+    // with the verdict.
+    expect(detection?.explanation).not.toContain("Nobody arrived");
+  });
+
+  it("still claims a no-show when nobody arrived at all", () => {
+    const detection = assess({
+      promise: slot,
+      evidence: [],
+      uptime: uptime(["12:30", "15:30"]),
+      now: "16:00",
+    });
+
+    expect(detection?.verdict).toBe("Breached");
+    expect(detection?.kind).toBe("no_show");
+  });
+});
+
+/**
+ * A window is missed by being late. Arriving early is not missing it, and the giveaway
+ * that the question was wrong was an explanation reading "Arrived -149 minutes after the
+ * window closed."
+ */
+describe("early and late against a promised window", () => {
+  const delivery = promise("delivery_window", {
+    window: interval(at("13:00"), at("15:00")),
+  });
+
+  /**
+   * `missedWindow` directly, not through `assess`.
+   *
+   * A `delivery_window` with a scan and no doorbell uptime is `Suspected` by
+   * `phantomDelivery` — correctly: it cannot see the door, so it will not say the parcel
+   * arrived and it will not claim it did not. That is the right answer to a different
+   * question, and it outranks this one, so asking the engine here would test the severity
+   * rule instead of the thing that was wrong.
+   */
+  const judge = (time: string) =>
+    missedWindow.detect({
+      promise: delivery,
+      evidence: [scan(time)],
+      uptime: [],
+      now: at("23:30"),
+    });
+
+  it("does not claim a window was missed by a parcel that came early", () => {
+    const detection = judge("12:30");
+
+    expect(detection?.verdict).toBe("Kept");
+    expect(detection?.explanation).toContain("30 minutes before the window opened");
+  });
+
+  it("still claims a window that was missed by a late arrival", () => {
+    const detection = judge("15:45");
+
+    expect(detection?.verdict).toBe("Breached");
+    expect(detection?.explanation).toContain("45 minutes after the window closed");
+  });
+
+  /** The giveaway that the question was wrong: "Arrived -149 minutes after the window closed." */
+  it("never reports a negative number of minutes", () => {
+    for (const time of ["09:00", "12:59", "13:00", "15:00", "15:01", "23:00"]) {
+      expect(judge(time)?.explanation, time).not.toMatch(/-\d+ minutes/);
+    }
+  });
+
+  /** The closing instant is still inside. "Delivered by five" includes five. */
+  it("counts an arrival at the closing instant as inside the window", () => {
+    const detection = judge("15:00");
+
+    expect(detection?.verdict).toBe("Kept");
+    expect(detection?.explanation).toBe("Arrived inside the promised window.");
+  });
+
+  /** And one minute past it is not. The boundary is closed, so this is the first miss. */
+  it("claims the window one minute after it closed", () => {
+    expect(judge("15:01")?.verdict).toBe("Breached");
+    expect(judge("15:01")?.explanation).toContain("1 minutes after the window closed");
   });
 });
 

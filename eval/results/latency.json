@@ -1,11 +1,11 @@
 {
-  "measured_at": "2026-10-14T14:00:56.058Z",
+  "measured_at": "2026-10-15T04:51:16.858Z",
   "environment": {
     "node": "v26.10.0",
     "platform": "darwin",
     "arch": "arm64",
     "cpus": 8,
-    "load_average_1m": 15.18
+    "load_average_1m": 4.81
   },
   "target_ms": 500,
   "samples_per_tool": 50,
@@ -13,61 +13,61 @@
     {
       "tool": "ledger_summary",
       "samples": 50,
-      "min_ms": 2.6,
-      "median_ms": 3.6,
-      "p95_ms": 15.1,
-      "max_ms": 20.8,
-      "mean_ms": 4.9
+      "min_ms": 1.9,
+      "median_ms": 2.2,
+      "p95_ms": 3.9,
+      "max_ms": 4.6,
+      "mean_ms": 2.5
     },
     {
       "tool": "promises_list",
       "samples": 50,
-      "min_ms": 2.3,
-      "median_ms": 2.8,
-      "p95_ms": 4.1,
-      "max_ms": 7.5,
-      "mean_ms": 3
+      "min_ms": 1.8,
+      "median_ms": 2.2,
+      "p95_ms": 3.7,
+      "max_ms": 4.7,
+      "mean_ms": 2.3
     },
     {
       "tool": "promise_check",
       "samples": 50,
-      "min_ms": 2.4,
-      "median_ms": 2.7,
-      "p95_ms": 4.2,
-      "max_ms": 5.2,
-      "mean_ms": 3
+      "min_ms": 1.6,
+      "median_ms": 1.8,
+      "p95_ms": 2.4,
+      "max_ms": 3.7,
+      "mean_ms": 1.9
     },
     {
       "tool": "evidence_get",
       "samples": 50,
-      "min_ms": 2.4,
-      "median_ms": 2.6,
-      "p95_ms": 3.7,
-      "max_ms": 4.7,
-      "mean_ms": 2.8
+      "min_ms": 1.5,
+      "median_ms": 1.7,
+      "p95_ms": 2.1,
+      "max_ms": 3.3,
+      "mean_ms": 1.8
     },
     {
       "tool": "claim_status",
       "samples": 50,
-      "min_ms": 2.5,
-      "median_ms": 3.2,
-      "p95_ms": 9.1,
-      "max_ms": 10.1,
-      "mean_ms": 4.6
+      "min_ms": 1.5,
+      "median_ms": 1.7,
+      "p95_ms": 2.9,
+      "max_ms": 3.7,
+      "mean_ms": 1.9
     },
     {
       "tool": "claim_file",
       "samples": 50,
-      "min_ms": 2,
-      "median_ms": 2.6,
-      "p95_ms": 3.6,
-      "max_ms": 6.7,
-      "mean_ms": 2.7
+      "min_ms": 1.4,
+      "median_ms": 1.5,
+      "p95_ms": 2.2,
+      "max_ms": 3.1,
+      "mean_ms": 1.6
     }
   ],
   "worst": {
     "tool": "ledger_summary",
-    "p95_ms": 15.1
+    "p95_ms": 3.9
   },
   "met": true
 }

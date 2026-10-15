@@ -392,15 +392,44 @@ to catch one authored phrasing reads a grocery delivery slot and a courier text 
 engineer appointments.
 
 **Measured so far (breach detection, `eval/README.md`):** over sixty pre-registered
-timelines the engine reaches **93.5% precision** and **100% recall** on the cases it could
-see enough of, with an **8.7% false-positive rate** on promises that were actually kept.
-**H2 is not met** — it asks for 0.9 precision *per kind* and under 5% false positives, and
-two kinds sit at 80% and 75%.
+timelines the engine reaches **100% precision and 100% recall on every one of the six kinds**,
+with a **0% false-positive rate** on promises that were actually kept. **H2 is met.**
 
-Every remaining failure is one thing: evidence a minute outside the ±30 minute tolerance
-is discarded entirely, so a parcel placed 31 minutes after the carrier scanned it still
-reads as a phantom delivery. That is a real defect, named rather than quietly fixed in the
-same sitting that found it, because fixing it means deciding what a tolerance is *for*.
+It was not, until three detector defects the corpus had been pointing at since it was
+written were fixed. **The order matters more than the number, so here it is:** the corpus was
+committed first (`2fe6ad2`) and has not been touched; the harness was corrected next, on its
+own, because it printed "≥ 0.9 precision *per kind*" while testing the pooled figure and
+would have said "met" without ever asking the pre-registered question; and the detectors
+changed last, after reading which two cases failed. Each of those is a separate commit, in
+that sequence.
+
+The **±30 minute tolerance is unchanged**, and so is every figure the demo rests on. What
+changed is which questions it was being asked:
+
+- **A placement is evidence a parcel arrived, wherever it falls.** Whether a doorbell
+  placement and a carrier scan are *the same event* is a matching question, and a tolerance
+  is right for it. Whether the parcel was **ever placed** is not. The detector used the
+  matching window for both, so a parcel photographed on the doorstep 31 minutes after the
+  scan produced a claim saying the door "recorded nobody arriving" — at confidence 1.0, with
+  the evidence that it did sitting one `filter` call upstream.
+- **`no_show` asks whether anybody came; `missed_window` asks whether they came in time.**
+  `no_show` was answering both and getting the second wrong: it looked wider than the slot to
+  find an arrival, then condemned the arrival it found for being outside the slot. Somebody
+  arriving 29 minutes early produced `Breached` carrying the sentence "Somebody arrived for
+  the appointment." A card that contradicts itself has no reading that is true.
+- **A window is missed by being late, not by being early.** The giveaway was an explanation
+  that read *"Arrived -149 minutes after the window closed."* A negative number there means
+  the question was wrong, not the arithmetic.
+
+None of the three requires knowing what it does to a number, which is the bar the two earlier
+corpus-found fixes were held to. Recall was already 100% on all six kinds and stayed there,
+so nothing was traded for the precision.
+
+This README carried that defect as **one** thing — "evidence a minute outside the tolerance
+is discarded entirely" — for as long as it was unfixed. It was two things wearing the same
+description, and the second one had a third hiding under it. Reading the two failing cases in
+the code, rather than the sentence summarising them, is what found that; `eval/README.md`
+keeps all three stages, including the stage where this page was wrong about its own defect.
 
 The number that did come out clean is the one the product rests on: **every** case where a
 promise was broken but the camera had been starved was **held back rather than claimed**.
@@ -449,7 +478,10 @@ So the strategy is knife-edged rather than wrong: it wins against a merchant who
 published figure exactly and loses the moment they do not. Countering a little under the
 reservation would trade a little upside for a lot of robustness — a design change to the
 thing H3 measures, so it is named here rather than made quietly in the sitting that found
-it. This is the same discipline as the ±30 minute tolerance above, and the same reason.
+it. The ±30 minute tolerance above was named this way too, and stayed named for two
+iterations before the third one found that the description was wrong — which is the argument
+for writing a defect down rather than carrying it in your head, and also the argument for
+not trusting the write-up over the code.
 
 ---
 
@@ -790,7 +822,7 @@ rather than in a drawer.
 - [x] Real-vs-simulated map (§13), and the statement that **none of this has run against the real Alexa+ client** because it is partner-gated
 - [x] All three pre-registered hypotheses published met or not, with the numbers (§10):
   - **H1 — can a promise be extracted from what a merchant wrote?** 100% precision / 99% recall on the 120-message corpus it was tuned against, and **73.7% / 58.3%** on 40 held-out messages. **Met on the corpus it was tuned against, missed on data it had not seen** — and that gap is the most useful number in this repository.
-  - **H2 — can a breach be detected reliably per promise kind?** 93.5% precision and 100% recall on cases with enough coverage, but an **8.7% false-positive rate** against a target of 0.9 precision per kind and under 5%. **Not met** — two kinds sit at 80% and 75%.
+  - **H2 — can a breach be detected reliably per promise kind?** **Met**, at 100% precision and 100% recall on every kind with a 0% false-positive rate, against a target of 0.9 precision per kind and under 5% — but only after three detector defects were fixed in response to the two cases that failed, and after correcting a harness that tested the pooled precision while claiming to test it per kind. The corpus was not touched and the ±30 minute tolerance was not changed; §10 has the three corrections and the commit order.
   - **H3 — does arguing recover more than accepting the first offer?** Target was ≥60% recovery, ≥1.5× the baseline, and a median of ≤2 rounds. **Met on the rounds criterion** — the median is two — and **not met** on the other two: 33.9% of owed value at 1.10× the baseline single-shot, 44.1% at 1.43× once the learning loop has three encounters to work from.
 - [ ] Demo video: public YouTube, English, < 3 min, no third-party trademarks or music
 - [x] Judges can read the repo — it is **public** under Apache-2.0, so there is nothing to invite and nothing that expires. This line previously tracked seven-day collaborator invitations, which the visibility change made unnecessary.

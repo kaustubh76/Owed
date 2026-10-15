@@ -155,8 +155,22 @@ export const missedWindow: Detector = {
     const coverage = measureCoverage(observed, window);
 
     if (fulfilment !== undefined) {
-      const inside = withinWindow(window, fulfilment.captured_at);
+      /**
+       * A window is missed by being **late**, not by being early.
+       *
+       * This asked `withinWindow` and treated anything else as broken, so an arrival before
+       * the window opened was reported as a breach — with the lateness computed as
+       * `arrival − window.end`, which is negative, giving the explanation
+       * "Arrived -149 minutes after the window closed." A negative number in that sentence
+       * is the tell that the question was wrong, not the arithmetic.
+       *
+       * `withinWindow` is still the right test for *inside*, closed at both ends so
+       * "delivered by five" includes five. Late is strictly after the close.
+       */
       const lateByMs = toEpochMs(fulfilment.captured_at) - toEpochMs(window.end);
+      const earlyByMs = toEpochMs(window.start) - toEpochMs(fulfilment.captured_at);
+      const inside = withinWindow(window, fulfilment.captured_at);
+      const late = lateByMs > 0;
       return conclude({
         promise,
         kind: "missed_window",
@@ -166,8 +180,10 @@ export const missedWindow: Detector = {
         evidence_ids: [fulfilment.id],
         explanation: inside
           ? "Arrived inside the promised window."
-          : `Arrived ${Math.round(lateByMs / MINUTE_MS)} minutes after the window closed.`,
-        outcome: inside ? "kept" : "broken",
+          : late
+            ? `Arrived ${Math.round(lateByMs / MINUTE_MS)} minutes after the window closed.`
+            : `Arrived ${Math.round(earlyByMs / MINUTE_MS)} minutes before the window opened.`,
+        outcome: late ? "broken" : "kept",
         decidable: true,
       });
     }
@@ -203,11 +219,32 @@ export const phantomDelivery: Detector = {
 
     const evaluation = around(scan.captured_at, TOLERANCE_MS);
     const coverage = measureCoverage(uptime, evaluation);
-    const sightings = arrivalSightings(evidence).filter((e) =>
-      containsInstant(evaluation, e.captured_at),
-    );
+
+    /**
+     * Every arrival the door recorded for this promise — not only the ones near the scan.
+     *
+     * This filtered sightings to `evaluation`, and that conflated two different questions.
+     * Whether a placement and a scan are **the same event** is a matching question, and a
+     * tolerance is the right tool for it. Whether a parcel was **ever placed** is not, and
+     * a tolerance is the wrong tool: it answered "no" for a parcel the door had
+     * photographed, because the placement landed 31 minutes after the scan instead of 29.
+     * The claim that went out said the door "recorded nobody arriving" — at confidence 1.0,
+     * with the evidence that it did sitting one `filter` call upstream.
+     *
+     * `assessPromise` has already narrowed `evidence` to this promise, so the scope here is
+     * exactly right: this promise's arrivals, however the courier's clock compares to the
+     * camera's.
+     */
+    const sightings = arrivalSightings(evidence);
 
     if (sightings.length > 0) {
+      const first = sightings[0] as Evidence;
+      // The matching window still means something — it is the difference between "the scan
+      // is corroborated" and "it turned up, just not when they said". Both are kept.
+      const matches = containsInstant(evaluation, first.captured_at);
+      const offsetMinutes = Math.round(
+        Math.abs(toEpochMs(first.captured_at) - toEpochMs(scan.captured_at)) / MINUTE_MS,
+      );
       return conclude({
         promise,
         kind: "phantom_delivery",
@@ -215,7 +252,9 @@ export const phantomDelivery: Detector = {
         observed: uptime,
         confidence: 0.97,
         evidence_ids: ids([scan, ...sightings]),
-        explanation: "The scan matches what the door recorded.",
+        explanation: matches
+          ? "The scan matches what the door recorded."
+          : `The door recorded the parcel arriving, ${offsetMinutes} minutes from the scan.`,
         outcome: "kept",
         decidable: true,
       });
@@ -258,12 +297,25 @@ export const noShow: Detector = {
       around(slot.end, TOLERANCE_MS).end,
     );
     const coverage = measureCoverage(uptime, evaluation);
-    const sightings = arrivalSightings(evidence).filter((e) =>
-      containsInstant(evaluation, e.captured_at),
-    );
+
+    /**
+     * `no_show` asks one question: **did anybody come?**
+     *
+     * It used to ask two, and got the second one wrong. The sighting was admitted from
+     * `evaluation` — the slot widened by the tolerance — and then the verdict was judged
+     * against the bare `slot`, so an arrival the detector had deliberately looked wider to
+     * find was then condemned for being outside the narrower window. Somebody arriving
+     * twenty-nine minutes early produced `Breached` carrying the explanation "Somebody
+     * arrived for the appointment." A card that contradicts itself is worse than a wrong
+     * one, because there is no reading of it that is true.
+     *
+     * Whether they came **in time** is `missedWindow`'s question, it applies to
+     * `appointment_slot` too, and `assess` takes the most severe answer. So this detector
+     * stops guessing at lateness and reports what it knows: somebody came, or nobody did.
+     */
+    const sightings = arrivalSightings(evidence);
 
     if (sightings.length > 0) {
-      const first = sightings[0] as Evidence;
       return conclude({
         promise,
         kind: "no_show",
@@ -272,7 +324,7 @@ export const noShow: Detector = {
         confidence: 0.97,
         evidence_ids: ids(sightings),
         explanation: "Somebody arrived for the appointment.",
-        outcome: withinWindow(slot, first.captured_at) ? "kept" : "broken",
+        outcome: "kept",
         decidable: true,
       });
     }
