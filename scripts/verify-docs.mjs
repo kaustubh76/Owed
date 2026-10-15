@@ -311,6 +311,48 @@ if (extraction === undefined || breach === undefined || recourse === undefined) 
   }
 }
 
+/**
+ * The running time, which §15 caps at under three minutes.
+ *
+ * The script is the plan for hitting that cap, and it is the kind of document a beat gets
+ * added to without anyone re-totalling it. Each beat states a start and a duration, so the
+ * two can be checked against each other: a beat whose start is not the previous one's start
+ * plus its duration means the budget has drifted, and a total at or over 3:00 means the
+ * submission requirement is no longer met on paper.
+ */
+process.stdout.write("\n--- the demo script's running time ---\n");
+
+const beats = [
+  ...read(join(DOCS, "demo-script.md")).matchAll(
+    /^\*\*(\d+):(\d\d) — .*?\((?:[^)]*?·\s*)?(\d+)s\)/gm,
+  ),
+].map((match) => ({
+  start: Number(match[1]) * 60 + Number(match[2]),
+  seconds: Number(match[3]),
+  label: `${match[1]}:${match[2]}`,
+}));
+
+want("the script's beats carry a start and a duration", beats.length > 0, `${beats.length} found`);
+
+let expectedStart = 0;
+let drifted = 0;
+for (const beat of beats) {
+  if (beat.start !== expectedStart) drifted += 1;
+  expectedStart = beat.start + beat.seconds;
+}
+want(
+  "every beat starts when the one before it ends",
+  drifted === 0,
+  drifted === 0 ? `${beats.length} beats, no drift` : `${drifted} beat(s) do not line up`,
+);
+
+const total = beats.length === 0 ? 0 : expectedStart;
+want(
+  "the take comes in under the three minutes §15 requires",
+  total > 0 && total < 180,
+  `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`,
+);
+
 // ---------------------------------------------------------------------------
 if (failures.length > 0) {
   process.stdout.write(`\n${failures.length} problem(s):\n`);
