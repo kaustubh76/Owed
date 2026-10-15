@@ -29,11 +29,35 @@ process.stdout.write(`
   held back below the coverage gate     ${pct(report.overall.held_back_share)}
 `);
 
-const met =
-  (report.overall.precision ?? 0) >= 0.9 && report.overall.kept_false_positive_rate < 0.05;
+/**
+ * H2 as pre-registered, which is not what this used to evaluate.
+ *
+ * The label has always said "0.9 precision **per kind**" and the predicate tested
+ * `report.overall.precision` — the pooled figure, which is 0.94 while two kinds sit at 0.80
+ * and 0.75. It printed "NOT met" on the false-positive clause alone, so the per-kind bar in
+ * its own output string was never checked. Had the false positives been fixed first, this
+ * would have printed "met" without ever asking the question it claims to ask.
+ *
+ * Corrected before any detector was touched, so the measurement is asking the
+ * pre-registered question before anything tries to satisfy it.
+ */
+const belowBar = report.by_kind.filter((kind) => (kind.precision ?? 1) < 0.9);
+const met = belowBar.length === 0 && report.overall.kept_false_positive_rate < 0.05;
 process.stdout.write(
   `\n  H2 (>= 0.9 precision per kind, < 5% false positives on kept): ${met ? "met" : "NOT met"}\n`,
 );
+if (belowBar.length > 0) {
+  process.stdout.write(
+    `    below the per-kind precision bar: ${belowBar
+      .map((kind) => `${kind.kind} ${pct(kind.precision ?? 0)}`)
+      .join(", ")}\n`,
+  );
+}
+if (report.overall.kept_false_positive_rate >= 0.05) {
+  process.stdout.write(
+    `    false positives on kept promises: ${pct(report.overall.kept_false_positive_rate)} against a 5% limit\n`,
+  );
+}
 
 if (report.mislabelled.length > 0) {
   process.stdout.write(
