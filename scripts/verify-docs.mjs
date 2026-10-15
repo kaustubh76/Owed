@@ -13,11 +13,16 @@
  * `docs/contract-v1.md`, so renumbering them silently breaks a cross-reference that looks
  * fine in every diff.
  *
- * **What this cannot do**, stated here rather than discovered later: it checks structure,
- * not truth. It would not have caught the Bedrock contradiction, because both sentences
- * were well-formed and only one was true. Nothing mechanical would have. The checks below
- * are the subset a machine can own, which is exactly why the ones it cannot own are worth a
- * person's attention.
+ * **What this can and cannot do**, stated here rather than discovered later. Most of it
+ * checks structure: counts, numbering, fields, links. One part checks truth, because it
+ * turned out a machine could own it — the demo script's hypothesis verdicts are recomputed
+ * from `eval/results/*.json` and compared to what the script tells a reader to say on
+ * camera. That one exists because the script claimed "breach detection: not met" for eleven
+ * days after a fix made it met.
+ *
+ * Everything else is still a person's job. This would not have caught the Bedrock
+ * contradiction — both sentences were well-formed and only one was true — and nothing
+ * mechanical would have.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -226,6 +231,87 @@ for (const name of readdirSync(DOCS)
 }
 
 // ---------------------------------------------------------------------------
+// The recording guide, which makes empirical claims and had nothing checking them.
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the demo script's hypothesis verdicts ---\n");
+
+/**
+ * Recomputed from the committed results, not read from prose.
+ *
+ * `docs/demo-script.md` told a reader to say "breach detection: not met" for eleven days
+ * after a detector fix made it met. The script is what the video is recorded from, so a
+ * stale verdict there is a false statement on camera — and the only thing that would have
+ * caught it is a check that knows both what the script says and what the harness found.
+ *
+ * Each predicate is the same one its own `eval/src/bin/*.ts` evaluates. They are duplicated
+ * here on purpose: a gate that imported the harness would agree with it by construction and
+ * prove nothing about the document.
+ */
+const results = (name) => {
+  const path = join(REPO_ROOT, "eval", "results", `${name}.json`);
+  if (!exists(path)) return undefined;
+  return JSON.parse(read(path));
+};
+
+const extraction = results("extraction");
+const breach = results("breach");
+const recourse = results("recourse");
+
+if (extraction === undefined || breach === undefined || recourse === undefined) {
+  want(
+    "the committed evaluation results are present",
+    false,
+    "missing eval/results/*.json — run `pnpm eval:all`",
+  );
+} else {
+  const verdicts = {
+    H1:
+      (extraction.tuned?.kind?.overall?.precision ?? 0) >= 0.9 &&
+      (extraction.tuned?.kind?.overall?.recall ?? 0) >= 0.8,
+    H2:
+      (breach.by_kind ?? []).every((kind) => (kind.precision ?? 1) >= 0.9) &&
+      (breach.overall?.kept_false_positive_rate ?? 1) < 0.05,
+    H3:
+      (recourse.totals?.negotiator_share ?? 0) >= 0.6 &&
+      (recourse.totals?.lift ?? 0) >= 1.5 &&
+      (recourse.median_rounds ?? Number.POSITIVE_INFINITY) <= 2,
+  };
+
+  const script = read(join(DOCS, "demo-script.md"));
+  for (const [hypothesis, met] of Object.entries(verdicts)) {
+    const stated = script.match(
+      new RegExp(`\\|\\s*\\*\\*${hypothesis}\\*\\*[^|]*\\|\\s*(met|not met)\\s*\\|`),
+    );
+    const expected = met ? "met" : "not met";
+    want(
+      `the script states ${hypothesis} as the harness finds it`,
+      stated?.[1] === expected,
+      stated === null
+        ? `no verdict row found for ${hypothesis} — did the table change shape?`
+        : `says "${stated[1]}", harness says "${expected}"`,
+    );
+  }
+
+  /**
+   * H1's verdict is computed on the **tuned** corpus, so "met" is the generous reading by
+   * construction. The script's own "Do not say" list forbids quoting it alone, so matching
+   * the verdict is not enough: both held-out figures have to be on the page.
+   */
+  const held = extraction.held_out?.kind?.overall ?? {};
+  for (const [label, value] of [
+    ["precision", held.precision],
+    ["recall", held.recall],
+  ]) {
+    const figure = `${((value ?? 0) * 100).toFixed(1)}%`;
+    want(
+      `the script quotes the held-out ${label}`,
+      script.includes(figure),
+      script.includes(figure) ? figure : `${figure} is nowhere in the script`,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 if (failures.length > 0) {
   process.stdout.write(`\n${failures.length} problem(s):\n`);
   for (const line of failures) process.stdout.write(`  ${line}\n`);
@@ -236,6 +322,7 @@ if (failures.length > 0) {
   process.exit(1);
 }
 process.stdout.write(
-  `\n${entries.length} entries, ${citations} citations and ${links} links check out.\n` +
-    "Structure only: whether any of it is true is not something this can tell you.\n",
+  `\n${entries.length} entries, ${citations} citations and ${links} links check out, and the\n` +
+    "demo script's verdicts agree with the harness. Everything else in these documents is\n" +
+    "still only as true as the person who wrote it.\n",
 );

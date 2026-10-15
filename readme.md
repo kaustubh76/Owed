@@ -30,8 +30,11 @@ figures here are the figures it reads.*
 *These are the beats, at the pace the automated check drives them.
 [`docs/demo-script.md`](docs/demo-script.md) is the same sequence as a recorded take —
 the same beats in the same order, with narration, an opening framing of the problem and a
-closing pass over the published numbers, which is why it lands at 2:50 rather than 1:30.
-Neither is stale; one is the test, the other is the script.*
+closing pass over the published numbers, which is why it lands at 2:58 rather than 1:30.
+One is the test, the other is the script, and `pnpm verify:docs` now checks that the script's
+hypothesis verdicts match what the harnesses found — because this line used to claim neither
+was stale, while the script spent eleven days telling a reader to say "breach detection: not
+met" after a fix made it met.*
 
 | t | Surface | What happens |
 |---|---|---|
@@ -564,8 +567,11 @@ apache.org, and `NOTICE` carries the copyright line and says which packages it c
 
 ## 12. Local setup
 
-**The demo still runs entirely offline**, and that has not changed: `pnpm install && pnpm
-demo` needs no AWS account, no model API, no doorbell vendor and no keys of any kind. The
+**The demo still runs entirely offline**, and that has not changed:
+`pnpm install && pnpm build && pnpm demo` needs no AWS account, no model API, no doorbell
+vendor and no keys of any kind. (Three, not two — the services run from `dist/` and there is
+no `postinstall` hook. This line said two for a long time, and the block below always said
+three.) The
 ledger is in memory by default.
 
 What *is* new is that persistence and deployment are now optional extras rather than absent.
@@ -589,8 +595,9 @@ else's machine is a port already in use, and the failure that causes is confusin
 names what it looked for, what it found and what to do about it.
 
 **Checked from a clean clone**, not asserted: `git clone` → `pnpm install` (3.4s) →
-`pnpm verify` (build, lint, the whole test suite, conformance, the deployment gate — all
-green) → `pnpm demo` (all
+`pnpm build` (29s, and not optional — the services run from `dist/` and nothing builds on
+install) → `pnpm verify` (the project graph, the documents, build, lint, the whole test
+suite, conformance, the deployment gate — all green) → `pnpm demo` (all
 four services answering in **4 seconds**) → `pnpm verify:ui` (every browser check,
 green) → all four evaluations run and write their results.
 

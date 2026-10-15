@@ -32,6 +32,50 @@ for (const [kind, totals] of Object.entries(report.by_breach_kind)) {
   );
 }
 
+/**
+ * H3 as pre-registered, which until now this harness computed every input for and never
+ * stated.
+ *
+ * `product_ideation.md:162`: "The negotiator recovers >= 60% of owed value across the
+ * matrix, >= 1.5x the 'accept first offer' baseline, with median <= 2 rounds." Three
+ * criteria. This file printed all three figures and no verdict, so H3's met/not-met lived
+ * only in prose — which is exactly how it drifted into being reported as a flat "not met"
+ * when one of the three is satisfied, and how the demo script came to tell a reader to say
+ * so on camera.
+ *
+ * `bin/extraction.ts` computes H1's and `bin/breach.ts` computes H2's. This completes the
+ * set, so the README's claim that **all three** are "reported met or not" is computed
+ * rather than asserted.
+ */
+const criteria = [
+  {
+    name: ">= 60% of owed value",
+    ok: report.totals.negotiator_share >= 0.6,
+    actual: pct(report.totals.negotiator_share),
+  },
+  {
+    name: ">= 1.5x the accept-first-offer baseline",
+    ok: report.totals.lift >= 1.5,
+    actual: `${report.totals.lift.toFixed(2)}x`,
+  },
+  {
+    name: "median <= 2 rounds",
+    ok: report.median_rounds <= 2,
+    actual: `${report.median_rounds}`,
+  },
+];
+const failed = criteria.filter((criterion) => !criterion.ok);
+process.stdout.write(
+  `\n  H3 (>= 60% of owed, >= 1.5x baseline, median <= 2 rounds): ${
+    failed.length === 0 ? "met" : "NOT met"
+  }\n`,
+);
+for (const criterion of criteria) {
+  process.stdout.write(
+    `    ${criterion.ok ? "met    " : "NOT met"}  ${criterion.name.padEnd(42)} ${criterion.actual}\n`,
+  );
+}
+
 const out = fileURLToPath(new URL("../../results/recourse.json", import.meta.url));
 mkdirSync(fileURLToPath(new URL("../../results/", import.meta.url)), { recursive: true });
 writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
