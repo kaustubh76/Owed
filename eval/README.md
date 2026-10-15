@@ -360,14 +360,26 @@ is the bar the two earlier fixes were held to. **Recall was already 100% on all 
 stayed there**, so no precision was bought with a miss. Exactly one case in the sixty has an
 early arrival and it is labelled `kept`; every late arrival is labelled `broken`.
 
-**What this now rests on, stated plainly.** An arrival sighting attached to a promise is
-taken as evidence that promise was fulfilled, at any offset. That is sound while evidence
-carries a `promise_id` — the corpus tags all 56 of its items and the seeded week tags every
-one of its doorbell events — but `engine.ts` also passes *untagged* evidence to every
-promise, so a household whose doorbell events arrived untagged would have one promise
-exculpated by another's sighting. That is a property of the evidence contract rather than of
-these detectors, it is not exercised by this corpus, and it is the next thing to look at
-rather than something this result has disposed of.
+**What this rests on, and what was done about it.** An arrival sighting attached to a promise
+is taken as evidence that promise was fulfilled, at any offset. That is sound only while
+evidence carries a `promise_id` — and `assessPromise` used to admit evidence that carried
+*none*, to every promise in the household. Before the fix above, an untagged stray sighting
+had to land within half an hour of a carrier scan to wrongly clear a promise. After it, the
+sighting only had to exist.
+
+So the filter was tightened: **evidence now reaches only the promise it names.** That clause
+turned out to have no live purpose at all — both seed constructors and this corpus take
+`promise_id` as a required argument, the only runtime producer hard-codes it, and the ledger
+projection already dropped untagged evidence on the way in. The sole thing relying on it was
+the breach test suite's own fixtures, which omitted the field out of convenience; they now
+set it, and four tests assert the two directions that matter: an untagged sighting does not
+clear a promise, another promise's sighting does not either, and the promise's own still
+does. The projection's matching guard, which had been untested in both directions, is tested
+too.
+
+The figures above are unchanged by it, because nothing in the corpus was ever untagged.
+Uptime stays household-wide, deliberately: what a camera could see is not a property of any
+one promise, and "it was up and saw nothing" is the whole phantom-delivery signal.
 
 The ideation's pivot trigger was "H1 or H2 below threshold **after two iterations**". H2 took
 three, and the third one is the first time the engine was changed on the strength of reading

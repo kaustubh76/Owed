@@ -62,7 +62,32 @@ export function assessPromise({
   return assess(
     {
       promise,
-      evidence: evidence.filter((e) => e.promise_id === undefined || e.promise_id === promise.id),
+      /**
+       * Only evidence attached to this promise.
+       *
+       * This used to admit `e.promise_id === undefined` as well, which turned an optional
+       * field into a household-wide broadcast: every untagged item reached every promise's
+       * detectors. That was survivable while the detectors only looked at evidence within
+       * half an hour of a carrier scan. It stopped being survivable when `phantomDelivery`
+       * and `noShow` were corrected to answer "did anything arrive?" instead of "did
+       * anything arrive near the scan?", because an untagged sighting then only has to
+       * *exist* to exculpate a promise it was never about.
+       *
+       * The failure that permits is the silent one: a promise that **was** broken reading
+       * as kept because of an event elsewhere in the household, so the money is never
+       * mentioned. A false positive argues with a merchant; this one just never tells the
+       * household.
+       *
+       * Nothing produces untagged evidence — both seed constructors and the corpus take
+       * `promise_id` as a required argument, the only runtime producer hard-codes it
+       * (`filing.ts`), and `projections.ts` drops untagged evidence on the way into the
+       * ledger anyway. So this clause had no live purpose and one latent hazard.
+       *
+       * Uptime stays household-wide below, deliberately: what a camera could see is not a
+       * property of any one promise, and saying "it was up and saw nothing" is the whole
+       * phantom-delivery signal.
+       */
+      evidence: evidence.filter((e) => e.promise_id === promise.id),
       uptime: uptime
         .filter((window) => window.household_id === promise.household_id)
         .map((window) => window.interval),

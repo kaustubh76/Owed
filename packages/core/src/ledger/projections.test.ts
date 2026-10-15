@@ -265,3 +265,58 @@ describe("ledger projection", () => {
     expect(claimRoundCount(claim as NonNullable<typeof claim>)).toBe(2);
   });
 });
+
+/**
+ * Which promise an observation lands on.
+ *
+ * `apply`'s `EvidenceObserved` case reads `event.evidence.promise_id` and pushes only when
+ * it is set — a guard that was **untested in both directions**, which is how
+ * `assessPromise`'s matching guard came to be the only thing standing between an untagged
+ * sighting and a promise it was never about. The two now agree: evidence reaches the
+ * promise it names and no other, at both layers.
+ */
+describe("attributing an observation to a promise", () => {
+  const captured = (id: string, promise_id?: string): LedgerEvent => ({
+    ...envelope(at(1, "14:00")),
+    type: "EvidenceObserved",
+    evidence: {
+      id,
+      household_id: HH,
+      source_id: "src_doorbell",
+      captured_at: at(1, "14:00"),
+      kind: "doorbell_event",
+      event: "package_placed",
+      ...(promise_id === undefined ? {} : { promise_id }),
+    },
+  });
+
+  const withPromise = (events: LedgerEvent[]): LedgerEvent[] => [
+    {
+      ...envelope(at(1, "08:00")),
+      type: "PromiseCaptured",
+      promise: promise("prm_e", "Northwind Parcel", "delivery_window", 1),
+    },
+    ...events,
+  ];
+
+  it("files evidence against the promise it names", async () => {
+    const state = await projectAll(withPromise([captured("evd_tagged", "prm_e")]));
+
+    expect(state.promises.get("prm_e")?.evidence.map((item) => item.id)).toStrictEqual([
+      "evd_tagged",
+    ]);
+  });
+
+  it("drops evidence that names no promise, rather than attaching it to all of them", async () => {
+    const state = await projectAll(withPromise([captured("evd_untagged")]));
+
+    expect(state.promises.get("prm_e")?.evidence).toStrictEqual([]);
+  });
+
+  it("drops evidence naming a promise the ledger has never seen", async () => {
+    const state = await projectAll(withPromise([captured("evd_stranger", "prm_nobody")]));
+
+    expect(state.promises.get("prm_e")?.evidence).toStrictEqual([]);
+    expect(state.promises.get("prm_nobody")).toBeUndefined();
+  });
+});

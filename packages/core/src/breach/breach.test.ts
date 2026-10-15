@@ -24,6 +24,15 @@ import { assessPromise } from "./engine.js";
 import { conclude } from "./types.js";
 
 const HH = "hh_test";
+
+/**
+ * The promise every fixture here is about.
+ *
+ * Named because the evidence helper has to tag with it: `assessPromise` admits only
+ * evidence carrying this promise's id, so a fixture that omitted the field — which all of
+ * them used to — would hand the detectors an empty array and quietly test nothing.
+ */
+const PROMISE_ID = "prm_1";
 const at = (hhmm: string): Instant => `2026-10-06T${hhmm}:00-07:00`;
 
 /**
@@ -40,7 +49,7 @@ const watched = (fraction: number): Interval[] =>
 
 function promise(kind: PromiseKind, extra: Partial<OwedPromise> = {}): OwedPromise {
   return {
-    id: "prm_1",
+    id: PROMISE_ID,
     household_id: HH,
     merchant: "Northwind Parcel",
     source_ref: "msg_1",
@@ -63,6 +72,7 @@ function evidence(partial: EvidenceDraft): Evidence {
     id: `evd_${evidenceSeq}`,
     household_id: HH,
     source_id: "src_test",
+    promise_id: PROMISE_ID,
     ...partial,
   } as Evidence;
 }
@@ -513,6 +523,103 @@ describe("early and late against a promised window", () => {
   it("claims the window one minute after it closed", () => {
     expect(judge("15:01")?.verdict).toBe("Breached");
     expect(judge("15:01")?.explanation).toContain("1 minutes after the window closed");
+  });
+});
+
+/**
+ * Whose evidence is whose.
+ *
+ * `promise_id` is optional on every evidence variant, and `assessPromise` used to admit
+ * anything that omitted it — so one untagged doorbell event was visible to every promise in
+ * the household. Nothing produces untagged evidence and the ledger projection drops it, so
+ * the clause had no live purpose; what it had was a latent hazard that got worse when
+ * `phantomDelivery` and `noShow` stopped windowing their sighting lookup. An untagged
+ * sighting then only had to exist to clear a promise it was never about.
+ *
+ * The direction matters. A false positive argues with a merchant and gets found out. This
+ * one tells the household nothing, about money they are owed.
+ */
+describe("evidence belonging to another promise", () => {
+  const delivery = promise("delivery_window", {
+    window: interval(at("12:00"), at("16:00")),
+  });
+
+  /** Built deliberately without the field, which the helper above always sets. */
+  const untagged = (partial: EvidenceDraft): Evidence => {
+    const { promise_id: _dropped, ...rest } = evidence(partial) as Evidence & {
+      promise_id?: string;
+    };
+    return rest as Evidence;
+  };
+
+  it("does not let an untagged sighting clear a promise it was never about", () => {
+    const scanned = scan("14:00");
+    const strayPlacement = untagged({
+      kind: "doorbell_event",
+      event: "package_placed",
+      captured_at: at("14:05"),
+    });
+
+    expect(strayPlacement.promise_id).toBeUndefined();
+    const detection = assess({
+      promise: delivery,
+      evidence: [scanned, strayPlacement],
+      uptime: uptime(["13:30", "15:00"]),
+      now: "16:30",
+    });
+
+    // The door recorded something, but not about this promise. The parcel is still a
+    // phantom as far as this promise's evidence goes.
+    expect(detection?.verdict).toBe("Breached");
+    expect(detection?.kind).toBe("phantom_delivery");
+  });
+
+  it("does not let another promise's sighting clear this one either", () => {
+    const otherPromise = evidence({
+      kind: "doorbell_event",
+      event: "package_placed",
+      captured_at: at("14:05"),
+      promise_id: "prm_somebody_else",
+    });
+
+    const detection = assess({
+      promise: delivery,
+      evidence: [scan("14:00"), otherPromise],
+      uptime: uptime(["13:30", "15:00"]),
+      now: "16:30",
+    });
+
+    expect(detection?.verdict).toBe("Breached");
+  });
+
+  it("still clears it on a sighting that is actually its own", () => {
+    const detection = assess({
+      promise: delivery,
+      evidence: [scan("14:00"), sawPackage("14:05")],
+      uptime: uptime(["13:30", "15:00"]),
+      now: "16:30",
+    });
+
+    expect(detection?.verdict).toBe("Kept");
+  });
+
+  /** And the same for an appointment: somebody else's visitor is not your engineer. */
+  it("does not let an untagged visitor answer an appointment", () => {
+    const slot = promise("appointment_slot", {
+      window: interval(at("13:00"), at("15:00")),
+    });
+
+    const detection = assess({
+      promise: slot,
+      evidence: [
+        untagged({ kind: "doorbell_event", event: "person_detected", captured_at: at("13:30") }),
+      ],
+      uptime: uptime(["12:30", "15:30"]),
+      now: "16:00",
+    });
+
+    expect(detection?.verdict).toBe("Breached");
+    expect(detection?.kind).toBe("no_show");
   });
 });
 
