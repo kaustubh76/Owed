@@ -106,6 +106,64 @@ describe("the pre-registered run, which every published figure comes from", () =
   });
 });
 
+describe("conceding, which the README predicted would help", () => {
+  /**
+   * The same guard as the variability seam: an explicitly-zero margin must be the
+   * pre-registered run, byte for byte. This is the one that would catch somebody deciding
+   * the default should be 2.5%.
+   */
+  it("is byte-identical when the margins are explicitly nothing", async () => {
+    const [plain, zeroed] = await Promise.all([
+      runRecourseMatrix(),
+      runRecourseMatrix(undefined, { negotiator: { acceptMargin: 0, counterMargin: 0 } }),
+    ]);
+
+    expect(zeroed).toStrictEqual(plain);
+  });
+
+  /**
+   * The measured refutation, pinned so the sentence in `readme.md` §10 cannot drift from it.
+   *
+   * The prediction was "a little upside for **a lot** of robustness". Conceding 10% of the
+   * published figure — four times the smallest margin measured — still does not get the
+   * lift back above 1.0 under jitter. The full table is
+   * `pnpm --filter @owed/eval robustness`.
+   */
+  it("does not restore the result at any margin worth calling little", async () => {
+    const conceded = await runRecourseMatrix(undefined, {
+      negotiator: { counterMargin: 0.1 },
+      variability: { rng: new SeededRng(1), jitter: 0.25, parameters: VARIABLE_PARAMETERS },
+    });
+
+    expect(conceded.totals.lift).toBeLessThan(1);
+  });
+
+  /** And it is not free: asking for less recovers less when the merchant would have paid. */
+  it("costs real money on the pre-registered grid", async () => {
+    const [exact, conceded] = await Promise.all([
+      runRecourseMatrix(),
+      runRecourseMatrix(undefined, { negotiator: { counterMargin: 0.1 } }),
+    ]);
+
+    expect(conceded.totals.negotiator_minor).toBeLessThan(exact.totals.negotiator_minor);
+    expect(conceded.totals.lift).toBeLessThan(exact.totals.lift);
+  });
+
+  /**
+   * The lever the README did not name behaves differently, and better: it gives up nothing
+   * against merchants who behave exactly as configured, because it only changes what the
+   * negotiator will *take*, never what it asks for.
+   */
+  it("costs nothing on the pre-registered grid when only the settling threshold moves", async () => {
+    const [exact, lenient] = await Promise.all([
+      runRecourseMatrix(),
+      runRecourseMatrix(undefined, { negotiator: { acceptMargin: 0.1 } }),
+    ]);
+
+    expect(lenient.totals.negotiator_minor).toBe(exact.totals.negotiator_minor);
+  });
+});
+
 describe("what variability does to the result", () => {
   /**
    * The measured headline, pinned at one seed so a regression in the seam shows up here

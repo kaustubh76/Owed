@@ -528,5 +528,163 @@
       "loss_rate": 0.2574074074074074,
       "arm": "accept_ratio"
     }
-  ]
+  ],
+  "conceding": {
+    "levers": [
+      "acceptMargin",
+      "counterMargin"
+    ],
+    "margins": [
+      0.025,
+      0.05,
+      0.1
+    ],
+    "note": "jitter 0 is the pre-registered grid: what conceding costs when nobody wobbles.",
+    "passes": [
+      {
+        "lever": "acceptMargin",
+        "margin": 0.025,
+        "jitter": 0,
+        "negotiator_share": 0.33945868945868946,
+        "lift": 1.1032407407407407,
+        "beats_baseline": true
+      },
+      {
+        "lever": "acceptMargin",
+        "margin": 0.025,
+        "jitter": 0.1,
+        "negotiator_share": 0.28985754985754986,
+        "lift": 0.9507933945485657,
+        "beats_baseline": false
+      },
+      {
+        "lever": "acceptMargin",
+        "margin": 0.025,
+        "jitter": 0.25,
+        "negotiator_share": 0.27431623931623933,
+        "lift": 0.8991988086768081,
+        "beats_baseline": false
+      },
+      {
+        "lever": "acceptMargin",
+        "margin": 0.05,
+        "jitter": 0,
+        "negotiator_share": 0.33945868945868946,
+        "lift": 1.1032407407407407,
+        "beats_baseline": true
+      },
+      {
+        "lever": "acceptMargin",
+        "margin": 0.05,
+        "jitter": 0.1,
+        "negotiator_share": 0.28985754985754986,
+        "lift": 0.9507933945485657,
+        "beats_baseline": false
+      },
+      {
+        "lever": "acceptMargin",
+        "margin": 0.05,
+        "jitter": 0.25,
+        "negotiator_share": 0.27431623931623933,
+        "lift": 0.8991988086768081,
+        "beats_baseline": false
+      },
+      {
+        "lever": "acceptMargin",
+        "margin": 0.1,
+        "jitter": 0,
+        "negotiator_share": 0.33945868945868946,
+        "lift": 1.1032407407407407,
+        "beats_baseline": true
+      },
+      {
+        "lever": "acceptMargin",
+        "margin": 0.1,
+        "jitter": 0.1,
+        "negotiator_share": 0.3017948717948718,
+        "lift": 0.9899620634330601,
+        "beats_baseline": false
+      },
+      {
+        "lever": "acceptMargin",
+        "margin": 0.1,
+        "jitter": 0.25,
+        "negotiator_share": 0.278988603988604,
+        "lift": 0.914506903090583,
+        "beats_baseline": false
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.025,
+        "jitter": 0,
+        "negotiator_share": 0.3343703703703704,
+        "lift": 1.0867037037037037,
+        "beats_baseline": true
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.025,
+        "jitter": 0.1,
+        "negotiator_share": 0.292572792022792,
+        "lift": 0.959698553314327,
+        "beats_baseline": false
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.025,
+        "jitter": 0.25,
+        "negotiator_share": 0.2789900284900285,
+        "lift": 0.9145307697745256,
+        "beats_baseline": false
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.05,
+        "jitter": 0,
+        "negotiator_share": 0.3294301994301994,
+        "lift": 1.0706481481481482,
+        "beats_baseline": true
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.05,
+        "jitter": 0.1,
+        "negotiator_share": 0.29776210826210825,
+        "lift": 0.9767151581029567,
+        "beats_baseline": false
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.05,
+        "jitter": 0.25,
+        "negotiator_share": 0.28348789173789174,
+        "lift": 0.9292539004105101,
+        "beats_baseline": false
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.1,
+        "jitter": 0,
+        "negotiator_share": 0.31925925925925924,
+        "lift": 1.0375925925925926,
+        "beats_baseline": true
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.1,
+        "jitter": 0.1,
+        "negotiator_share": 0.3012222222222222,
+        "lift": 0.9880700319903986,
+        "beats_baseline": false
+      },
+      {
+        "lever": "counterMargin",
+        "margin": 0.1,
+        "jitter": 0.25,
+        "negotiator_share": 0.29251139601139603,
+        "lift": 0.958772698412534,
+        "beats_baseline": false
+      }
+    ]
+  }
 }

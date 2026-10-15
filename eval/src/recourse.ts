@@ -165,6 +165,15 @@ export interface RecourseMatrixOptions {
    * simulation — without touching the run that caveat is about.
    */
   variability?: Variability;
+  /**
+   * How much ground the negotiator will give, if any.
+   *
+   * Absent is the pre-registered run, and `robustness.test.ts` pins that the report is
+   * byte-identical with and without this field. Supplying one answers the prediction
+   * `readme.md` §10 and `eval/README.md` made and never measured: that conceding a little
+   * below the published figure would trade a little upside for a lot of robustness.
+   */
+  negotiator?: { acceptMargin?: number; counterMargin?: number };
 }
 
 export async function runRecourseMatrix(
@@ -187,7 +196,18 @@ export async function runRecourseMatrix(
       };
 
       const claim = claimFor(policy.merchant, breachKind, openingAsk(bounds), remedy.clause.id);
-      const negotiator = { ...createNegotiator({ bounds }), open: () => claim };
+      const negotiator = {
+        ...createNegotiator({
+          bounds,
+          ...(options.negotiator?.acceptMargin === undefined
+            ? {}
+            : { acceptMargin: options.negotiator.acceptMargin }),
+          ...(options.negotiator?.counterMargin === undefined
+            ? {}
+            : { counterMargin: options.negotiator.counterMargin }),
+        }),
+        open: () => claim,
+      };
       const agent = createMerchantAgent({
         config: { merchant: policy.merchant, behaviour },
         lookup: () => ({ stated: remedy.reservation, clause_title: remedy.clause.title }),

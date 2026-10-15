@@ -144,6 +144,77 @@ describe("the safety invariants", () => {
     );
   });
 
+  /**
+   * The margins, which nothing ships with.
+   *
+   * Both default to zero, and the properties above still assert the shipped invariants
+   * verbatim — including *"never undercuts what the merchant published either"* — because
+   * they pass no margin. Weakening those assertions to accommodate an option no caller sets
+   * would have traded a named guarantee for a measurement, so the margin gets its own
+   * property instead.
+   *
+   * They exist because `eval/README.md` predicted that conceding a little would buy a lot of
+   * robustness, and a prediction in a submission has to be answerable.
+   * `eval/src/bin/robustness.ts` answers it: for `counterMargin`, the lever that was
+   * predicted, the trade is roughly one-for-one and never restores the result.
+   */
+  it("counters below the published figure only when asked to, and by exactly the margin", () => {
+    const none = nextAction(transcriptOf([5]), { bounds: BOUNDS });
+    const tenth = nextAction(transcriptOf([5]), { bounds: BOUNDS, counterMargin: 0.1 });
+
+    if (none.type !== "COUNTER" || tenth.type !== "COUNTER") throw new Error("expected counters");
+    expect(none.amount).toEqual(usd(12));
+    expect(tenth.amount).toEqual(usd(10.8));
+  });
+
+  it("settles for less than the published figure only within the margin it was given", () => {
+    // $11 against a published $12 is an 8.3% shortfall.
+    const transcript = transcriptOf([11]);
+
+    expect(nextAction(transcript, { bounds: BOUNDS }).type).toBe("COUNTER");
+    expect(nextAction(transcript, { bounds: BOUNDS, acceptMargin: 0.05 }).type).toBe("COUNTER");
+    expect(nextAction(transcript, { bounds: BOUNDS, acceptMargin: 0.1 }).type).toBe("ACCEPT");
+  });
+
+  it("treats a zero margin as no margin at all", () => {
+    for (const options of [
+      { bounds: BOUNDS },
+      { bounds: BOUNDS, acceptMargin: 0, counterMargin: 0 },
+    ]) {
+      const action = nextAction(transcriptOf([5]), options);
+      if (action.type !== "COUNTER") throw new Error("expected a counter");
+      expect(action.amount).toEqual(usd(12));
+    }
+  });
+
+  it("stays between the margin and the ceiling, whatever the bounds", () => {
+    fc.assert(
+      fc.property(
+        boundsArb,
+        offersArb,
+        fc.double({ min: 0, max: 0.5, noNaN: true }),
+        (bounds, offers, margin) => {
+          const action = nextAction(transcriptOf(offers), { bounds, counterMargin: margin });
+          if (action.type !== "COUNTER") return true;
+          const floor = Math.round(bounds.reservation.minor * (1 - margin));
+          return action.amount.minor >= floor && action.amount.minor <= bounds.ceiling.minor;
+        },
+      ),
+      { numRuns: 500 },
+    );
+  });
+
+  /** A margin can never turn an ask into a debt, however absurd the value. */
+  it("never counters below nothing", () => {
+    fc.assert(
+      fc.property(boundsArb, fc.double({ min: -5, max: 5, noNaN: true }), (bounds, margin) => {
+        const action = nextAction(transcriptOf([0]), { bounds, counterMargin: margin });
+        return action.type !== "COUNTER" || action.amount.minor >= 0;
+      }),
+      { numRuns: 500 },
+    );
+  });
+
   it("always cites a clause when it counters — never an unsupported number", () => {
     fc.assert(
       fc.property(boundsArb, offersArb, (bounds, offers) => {

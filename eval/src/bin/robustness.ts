@@ -101,6 +101,72 @@ const byArm = ARMS.flatMap((arm) =>
 );
 const byJitter = byArm.filter((row) => row.arm === "all three");
 
+/**
+ * And the question the first version of this harness raised and did not answer.
+ *
+ * Having measured that the lift depends on merchants honouring their thresholds exactly,
+ * `readme.md` §10 and `eval/README.md` both went on to predict that "countering a little
+ * under the reservation would trade a little upside for a lot of robustness". That was
+ * written and never run. It is run here, for both levers, because the prediction names the
+ * one that breaks the product's stance and the other one was missed entirely:
+ *
+ * - `acceptMargin` — settle for slightly less rather than keep arguing. The negotiator
+ *   still asks for the published figure, so the stance holds.
+ * - `counterMargin` — ask for slightly less. This is what was predicted, and it undercuts
+ *   the published figure, which `negotiator.test.ts` asserts it never does.
+ *
+ * The deterministic column is the **cost**: money left on the table against merchants who
+ * would have paid in full. The jittered columns are the **benefit**. Nothing here changes a
+ * default; both levers are zero everywhere except in these passes.
+ */
+const MARGINS = [0.025, 0.05, 0.1] as const;
+const LEVERS = ["acceptMargin", "counterMargin"] as const;
+
+interface MarginPass {
+  lever: string;
+  margin: number;
+  jitter: number;
+  negotiator_share: number;
+  lift: number;
+  beats_baseline: boolean;
+}
+
+const marginPasses: MarginPass[] = [];
+for (const lever of LEVERS) {
+  for (const margin of MARGINS) {
+    // Deterministic: what giving ground costs when merchants behave exactly as configured.
+    const exact = await runRecourseMatrix(undefined, { negotiator: { [lever]: margin } });
+    marginPasses.push({
+      lever,
+      margin,
+      jitter: 0,
+      negotiator_share: exact.totals.negotiator_share,
+      lift: exact.totals.lift,
+      beats_baseline: exact.totals.lift > 1,
+    });
+
+    // And what it buys once their thresholds are uncertain, averaged over the same seeds.
+    for (const jitter of JITTERS) {
+      const runs = await Promise.all(
+        SEEDS.map((seed) =>
+          runRecourseMatrix(undefined, {
+            negotiator: { [lever]: margin },
+            variability: { rng: new SeededRng(seed), jitter, parameters: VARIABLE_PARAMETERS },
+          }),
+        ),
+      );
+      marginPasses.push({
+        lever,
+        margin,
+        jitter,
+        negotiator_share: mean(runs.map((r) => r.totals.negotiator_share)),
+        lift: mean(runs.map((r) => r.totals.lift)),
+        beats_baseline: runs.every((r) => r.totals.lift > 1),
+      });
+    }
+  }
+}
+
 const report = {
   what: "H3 under merchants that do not behave exactly as configured",
   grid_size: baseline.grid_size,
@@ -129,6 +195,13 @@ const report = {
   },
   by_arm: byArm,
   passes,
+  /** The prediction `readme.md` §10 made and had not measured. */
+  conceding: {
+    levers: [...LEVERS],
+    margins: [...MARGINS],
+    note: "jitter 0 is the pre-registered grid: what conceding costs when nobody wobbles.",
+    passes: marginPasses,
+  },
 };
 
 const pct = (value: number) => `${(value * 100).toFixed(1)}%`;
@@ -170,6 +243,30 @@ process.stdout.write(
   robust
     ? "\n  Arguing still beat taking the first offer in every run, at every jitter: the\n  direction of the H3 result is not an artefact of deterministic merchants.\n"
     : "\n  Arguing did NOT beat taking the first offer in every run. The direction of the H3\n  result depends on merchants behaving as configured, and the README must say so.\n",
+);
+
+process.stdout.write("\n  does conceding a little buy robustness? (the prediction §10 made)\n");
+for (const lever of LEVERS) {
+  process.stdout.write(`\n    ${lever}\n`);
+  process.stdout.write("      margin   deterministic      jitter 0.1         jitter 0.25\n");
+  for (const margin of MARGINS) {
+    const cell = (jitter: number) => {
+      const row = marginPasses.find(
+        (pass) => pass.lever === lever && pass.margin === margin && pass.jitter === jitter,
+      );
+      return row === undefined
+        ? "—".padEnd(18)
+        : `${row.lift.toFixed(2)}x ${row.beats_baseline ? "  " : "<1"}`.padEnd(18);
+    };
+    process.stdout.write(
+      `      ${`${(margin * 100).toFixed(1)}%`.padEnd(8)} ${cell(0)} ${cell(0.1)} ${cell(0.25)}\n`,
+    );
+  }
+}
+process.stdout.write(
+  `\n      for comparison, conceding nothing: ${report.deterministic.lift.toFixed(2)}x deterministic, ` +
+    `${(byJitter.find((row) => row.jitter === 0.1)?.mean_lift ?? 0).toFixed(2)}x at jitter 0.1, ` +
+    `${(byJitter.find((row) => row.jitter === 0.25)?.mean_lift ?? 0).toFixed(2)}x at jitter 0.25\n`,
 );
 
 const dir = fileURLToPath(new URL("../../results/", import.meta.url));

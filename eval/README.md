@@ -509,10 +509,46 @@ point, because the counter arrives on the first reply and the merchant's later c
 schedule hardly ever comes into it.
 
 So the strategy is knife-edged rather than wrong: asking for exactly the published figure
-wins against a merchant who honours it exactly and loses the moment they do not. A negotiator
-that countered a little under the reservation would trade a small amount of upside for a lot
-of robustness. That is a design change to the thing H3 measures, so it is named here and not
-made quietly: the pre-registered negotiator is the one every figure above was produced with.
+wins against a merchant who honours it exactly and loses the moment they do not.
+
+**This section used to end by predicting the fix: that countering a little under the
+reservation would trade a small amount of upside for a lot of robustness. It was never run,
+and it is wrong.** Run now, over the same five seeds, with both the lever that was predicted
+and one it missed — and with no default changed, which `robustness.test.ts` pins by asserting
+the report is byte-identical when both margins are explicitly zero:
+
+| conceding | deterministic | jitter 0.1 | jitter 0.25 | ever above 1.0 |
+|---|---|---|---|---|
+| nothing — the shipped negotiator | **1.103×** | 0.951× | 0.899× | — |
+| `counterMargin` 2.5% | 1.087× | 0.960× | 0.915× | no |
+| `counterMargin` 5% | 1.071× | 0.977× | 0.929× | no |
+| `counterMargin` 10% | 1.038× | 0.988× | 0.959× | no |
+| `acceptMargin` 2.5% | 1.103× | 0.951× | 0.899× | no |
+| `acceptMargin` 5% | 1.103× | 0.951× | 0.899× | no |
+| `acceptMargin` 10% | **1.103×** | 0.990× | 0.915× | no |
+
+Three findings, none of them the predicted one:
+
+1. **Asking for less trades roughly one for one.** `counterMargin` 10% costs 0.066 of lift
+   deterministically and buys back 0.037 at jitter 0.1 and 0.060 at jitter 0.25. A fair
+   swap, not "a little for a lot".
+2. **No margin at either lever restores the result.** The best jittered figure anywhere in
+   the table is 0.990×, from a 10% concession. The sign does not flip back, so conceding is
+   not the fix — it is a slightly different shape of losing.
+3. **The lever the prediction did not name is strictly better and still insufficient.**
+   `acceptMargin` changes only what the negotiator will *take*, never what it asks, so the
+   stance holds — it never asks for a number of its own invention — and it costs **exactly
+   nothing** on the pre-registered grid, pinned by a test asserting the recovered total is
+   identical. Below 10% it does nothing at all; at 10% it recovers 0.951× → 0.990×.
+
+The reason both fall short is already in this document: a third of the grid refuses every
+claim outright. There is nothing to concede *to* a merchant who offers nothing, and the
+cells that flip under jitter flip from "settles at the published figure" to "refuses" — not
+to "offers slightly less".
+
+**The pre-registered negotiator is still the one every figure above was produced with**, and
+both margins are zero in everything that ships. What changed is that the sentence predicting
+otherwise has been replaced by the measurement that refutes it.
 
 Numbers from `results/robustness.json`, seeds 1–5, listed in the file.
 

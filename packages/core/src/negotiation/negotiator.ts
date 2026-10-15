@@ -42,6 +42,41 @@ export interface NegotiatorOptions {
   experience?: CounterExperience;
   /** Tries before experience is trusted over optimism. */
   minObservations?: number;
+  /**
+   * How far below the published figure the negotiator will settle, as a fraction.
+   *
+   * **Zero by default, which is the shipped behaviour and the only one any published
+   * number was measured with.** This exists because `eval/README.md` reported that H3's
+   * lift survives only while merchants honour their acceptance thresholds exactly — 90 of
+   * the 270 grid policies settle at precisely the counter, to the penny — and then this
+   * README predicted that giving a little ground would buy a lot of robustness. The
+   * prediction was never run. `eval/src/bin/robustness.ts` runs it.
+   *
+   * This is the lever that keeps the product's stance intact: the negotiator still asks for
+   * the published figure and nothing of its own invention. It only changes what it will
+   * take rather than keep arguing.
+   */
+  acceptMargin?: number;
+  /**
+   * How far below the published figure the negotiator will *ask*, as a fraction.
+   *
+   * **Zero by default.** Unlike `acceptMargin`, a non-zero value here contradicts the
+   * stance stated below — "never a number of our own invention" — and breaks the invariant
+   * that `negotiator.test.ts` asserts under the name *"never undercuts what the merchant
+   * published either"*. It is here because that is the specific thing the README predicted
+   * would help, so it has to be measurable to be answerable. Nothing ships with it set.
+   */
+  counterMargin?: number;
+}
+
+/** A fraction of the published figure, floored at nothing and rounded to the minor unit. */
+function below(amount: Money, margin: number): Money {
+  const clamped = Math.min(Math.max(margin, 0), 1);
+  if (clamped === 0) return amount;
+  return {
+    minor: Math.max(0, Math.round(amount.minor * (1 - clamped))),
+    currency: amount.currency,
+  };
 }
 
 export type NegotiatorAction =
@@ -127,7 +162,10 @@ export function nextAction(
   const maxRounds = options.maxRounds ?? DEFAULT_MAX_ROUNDS;
   const standing = standingOffer(transcript);
 
-  if (standing !== undefined && standing.amount.minor >= bounds.reservation.minor) {
+  // At or above what the merchant published — or within the margin, where a caller has set
+  // one. With the default of zero this is exactly the published figure.
+  const willSettleAt = below(bounds.reservation, options.acceptMargin ?? 0);
+  if (standing !== undefined && standing.amount.minor >= willSettleAt.minor) {
     return { type: "ACCEPT" };
   }
 
@@ -157,7 +195,7 @@ export function nextAction(
 
   return {
     type: "COUNTER",
-    amount: bounds.reservation,
+    amount: below(bounds.reservation, options.counterMargin ?? 0),
     justification: {
       policy_clause: bounds.clause.title,
       evidence_ids: [...(options.evidenceIds ?? [])],

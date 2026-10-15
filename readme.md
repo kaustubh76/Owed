@@ -475,13 +475,38 @@ schedule hardly ever comes into it; varying `anchor_ratio` alone still beats the
 every run.
 
 So the strategy is knife-edged rather than wrong: it wins against a merchant who honours its
-published figure exactly and loses the moment they do not. Countering a little under the
-reservation would trade a little upside for a lot of robustness — a design change to the
-thing H3 measures, so it is named here rather than made quietly in the sitting that found
-it. The ±30 minute tolerance above was named this way too, and stayed named for two
-iterations before the third one found that the description was wrong — which is the argument
-for writing a defect down rather than carrying it in your head, and also the argument for
-not trusting the write-up over the code.
+published figure exactly and loses the moment they do not.
+
+**This paragraph used to end by predicting the fix, and the prediction was wrong.** It said
+countering a little under the reservation would trade a little upside for a lot of
+robustness. That was written and not run, so it was run — both for the lever it named and
+for one it missed, over the same five seeds, changing no default:
+
+| conceding | deterministic | jitter 0.1 | jitter 0.25 |
+|---|---|---|---|
+| nothing (shipped) | **1.10×** | 0.95× | 0.90× |
+| ask 2.5% less | 1.09× | 0.96× | 0.92× |
+| ask 5% less | 1.07× | 0.98× | 0.93× |
+| ask 10% less | 1.04× | 0.99× | 0.96× |
+| settle for up to 10% less | **1.10×** | 0.99× | 0.92× |
+
+Asking for less trades about **one for one** — every point of lift given up against
+merchants who behave buys roughly a point back against merchants who do not. That is not
+"a little for a lot", and **no margin at either lever gets the lift back above 1.0.**
+Conceding is not the fix.
+
+The lever the prediction did not name is the better one and still not enough: raising only
+what the negotiator will *settle for*, never what it asks, costs **exactly nothing** on the
+pre-registered grid — it leaves the stance intact, since it never asks for a number of its
+own invention — and recovers 0.95× to 0.99× at the lower jitter. Free, real, and short of
+the line. The reason neither works is already in the numbers above: a third of the grid
+refuses every claim outright, and there is nothing to concede *to* a merchant who offers
+nothing.
+
+The ±30 minute tolerance was named this way too, and stayed named for two iterations before
+the third found the description itself was wrong. Both are the same lesson twice: write the
+defect down, and do not trust the write-up over the code — including when the write-up is
+this one.
 
 ---
 
@@ -799,6 +824,7 @@ nothing in this submission should be read as claiming otherwise.
 | AWS | **done after the fact** — the ledger runs on DynamoDB with an append-only guarantee from one conditional write and an atomic sequence counter (§12), verified against the real service in `us-east-1`; also the SDK v3 clients, the `aws` CLI, a nine-action IAM policy — eight on DynamoDB tables named `owed-*`, one `sts:GetCallerIdentity` — Amazon Linux 2023 and CloudShell. `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
 | The deployment, checked like the code | done — 35 structural checks on the four units and the Caddyfile, plus `shellcheck`, `systemd-analyze verify` and `caddy validate` in CI. It was the one directory with nothing automated pointed at it, and both defects found by reading it by hand are now checks (§12) |
 | H3 under merchants that are not perfectly predictable | done, and it does not flatter the result — **the 1.10× lift becomes 0.95× at 10% wobble and 0.90× at 25%**: once a merchant's acceptance threshold is uncertain, arguing loses to taking the first offer. Decomposed to the parameter that causes it and the knife-edge that explains it (§10) |
+| The fix §10 predicted for that | done, and **the prediction was wrong**. Conceding below the published figure trades about one for one and never gets the lift back above 1.0; the lever the prediction did not name costs nothing on the grid and still falls short at 0.99×. The sentence that predicted otherwise has been replaced by the table that refutes it |
 
 **Never cut, and not cut:** the three numbers on the ledger card, the claim card, the
 protocol inspector, the storyboard golden test, the contract suite, the friction log, and
