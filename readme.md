@@ -541,6 +541,7 @@ owed/
 │  ├─ verify-deploy.mjs     # the units, the Caddyfile and the shell, checked like code
 │  ├─ verify-docs.mjs       # entry counts, citations by number, and every relative link
 │  ├─ verify-graph.mjs      # every cross-package import declared *and* referenced
+│  ├─ draw-architecture.mjs # regenerates docs/architecture.excalidraw
 │  ├─ capture-demo.mjs      # records the storyboard to docs/demo-capture.json
 │  └─ aws-smoke.mjs         # proves the ledger against real DynamoDB, in a named account
 ├─ deploy/                  # one box: Caddyfile, four systemd units, bootstrap, IAM policy
@@ -549,6 +550,7 @@ owed/
 │  ├─ proactive.md          # the one primitive Alexa+ is missing, written as a schema
 │  ├─ friction-log.md       # per-tool friction, nineteen entries
 │  ├─ product-feedback.md   # submission requirement (d), per tool and SDK
+│  ├─ architecture.excalidraw # the whole system in one canvas, end to end
 │  ├─ demo-script.md        # what to say, and what not to claim, while recording
 │  └─ policies/             # the merchant policy documents the claims are argued from
 ├─ LICENSE                  # Apache-2.0, verbatim
