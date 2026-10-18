@@ -21,14 +21,35 @@
  *   - **Frames with `frameId` set on every child**, because Excalidraw clips to its frames —
  *     so containment is asserted below rather than assumed.
  *
- * Usage: node scripts/draw-architecture.mjs
+ * Usage: node scripts/draw-architecture.mjs            regenerate the committed diagram
+ *        node scripts/draw-architecture.mjs --check    compare without writing anything
+ *
+ * `--check` exists because the committed file and this generator could disagree and nothing
+ * would say so. Edit the layout, forget to re-run, and `docs/architecture.excalidraw` goes on
+ * describing a system that has moved — the same drift `eval/src/grid.test.ts` already stops
+ * for `data/policies/grid.json`. `pnpm verify:docs` runs it, so a gate watches the diagram
+ * the submission points a reader at.
+ *
+ * It deliberately does not write. A gate that regenerates the artefact it is checking always
+ * passes; this one builds the file in memory and compares the bytes.
  */
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = resolve(REPO_ROOT, "docs/architecture.excalidraw");
+
+/**
+ * Compare instead of writing.
+ *
+ * Every assertion below this point still runs — the required keys, the arrow geometry, the
+ * frame containment, the overlap and label-fit checks, the JSON round-trip. That is the half
+ * of the pin `grid.test.ts` spells out that a byte comparison alone does not give you: a
+ * comparison catches an edited file, and the generator's own checks catch a broken generator,
+ * which would otherwise agree with a file regenerated from itself.
+ */
+const CHECK = process.argv.includes("--check");
 
 // ---------------------------------------------------------------------------
 // Palette. Colour carries meaning here, not decoration — the legend in the
@@ -1098,15 +1119,17 @@ const bounds = elements.reduce(
   { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
 );
 
-process.stdout.write("\nOwed — architecture diagram\n\n");
-process.stdout.write(
+const report = CHECK ? () => {} : (text) => process.stdout.write(text);
+
+report("\nOwed — architecture diagram\n\n");
+report(
   `  canvas        ${Math.round(bounds.maxX - bounds.minX)} x ${Math.round(bounds.maxY - bounds.minY)}\n`,
 );
-process.stdout.write(`  frames        ${frames.length}\n`);
-process.stdout.write(`  shapes        ${shapes.length}\n`);
-process.stdout.write(`  labels        ${elements.filter((e) => e.type === "text").length}\n`);
-process.stdout.write(`  arrows        ${elements.filter((e) => e.type === "arrow").length}\n`);
-process.stdout.write(`  elements      ${elements.length}\n\n`);
+report(`  frames        ${frames.length}\n`);
+report(`  shapes        ${shapes.length}\n`);
+report(`  labels        ${elements.filter((e) => e.type === "text").length}\n`);
+report(`  arrows        ${elements.filter((e) => e.type === "arrow").length}\n`);
+report(`  elements      ${elements.length}\n\n`);
 
 const COLS = 76;
 const ROWS = 30;
@@ -1121,11 +1144,11 @@ for (const [index, f] of frames.entries()) {
     }
   }
 }
-for (const row of grid) process.stdout.write(`  ${row.join("")}\n`);
-process.stdout.write("\n  O = overview, 1-9 = the detail frames, in reading order\n");
+for (const row of grid) report(`  ${row.join("")}\n`);
+report("\n  O = overview, 1-9 = the detail frames, in reading order\n");
 for (const [index, f] of frames.entries()) {
   if (index === 0) continue;
-  process.stdout.write(`    ${index}. ${f.name}\n`);
+  report(`    ${index}. ${f.name}\n`);
 }
 
 // ---------------------------------------------------------------------------
@@ -1150,8 +1173,56 @@ if (reparsed.elements.length !== elements.length) {
   process.exit(1);
 }
 
-writeFileSync(OUT, json);
-process.stdout.write(
-  `\n  written to ${relative(REPO_ROOT, OUT)} — ${Math.round(json.length / 1024)} KB\n` +
-    "  open it at excalidraw.com, or with the Excalidraw extension in VS Code\n",
-);
+const where = relative(REPO_ROOT, OUT);
+
+if (CHECK) {
+  let committed;
+  try {
+    committed = readFileSync(OUT, "utf8");
+  } catch {
+    process.stdout.write(`${where} is missing. Run \`node scripts/draw-architecture.mjs\`.\n`);
+    process.exit(1);
+  }
+
+  if (committed === json) {
+    process.stdout.write(
+      `${where} matches the generator — ${elements.length} elements, ${frames.length} frames\n`,
+    );
+  } else {
+    // Say what differs, not what the file contains. A diff of 221 KB of generated JSON is
+    // not something anybody reads, and the useful answer is almost always the first one.
+    const theirs = (() => {
+      try {
+        return JSON.parse(committed);
+      } catch {
+        return undefined;
+      }
+    })();
+    const lines = [`${where} is out of date — run \`node scripts/draw-architecture.mjs\`.`];
+    if (theirs === undefined) {
+      lines.push("  the committed file is not valid JSON");
+    } else {
+      if (theirs.elements?.length !== elements.length) {
+        lines.push(
+          `  elements: committed ${theirs.elements?.length}, generator ${elements.length}`,
+        );
+      }
+      const mine = elements.find(
+        (element, index) =>
+          JSON.stringify(element) !== JSON.stringify(theirs.elements?.[index] ?? null),
+      );
+      if (mine !== undefined) {
+        lines.push(`  first element that differs: ${mine.type} ${mine.id}`);
+      }
+      lines.push(`  bytes: committed ${committed.length}, generator ${json.length}`);
+    }
+    process.stdout.write(`${lines.join("\n")}\n`);
+    process.exit(1);
+  }
+} else {
+  writeFileSync(OUT, json);
+  process.stdout.write(
+    `\n  written to ${where} — ${Math.round(json.length / 1024)} KB\n` +
+      "  open it at excalidraw.com, or with the Excalidraw extension in VS Code\n",
+  );
+}

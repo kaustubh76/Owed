@@ -24,6 +24,7 @@
  * contradiction — both sentences were well-formed and only one was true — and nothing
  * mechanical would have.
  */
+import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -236,6 +237,31 @@ for (const name of readdirSync(DOCS).sort()) {
     readme.includes(name) ? "listed" : "absent",
   );
 }
+
+// ---------------------------------------------------------------------------
+// The architecture diagram, against the generator that produced it.
+//
+// `docs/architecture.excalidraw` is 221 KB of generated JSON that `readme.md` and the
+// submission both point a reader at, and it was committed with nothing checking that it
+// still agreed with `scripts/draw-architecture.mjs`. Edit the layout, forget to re-run, and
+// the canvas quietly describes a system that has moved.
+//
+// Spawned rather than imported, because the generator is a script with assertions and an
+// exit code, not a module — and run with `--check`, which compares in memory. A gate that
+// regenerates the file it is checking cannot fail.
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the architecture diagram ---\n");
+
+const drawn = spawnSync(
+  process.execPath,
+  [join(REPO_ROOT, "scripts/draw-architecture.mjs"), "--check"],
+  { encoding: "utf8" },
+);
+want(
+  "docs/architecture.excalidraw agrees with its generator",
+  drawn.status === 0,
+  (drawn.stdout ?? "").trim().split("\n")[0] ?? drawn.error?.message ?? "did not run",
+);
 
 // ---------------------------------------------------------------------------
 // Counts that drifted, and now cannot.
