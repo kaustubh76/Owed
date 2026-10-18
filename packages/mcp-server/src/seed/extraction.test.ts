@@ -17,6 +17,29 @@ import { buildArcs, SOURCE_MESSAGES } from "./storyboard.js";
 describe("every seeded promise can be read out of the message it came from", () => {
   const arcs = buildArcs();
 
+  /**
+   * How many promises there are — which nothing asserted, and had to.
+   *
+   * The `it()`s further down are generated from `arcs` at **collection time**. If
+   * `buildArcs()` ever returned an empty list they would not fail; they would cease to
+   * exist. The suite would drop from 442 tests to 431, the loop below would pass over
+   * nothing, and every remaining check would be green. A test that can vanish is the worst
+   * version of a check that cannot fail, because even the test count stops reporting it.
+   *
+   * Eleven is the figure `docs/contract-v1.md` §6 and `readme.md` §15 both commit to: the
+   * ten in the week's table, plus `prm_011` — the promise the demo files during the take.
+   */
+  it("reads all eleven promises the seed declares, and no others", () => {
+    expect(arcs).toHaveLength(11);
+    expect(new Set(arcs.map((arc) => arc.promise.id)).size, "distinct promise ids").toBe(11);
+
+    // Both directions. An arc with no message and a message with no arc are both
+    // provenance holes, and the per-promise tests below only ever look one way.
+    expect(arcs.map((arc) => arc.promise.id).toSorted()).toEqual(
+      Object.keys(SOURCE_MESSAGES).toSorted(),
+    );
+  });
+
   it("has a message behind every promise", () => {
     for (const arc of arcs) {
       expect(SOURCE_MESSAGES[arc.promise.id], `no message for ${arc.promise.id}`).toBeDefined();
