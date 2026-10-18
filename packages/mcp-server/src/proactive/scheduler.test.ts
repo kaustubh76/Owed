@@ -57,10 +57,24 @@ describe("the proactive scheduler", () => {
    * The property that makes the scrubber work. A queue would replay announcements on
    * the way back through the week, or lose them on the way forward; a projection
    * cannot, because the same instant is the same question.
+   *
+   * The second assertion is what makes the first one mean anything. On its own, "the same
+   * instant gives the same answer" compares one call to another call with the same
+   * argument: true of a correct projection, and equally true of one that always returns
+   * the same thing regardless of when you ask — which is the opposite of a scrubber.
+   * `eval/src/robustness.test.ts` pairs its determinism check with a differing seed for
+   * exactly this reason.
    */
-  it("answers the same for an instant however it was reached", async () => {
+  it("answers the same for an instant, and differently for a different one", async () => {
     const instant = at("sun", "19:30");
-    expect(await dueAt(instant)).toEqual(await dueAt(instant));
+    const asked = await dueAt(instant);
+
+    expect(asked).toHaveLength(SUNDAY_EVENING_ANNOUNCEMENTS);
+    expect(await dueAt(instant)).toEqual(asked);
+    expect(
+      await dueAt(at("mon", "08:00")),
+      "a different instant is a different question",
+    ).not.toEqual(asked);
   });
 
   it("takes an announcement back when the clock moves before it", async () => {
@@ -117,12 +131,23 @@ describe("the proactive scheduler", () => {
     }
   });
 
-  /** Identity has to survive both re-polling and replay, or the household hears it twice. */
-  it("gives an event the same id every time it is derived", async () => {
-    const first = await dueAt(at("sun", "19:30"));
-    const second = await dueAt(at("sun", "19:30"));
+  /**
+   * Identity has to survive both re-polling and replay, or the household hears it twice.
+   *
+   * And it has to be derived from the event rather than constant, or the household hears
+   * one announcement for everything — so a Monday instant has to produce a different set
+   * of ids, not merely a stable one.
+   */
+  it("gives an event the same id every time it is derived, and not the same id to every event", async () => {
+    const first = await sundayEvening();
+    const second = await sundayEvening();
+
     expect(first.map((e) => e.event_id)).toEqual(second.map((e) => e.event_id));
-    expect(new Set(first.map((e) => e.event_id)).size).toBe(first.length);
+    expect(new Set(first.map((e) => e.event_id)).size, "distinct ids").toBe(first.length);
+    expect(
+      await dueAt(at("mon", "08:00")).then((events) => events.map((e) => e.event_id)),
+      "a different instant does not reuse these ids",
+    ).not.toEqual(first.map((e) => e.event_id));
   });
 
   it("stops offering an announcement once it has gone stale", async () => {

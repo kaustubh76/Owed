@@ -22,8 +22,24 @@ async function stateAt(instant?: string) {
  * breaking the demo turns CI red (plan §8). Figures are frozen in docs/contract-v1.md §6.
  */
 describe("storyboard week", () => {
-  it("is deterministic — two builds produce identical events", async () => {
-    expect(await storyboardEvents()).toEqual(await storyboardEvents());
+  /**
+   * Identical, and not identically empty.
+   *
+   * This compared two calls of the same argument-less function, so it passed whenever both
+   * sides agreed — including when both were `[]`, and including for a `storyboardEvents`
+   * that had stopped building a week at all. The count is what makes the equality mean
+   * something: eighty-one events, eleven of them `PromiseCaptured`, which is the same
+   * eleven promises `extraction.test.ts` pins against `SOURCE_MESSAGES`.
+   */
+  it("is deterministic — two builds produce identical, non-empty events", async () => {
+    const events = await storyboardEvents();
+
+    expect(events).toHaveLength(81);
+    expect(
+      events.filter((event) => event.type === "PromiseCaptured"),
+      "one PromiseCaptured per seeded promise",
+    ).toHaveLength(11);
+    expect(events).toEqual(await storyboardEvents());
   });
 
   it("replays in occurrence order", async () => {
