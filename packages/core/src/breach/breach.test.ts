@@ -625,16 +625,58 @@ describe("evidence belonging to another promise", () => {
 
 describe("the gate", () => {
   /**
+   * Fractions that visit the region the gate actually turns on.
+   *
+   * The uniform draw is kept and a second branch added either side of the threshold — so
+   * the support is unchanged and nothing that used to be generated stopped being
+   * generated. This widens; it does not narrow. Needed because the property below has to
+   * clear *both* gates to reach its assertion, and two independent uniform draws over
+   * [0, 1] do that about one time in five before the outcome and decidability filters
+   * take their share.
+   */
+  const fractionAround = (threshold: number) =>
+    fc.oneof(
+      fc.double({ min: 0, max: 1, noNaN: true }),
+      fc.double({
+        min: Math.max(0, threshold - 0.1),
+        max: Math.min(1, threshold + 0.1),
+        noNaN: true,
+      }),
+    );
+
+  /**
    * The product's central safety promise, as a property rather than a paragraph:
    * nothing is ever reported as Breached below the confidence and coverage thresholds.
+   *
+   * `gated` is counted because almost nothing reached the assertion. A case has to be
+   * `broken` (one outcome in three), `decidable` (one in two), *and* clear both gates, and
+   * the result was a handful of reaching runs out of five hundred. The property was still
+   * doing something — which is why it is worth making it reach rather than merely
+   * measuring it. The assertion is not a tautology: `coverage` is the fraction the case
+   * asked for, while the gate reads the coverage `conclude` re-derives from the intervals
+   * `watched()` built from it, so the two agreeing is a real invariant about coverage
+   * derivation. It was being checked a couple of times per run.
    */
   it("never reports Breached below the thresholds", () => {
+    let gated = 0;
     fc.assert(
       fc.property(
-        fc.double({ min: 0, max: 1, noNaN: true }),
-        fc.double({ min: 0, max: 1, noNaN: true }),
-        fc.constantFrom("kept" as const, "broken" as const, "unknown" as const),
-        fc.boolean(),
+        fractionAround(BREACH_CONFIDENCE_MIN),
+        fractionAround(BREACH_COVERAGE_MIN),
+        // Weighted, not narrowed: all three outcomes and both booleans are still drawn,
+        // just not uniformly. Only a `broken` and `decidable` case can be Breached at all,
+        // so a uniform draw spends five sixths of its runs on the early return.
+        fc.oneof(
+          {
+            arbitrary: fc.constantFrom("kept" as const, "broken" as const, "unknown" as const),
+            weight: 1,
+          },
+          { arbitrary: fc.constant("broken" as const), weight: 3 },
+        ),
+        fc.oneof(
+          { arbitrary: fc.boolean(), weight: 1 },
+          { arbitrary: fc.constant(true), weight: 3 },
+        ),
         (confidence, coverage, outcome, decidable) => {
           const detection = conclude({
             promise: promise("delivery_window"),
@@ -649,32 +691,69 @@ describe("the gate", () => {
           });
 
           if (detection.verdict !== "Breached") return true;
+          gated += 1;
           return confidence >= BREACH_CONFIDENCE_MIN && coverage >= BREACH_COVERAGE_MIN;
         },
       ),
-      { numRuns: 500 },
+      { numRuns: 2000 },
     );
+
+    // 88 to 115 of 2000 measured over six runs; 40 leaves better than twice the margin.
+    // Before the widening and the weights it was 3 to 9 of 500 — about five assertions a
+    // run, on the property that states the product's main promise.
+    expect(gated, "runs that reached the gate").toBeGreaterThan(40);
   });
 
-  it("never claims before the moment of judgement has passed", () => {
+  /**
+   * Undecidable abstains — and decidable does not.
+   *
+   * This property used to hardcode `decidable: false` and vary only `coverage`, which
+   * `verdictFor` does not consult when a case is undecidable. Two hundred runs, all
+   * asserting the same thing, and no way to tell the real implementation from one that
+   * returns `"Undetermined"` for everything. The arbitrary bought nothing.
+   *
+   * So `decidable` is the generated parameter now, and the assertion runs both ways. The
+   * second half is what gives the first half meaning: an implementation that always
+   * abstained would satisfy "undecidable ⇒ Undetermined" perfectly.
+   */
+  it("abstains before the moment of judgement, and only before it", () => {
+    let undecided = 0;
+    let decided = 0;
     fc.assert(
-      fc.property(fc.double({ min: 0, max: 1, noNaN: true }), (coverage) => {
-        const detection = conclude({
-          promise: promise("delivery_window"),
-          kind: "phantom_delivery",
-          evaluation: interval(at("13:00"), at("14:00")),
-          observed: watched(coverage),
-          confidence: 1,
-          evidence_ids: [],
-          explanation: "property test",
-          outcome: "broken",
-          decidable: false,
-        });
+      fc.property(
+        fc.double({ min: 0, max: 1, noNaN: true }),
+        fc.boolean(),
+        (coverage, decidable) => {
+          const detection = conclude({
+            promise: promise("delivery_window"),
+            kind: "phantom_delivery",
+            evaluation: interval(at("13:00"), at("14:00")),
+            observed: watched(coverage),
+            confidence: 1,
+            evidence_ids: [],
+            explanation: "property test",
+            outcome: "broken",
+            decidable,
+          });
 
-        return detection.verdict === "Undetermined";
-      }),
-      { numRuns: 200 },
+          if (!decidable) {
+            undecided += 1;
+            // Whatever the coverage. This is the half that was already here.
+            return detection.verdict === "Undetermined";
+          }
+
+          decided += 1;
+          // And the half that was not: a decidable case reaches a real verdict. Which one
+          // depends on coverage and is the gate property's business, not this one's — but
+          // it is never the abstention.
+          return detection.verdict !== "Undetermined";
+        },
+      ),
+      { numRuns: 400 },
     );
+
+    expect(undecided, "undecidable cases generated").toBeGreaterThan(50);
+    expect(decided, "decidable cases generated").toBeGreaterThan(50);
   });
 });
 
