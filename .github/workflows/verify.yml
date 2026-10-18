@@ -79,6 +79,31 @@ jobs:
         env:
           OWED_REQUIRE_DYNAMO: "1"
 
+      # The same suite in a second timezone, because its independence was accidental.
+      #
+      # Nothing in this repository sets `TZ`, and nothing claimed the suite was
+      # zone-independent — it simply was, as a by-product of real discipline: `clock.ts`
+      # forbids a bare `new Date()` elsewhere, the arithmetic is all `Date.UTC` and
+      # `getUTCDay`, and a grep for every local-time accessor (`getHours`, `getDay()`,
+      # `toLocaleString`, `getTimezoneOffset`, …) across the whole tree returns zero hits.
+      # So it passed here in UTC and on a developer machine at +05:30, and nobody knew that
+      # was being tested or would have noticed it breaking in one zone only.
+      #
+      # That matters for this product specifically: the demo's central beat fires on
+      # *crossing* one instant, Sunday 18:25, and a zone-dependent regression would make it
+      # look broken on a judge's machine rather than on ours.
+      #
+      # +14 and across the date line, so local date != UTC date — the case a negative or
+      # half-hour offset cannot catch. Deliberately a second run rather than `TZ` in
+      # `vitest.config.ts`: fixing the zone for everyone would collapse the incidental
+      # diversity that is currently the evidence. Verified locally under UTC,
+      # America/New_York and Pacific/Kiritimati before being pinned here — all green, and
+      # ~9s each, so this is the cheapest coverage in the job.
+      - run: pnpm test
+        env:
+          TZ: Pacific/Kiritimati
+          OWED_REQUIRE_DYNAMO: "1"
+
       # The external Alexa+ conformance checker, run against a real booted server.
       - run: pnpm conformance
 

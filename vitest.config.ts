@@ -8,7 +8,7 @@ const pkg = (name: string) =>
 /**
  * Half the cores, at least two.
  *
- * Vitest defaults to a worker per file and this suite has thirty of them, most of which
+ * Vitest defaults to a worker per file and this suite has forty of them, most of which
  * boot a real HTTP server on an ephemeral port — so the default oversubscribes an
  * eight-core machine by roughly four to one. The symptom was not slowness but
  * *unreliability*: failures that moved between files run to run, and the latency benchmark
@@ -17,8 +17,8 @@ const pkg = (name: string) =>
  *
  * Half the cores leaves room for the servers the tests themselves spawn, which the worker
  * count does not account for. `isolate: false` would be the faster fix and is the wrong
- * one: it shares workers across files, and 325 tests is a lot of module state to start
- * trusting with that.
+ * one: it shares workers across files, and this many tests is a lot of module state to
+ * start trusting with that.
  */
 const maxWorkers = Math.max(2, Math.floor(cpus().length / 2));
 
