@@ -1,0 +1,91 @@
+# Owed against its own requirements
+
+*What `product_ideation.md` said this product had to be, checked against what it is.*
+
+The scope list (§20) and the required safety, security and reliability properties (§10) were
+written **before** the code, as part of the ideation document in this repository. This file
+walks both, one row at a time, and says for each one where it is implemented, how it was
+checked, and whether it holds.
+
+Three things make it worth reading rather than skipping:
+
+- **Every row was checked by running something**, in one pass, on 2026-10-18. Not by reading
+  the code and believing it. Where a row says "measured", a command produced the number.
+- **Two rows do not hold as written**, and they are marked that way rather than smoothed over.
+- **One row was found missing while writing this** — the per-merchant claim frequency cap —
+  and was built rather than reworded. It had been required since before the first commit and
+  implemented nowhere, which is the kind of gap a document like this exists to surface.
+
+What this is not: a claim that Owed has run on Alexa+. It has not — the platform is
+partner-gated, and §13 of the readme carries the real-vs-simulated map.
+
+---
+
+## MVP scope (§20, "Must include")
+
+| Requirement | Where | Checked by | Verdict |
+|---|---|---|---|
+| Seven promise kinds, six breach kinds | `domain/src/promise.ts`, `domain/src/breach.ts` | Read out of the schemas: `PromiseKindSchema` has 7, `BreachKindSchema` has 6 | **holds** |
+| Extractor and breach engine with published precision/recall | `eval/src/extraction/`, `eval/src/breach/` | `pnpm eval:all`; figures in readme §10, including the held-out ones | **holds** |
+| Six tools | `mcp-server/src/tools/` | `tools/list` over a real client against the booted server returns exactly the six frozen names | **holds** |
+| Three `ui://` views | `mcp-server/src/views.ts` | `verify:docs` compares the contract's table to the registered tools; `verify:ui` reads all three back over the wire | **holds** |
+| Elicitation | `tools/claimFile.ts` | `alexa/contract.test.ts` drives both branches — the declared-capability one and the explicit `confirm` | **holds** |
+| OAuth 2.1 + PKCE | `mcp-server/src/auth/` | Live against the booted server: `code_challenge_methods_supported: ["S256"]`, and no `registration_endpoint` | **holds** |
+| Conformance passing | `scripts/conformance.mjs` | `pnpm conformance`, in `pnpm verify`, against a real booted server | **holds** |
+| Recourse protocol v1 and negotiator | `packages/recourse-protocol/`, `core/src/negotiation/` | Property tests plus the recorded wire transcript the inspector renders | **holds** |
+| **Three** merchant agents | `packages/merchant-agents/` | Live: `GET /merchants` on 3941 returns **four** — Northwind Parcel, Meridian Rides, Alder Home Services, Calder & Co. | **exceeded** — four, not three |
+| **20**-policy eval | `data/policies/grid.json` | `eval/src/grid.test.ts` pins **270** policies, generated from five parameters before the negotiator was tuned | **exceeded** — 270, not 20; readme §10 explains the change to a pre-registered quantity |
+| Simulated home: Echo Show frame | `apps/home/` | `verify:ui` asserts the canvas at 768×480 with no horizontal overflow | **holds** |
+| Echo Dot, voice-only | `apps/home/` | `verify:ui`: "the Dot has no screen" (zero card elements), and it still answers | **holds** |
+| Timeline scrubber | `apps/home/` | `verify:ui` scrubs to Monday and back; the scheduler answers per instant, pinned both ways | **holds** |
+| Voice, in and out | `apps/home/` | `verify:ui`: speech recognition offered, TTS speaks, barge-in cancels, both off by default | **holds** |
+| Protocol inspector | `apps/home/` | `verify:ui`: the commitment event and the recourse exchange both appear, captured at the transport | **holds** |
+| Proactive badge | `apps/home/`, `proactive/` | `verify:ui`: the announcement is labelled `simulated proactive` and carries its offer | **holds** |
+| Seeded inbox and doorbell scenarios | `mcp-server/src/seed/` | 81 ledger events — 11 `PromiseCaptured`, 18 `EvidenceObserved` — and every promise re-extracted from its own message to the minute | **holds** |
+| Event-sourced ledger | `core/src/ledger/` | Append-only behind a two-method port; memory, `node:sqlite` and DynamoDB adapters replay identically | **holds** |
+| README with numbers, friction log, feature request, real-vs-simulated map | `readme.md`, `docs/` | `verify:docs` checks entry counts, citations, links and the hypothesis verdicts against the harness output | **holds** |
+| Demo video | — | Not recorded | **outstanding** — the last unchecked box in readme §15 |
+
+---
+
+## Required properties (§10)
+
+| Property | Where | Checked by | Verdict |
+|---|---|---|---|
+| OAuth 2.1 + PKCE (S256) for account linking | `auth/router.ts` | Live discovery, and the brain walks a real authorization-code + PKCE link at boot | **holds** |
+| Owed's own AS issues scoped tokens | `auth/` | `scopes_supported` on the protected-resource document; `auth.test.ts` | **holds** |
+| Every tool call bound to a household id **from the token** | `auth/middleware.ts` | The id is read from the verified token's claims, never from the request; `auth.test.ts` covers a token for another household | **holds** |
+| Minimum data — promises and evidence pointers, not mailboxes | `domain/src/evidence.ts` | Evidence carries a kind, an instant and a pointer; no message bodies are stored beyond the quoted sentence a promise was read from | **holds** |
+| Snapshots retained 30 days | — | Nothing implements retention | **not built** — persistence is off by default and the seeded week is rebuilt on every boot, so there is nothing to expire. Stated here rather than implied |
+| Evidence shared with merchants only as the pack the user approved | `tools/claimFile.ts` | `attach_evidence` defaults true and is the only path; the claim card shows what went with it | **holds** |
+| No third-party analytics | — | No analytics dependency exists | **holds** |
+| Evidence source down → cannot escalate to `Breached`, and the household is told what was not watched | `core/src/breach/` | The coverage gate: below `BREACH_COVERAGE_MIN` the verdict is `Suspected`, never `Breached`, and the card draws the gaps | **holds differently** — §10 named a `Degraded` regime; the guarantee is delivered by coverage accounting instead, and the word appears nowhere in the code |
+| Merchant agent unreachable → claim falls back to email route with the same pack | `core/src/negotiation/filing.ts` | `fileWithoutAgent` emits `ClaimProposed` + `ClaimFiled` with route `email` where the policy publishes a contact, else `manual`; `claimFileNoAgent.test.ts` drives it against a directory that cannot answer | **holds** |
+| Bedrock unavailable → ledger and tools stay readable | `mcp-server/src/app.ts` | Stronger than required: the server imports `@owed/extractor` only. `extractor-bedrock` is not on the request path at all, so Bedrock cannot affect it | **holds** |
+| One negotiation per promise | `tools/claimFile.ts` | `findClaimForPromise` returns the existing claim rather than filing a second; `claim_file` is idempotent per promise | **holds** |
+| Three-round cap | `domain/src/coverage.ts` | `MAX_NEGOTIATION_ROUNDS = 3`, read by the negotiator; the eval's median is 2 rounds | **holds** |
+| Per-merchant claim frequency cap | `domain/src/coverage.ts`, `tools/claimFile.ts` | `MAX_CLAIMS_PER_MERCHANT = 5` over `CLAIM_WINDOW_DAYS = 7`, counted over the ledger; five tests pin both sides of the boundary | **holds — built on 2026-10-18.** It was required here and implemented nowhere, and was not listed as not-built either |
+| No auto-file in v1 | `tools/claimFile.ts` | Elicitation or an explicit `confirm`; `verify:ui` clicks the household's own "File it" | **holds** |
+| Append-only ledger | `core/src/ledger/` | The DynamoDB adapter's whole guarantee is one conditional write plus an atomic counter; "never rewrites an event that is already there" is a test | **holds** |
+| Every claim message carries its claim id | `recourse-protocol/src/messages.ts` | `claim_id` is required on every message in the union | **holds differently** — §10 said "signed with claim id"; the id is carried on every message, not cryptographically signed |
+| The inspector renders the exact wire messages | `apps/home/` | Frames are tapped at the transport, not reconstructed; `verify:ui` reads them off the panel | **holds** |
+| Useful read-only if every external source is offline | `tools/reads.ts`, `tools/ledgerSummary.ts` | Neither reads any merchant or performs any fetch — the read tools project the ledger and nothing else | **holds** |
+
+---
+
+## How to re-run this
+
+```bash
+pnpm preflight        # a machine that can run it says so
+pnpm verify           # five gates: graph, docs, build, lint, tests, conformance, deploy
+pnpm verify:ui        # 52 browser assertions and four accessibility audits, needs Chrome
+pnpm demo             # four processes; the home at http://127.0.0.1:5173
+```
+
+Measured on 2026-10-18, on an 8-core machine: `pnpm verify` 12s, `pnpm verify:ui` 10–18s,
+450 tests across 42 files.
+
+The two rows marked **exceeded** are expansions of a pre-registered quantity, which is
+recorded as such in readme §10 rather than treated as a free upgrade. The two marked **holds
+differently** deliver the property under another name, and the difference is named so a reader
+can disagree with the substitution.

@@ -556,6 +556,7 @@ owed/
 │  ├─ architecture.excalidraw # the whole system in one canvas, end to end
 │  ├─ demo-capture.json     # the storyboard recorded off the running server, asserted by verify:ui
 │  ├─ demo-script.md        # what to say, and what not to claim, while recording
+│  ├─ requirements.md      # §20 scope and §10 properties, each checked by running it
 │  └─ policies/             # the merchant policy documents the claims are argued from
 ├─ LICENSE                  # Apache-2.0, verbatim
 ├─ NOTICE                   # the copyright line, and which packages it covers
@@ -863,6 +864,7 @@ rather than in a drawer.
   - **H1 — can a promise be extracted from what a merchant wrote?** 100% precision / 99% recall on the 120-message corpus it was tuned against, and **73.7% / 58.3%** on 40 held-out messages. **Met on the corpus it was tuned against, missed on data it had not seen** — and that gap is the most useful number in this repository.
   - **H2 — can a breach be detected reliably per promise kind?** **Met**, at 100% precision and 100% recall on every kind with a 0% false-positive rate, against a target of 0.9 precision per kind and under 5% — but only after three detector defects were fixed in response to the two cases that failed, and after correcting a harness that tested the pooled precision while claiming to test it per kind. The corpus was not touched and the ±30 minute tolerance was not changed; §10 has the three corrections and the commit order.
   - **H3 — does arguing recover more than accepting the first offer?** Target was ≥60% recovery, ≥1.5× the baseline, and a median of ≤2 rounds. **Met on the rounds criterion** — the median is two — and **not met** on the other two: 33.9% of owed value at 1.10× the baseline single-shot, 44.1% at 1.43× once the learning loop has three encounters to work from.
+- [x] **Scope and required properties, walked against the build**: **[docs/requirements.md](docs/requirements.md)** — every row in `product_ideation.md` §20 (MVP scope) and §10 (required safety, security and reliability properties), checked by running something rather than by reading the code. Two rows are exceeded (four merchant agents where it said three, a 270-policy grid where it said 20), two hold under a different name than the ideation used, one is **not built** and says so (30-day snapshot retention, which has nothing to expire while persistence is off by default), and one was found missing while writing it and built: the per-merchant claim frequency cap
 - [ ] Demo video: public YouTube, English, < 3 min, no third-party trademarks or music
 - [x] Judges can read the repo — it is **public** under Apache-2.0, so there is nothing to invite and nothing that expires. This line previously tracked seven-day collaborator invitations, which the visibility change made unnecessary.
 

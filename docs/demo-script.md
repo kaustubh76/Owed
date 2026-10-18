@@ -17,7 +17,7 @@ eleven days after it became met, which is why both of those checks now exist.
 pnpm install
 pnpm build            # required — the services run from dist/, and nothing builds on install
 pnpm preflight        # says yes, or says exactly what is in the way
-pnpm verify:ui        # 23s on an 8-core laptop. Needs Google Chrome. Run it before recording.
+pnpm verify:ui        # 10-18s on an 8-core laptop. Needs Google Chrome. Run it before recording.
 pnpm demo
 ```
 
