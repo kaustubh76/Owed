@@ -98,4 +98,12 @@ jobs:
       # pointed at it. The structural checks run anywhere; this runner is where all three
       # real validators exist, so it is the only place those files get genuinely read — a
       # Mac reports the validators as skipped.
+      #
+      # OWED_REQUIRE_VALIDATORS makes a skip here a failure, for the same reason
+      # OWED_REQUIRE_DYNAMO exists above: without it, the caddy step breaking or a runner
+      # image dropping shellcheck would turn all three validators into no-ops and this gate
+      # would still go green, reporting that 150 lines of Caddyfile and four systemd units
+      # had been read when nothing had read them.
       - run: pnpm verify:deploy
+        env:
+          OWED_REQUIRE_VALIDATORS: "1"

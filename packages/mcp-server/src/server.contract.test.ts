@@ -7,6 +7,23 @@ import { VIEW_URIS } from "./views.js";
 import { MAX_SPOKEN_CHARS } from "./voice.js";
 
 /**
+ * Frozen at D0. Alexa+ locks tool signatures at certification, and the storyboard asserts
+ * against them. docs/contract-v1.md §3.
+ *
+ * Hoisted out of the one test that used to own it because two other tests loop `tools` with
+ * an `expect` in the body: if `listTools` ever returned nothing, those loops would pass
+ * having checked nothing. They compare against this length rather than carrying a `6` each.
+ */
+const TOOL_NAMES = [
+  "claim_file",
+  "claim_status",
+  "evidence_get",
+  "ledger_summary",
+  "promise_check",
+  "promises_list",
+] as const;
+
+/**
  * The tool contract, exercised over real Streamable HTTP with the real client, through
  * a real access token. Gate 4 in the plan.
  */
@@ -35,29 +52,28 @@ describe("tools/list", () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
 
-    // Frozen at D0. Alexa+ locks tool signatures at certification, and the storyboard
-    // asserts against them. docs/contract-v1.md §3.
-    expect(names).toEqual([
-      "claim_file",
-      "claim_status",
-      "evidence_get",
-      "ledger_summary",
-      "promise_check",
-      "promises_list",
-    ]);
+    expect(names).toEqual([...TOOL_NAMES]);
   });
 
   it("gives every tool a description and an input schema", async () => {
     const { tools } = await client.listTools();
+    expect(tools).toHaveLength(TOOL_NAMES.length);
 
     for (const tool of tools) {
-      expect(tool.description, `${tool.name} needs a description`).toBeTruthy();
-      expect(tool.inputSchema, `${tool.name} needs an inputSchema`).toBeTruthy();
+      // Not `toBeTruthy()`, which passes on the single character `"x"` and on `{}`. A
+      // description is what Alexa+ reads to decide whether to call the tool at all, so the
+      // bound is the one `alexa/contract.test.ts` already uses for the spoken surface.
+      expect(
+        (tool.description ?? "").length,
+        `${tool.name} needs a real description`,
+      ).toBeGreaterThan(40);
+      expect(tool.inputSchema?.type, `${tool.name} needs an inputSchema`).toBe("object");
     }
   });
 
   it("links every tool to the view that renders it", async () => {
     const { tools } = await client.listTools();
+    expect(tools).toHaveLength(TOOL_NAMES.length);
 
     for (const tool of tools) {
       const meta = tool._meta as { ui?: { resourceUri?: string } } | undefined;

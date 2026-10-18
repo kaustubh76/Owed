@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as z from "zod/v4";
 import { type Harness, startHarness } from "../testing/harness.js";
 import { CONFIRMATION_SCHEMA } from "../tools/claimFile.js";
+import { VIEW_URIS } from "../views.js";
 import { MAX_SPOKEN_CHARS } from "../voice.js";
 
 /**
@@ -231,12 +232,31 @@ describe("latency", () => {
 });
 
 describe("the views a sandboxed iframe has to render", () => {
+  /**
+   * The list is asserted, not just returned.
+   *
+   * This is a `.filter()` over whatever the tools happen to declare, and three tests below
+   * loop it. If no tool declared `_meta.ui.resourceUri` — a one-character slip in
+   * `registerAppTool`, or a rename of the `_meta` key — the list would come back empty and
+   * all three would pass having read nothing, including *"declares a deny-by-default content
+   * security policy on every view"*. A security assertion that passes when there is nothing
+   * to check is worse than no assertion, because it reports coverage.
+   *
+   * Comparing against `VIEW_URIS` rather than asserting non-emptiness: the three views are
+   * frozen in `docs/contract-v1.md` §3, so the right check is that the tools point at all of
+   * them and at nothing else.
+   */
   async function everyViewUri(): Promise<string[]> {
     const { tools } = await client.listTools();
     const uris = tools
       .map((tool) => (tool._meta as { ui?: { resourceUri?: string } } | undefined)?.ui?.resourceUri)
       .filter((uri): uri is string => typeof uri === "string");
-    return [...new Set(uris)];
+    const distinct = [...new Set(uris)];
+
+    expect(distinct.toSorted(), "the views the tools point at").toStrictEqual(
+      Object.values(VIEW_URIS).toSorted(),
+    );
+    return distinct;
   }
 
   it("serves every view a tool points at", async () => {

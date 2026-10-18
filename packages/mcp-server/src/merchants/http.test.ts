@@ -116,7 +116,13 @@ describe("a merchant agent over HTTP", () => {
         clause_title: "Delivery Guarantee 4.2",
       }),
     );
-    expect(await before.respond([sampleClaim()])).toBeDefined();
+    // The same assertion as "answers from its own policy" above, not `toBeDefined()`:
+    // "stays usable" is a claim about the answer, and a directory handing back a dead
+    // client's empty reply would have satisfied the weaker form.
+    expect(await before.respond([sampleClaim()])).toMatchObject({
+      type: "OFFER",
+      amount: { minor: 500, currency: "USD" },
+    });
 
     await directory.close?.();
 
@@ -126,7 +132,10 @@ describe("a merchant agent over HTTP", () => {
         clause_title: "Delivery Guarantee 4.2",
       }),
     );
-    expect(await after.respond([sampleClaim()])).toBeDefined();
+    expect(await after.respond([sampleClaim()])).toMatchObject({
+      type: "OFFER",
+      amount: { minor: 500, currency: "USD" },
+    });
   });
 
   /** Teardown gets called twice, and on things that never started. Neither may throw. */

@@ -97,20 +97,47 @@ describe("nextAction", () => {
 });
 
 describe("the safety invariants", () => {
+  /**
+   * The clause title is generated, not a constant.
+   *
+   * It used to be `title: "Clause"` for every case, which made *"always cites a clause when
+   * it counters"* an assertion that a hard-coded string is non-empty. A generated title lets
+   * the property say the thing it means: the counter cites **this** merchant's clause,
+   * verbatim, rather than any non-empty string the negotiator might have had lying around.
+   */
   const boundsArb = fc
     .record({
       reservationMinor: fc.integer({ min: 0, max: 50_000 }),
       headroom: fc.integer({ min: 0, max: 20_000 }),
+      title: fc.string({ minLength: 1, maxLength: 40 }).filter((s) => s.trim().length > 0),
     })
     .map(
-      ({ reservationMinor, headroom }): RemedyBounds => ({
+      ({ reservationMinor, headroom, title }): RemedyBounds => ({
         reservation: { minor: reservationMinor, currency: "USD" },
         ceiling: { minor: reservationMinor + headroom, currency: "USD" },
-        clause: { id: "c", title: "Clause" },
+        clause: { id: "c", title },
       }),
     );
 
-  const offersArb = fc.array(fc.integer({ min: 0, max: 1000 }), { minLength: 1, maxLength: 6 });
+  /**
+   * Offers that can actually provoke a counter, which the old ones mostly could not.
+   *
+   * Two separate mistakes, and both were invisible until the runs were counted.
+   *
+   * `transcriptOf` takes majors and `usd` multiplies by a hundred, so `max: 1000` meant
+   * offers spanning 0 to 100,000 minor against a reservation spanning 0 to 50,000, and
+   * `nextAction` ACCEPTs as soon as the standing offer reaches the reservation. Then
+   * `maxLength: 6`: `countRounds` reaches `MAX_NEGOTIATION_ROUNDS` (3) at the third offer,
+   * so a transcript of four or more could never produce a COUNTER at all — four of the six
+   * generated lengths were incapable of reaching the assertion.
+   *
+   * Measured over eight repetitions, the old pair reached a COUNTER in **60 to 109 of 1000
+   * runs** — under one run in ten, and none of those could fail. `max: 500` matches the
+   * reservation's range and `maxLength: 3` keeps the one length that still exercises the
+   * round cap: 301 to 338 of 1000. The `countered` assertions below pin that, so a future
+   * change that quietly stops reaching the invariant fails instead of passing.
+   */
+  const offersArb = fc.array(fc.integer({ min: 0, max: 500 }), { minLength: 1, maxLength: 3 });
 
   /**
    * The product's answer to "what is your legal exposure?", as a property rather than a
@@ -118,6 +145,7 @@ describe("the safety invariants", () => {
    * wording allows.
    */
   it("never asks for more than the merchant's own wording allows", () => {
+    let countered = 0;
     fc.assert(
       fc.property(
         boundsArb,
@@ -126,22 +154,31 @@ describe("the safety invariants", () => {
         (bounds, offers, maxRounds) => {
           const action = nextAction(transcriptOf(offers), { bounds, maxRounds });
           if (action.type !== "COUNTER") return true;
+          countered += 1;
           return action.amount.minor <= bounds.ceiling.minor;
         },
       ),
       { numRuns: 1000 },
     );
+
+    // Lower than the properties that take the default cap: this one generates `maxRounds`
+    // down to 1, which blocks the counter outright.
+    expect(countered, "runs that reached the invariant").toBeGreaterThan(100);
   });
 
   it("never undercuts what the merchant published either", () => {
+    let countered = 0;
     fc.assert(
       fc.property(boundsArb, offersArb, (bounds, offers) => {
         const action = nextAction(transcriptOf(offers), { bounds });
         if (action.type !== "COUNTER") return true;
+        countered += 1;
         return action.amount.minor >= bounds.reservation.minor;
       }),
       { numRuns: 1000 },
     );
+
+    expect(countered, "runs that reached the invariant").toBeGreaterThan(200);
   });
 
   /**
@@ -152,6 +189,12 @@ describe("the safety invariants", () => {
    * they pass no margin. Weakening those assertions to accommodate an option no caller sets
    * would have traded a named guarantee for a measurement, so the margin gets its own
    * property instead.
+   *
+   * These three example tests are what actually holds the default in place, and it is worth
+   * being precise about that: the property above compares the counter to the reservation,
+   * and with no margin `below` returns its argument unchanged, so the two sides are the same
+   * expression. It would catch a changed default — raise `counterMargin` to 0.025 and it
+   * goes red — but it is not an independent check. The three below are.
    *
    * They exist because `eval/README.md` predicted that conceding a little would buy a lot of
    * robustness, and a prediction in a submission has to be answerable.
@@ -187,7 +230,34 @@ describe("the safety invariants", () => {
     }
   });
 
+  /**
+   * Both ends of the clamp, which nothing exercised.
+   *
+   * `below` does `Math.min(Math.max(margin, 0), 1)` and both branches are live code reachable
+   * from a caller's argument. The property below asserts the counter is never negative, and
+   * cannot fail — the clamp and a non-negative reservation each guarantee it independently.
+   * This says what that property was reaching for, in the falsifiable direction: what the
+   * clamp actually *does* at either end.
+   *
+   * The asymmetry is the point. A margin over 1 would counter below nothing, so it pins to
+   * zero. A negative margin would counter *above* the published figure, which is the one
+   * thing the stance forbids, so it pins to the figure itself.
+   */
+  it("clamps a margin outside the range it means, instead of inventing a number", () => {
+    const counterAt = (counterMargin: number) => {
+      const action = nextAction(transcriptOf([5]), { bounds: BOUNDS, counterMargin });
+      if (action.type !== "COUNTER") throw new Error("expected a counter");
+      return action.amount;
+    };
+
+    expect(counterAt(1)).toEqual(usd(0));
+    expect(counterAt(4)).toEqual(usd(0));
+    expect(counterAt(-0.5)).toEqual(usd(12));
+    expect(counterAt(-200)).toEqual(usd(12));
+  });
+
   it("stays between the margin and the ceiling, whatever the bounds", () => {
+    let countered = 0;
     fc.assert(
       fc.property(
         boundsArb,
@@ -196,33 +266,47 @@ describe("the safety invariants", () => {
         (bounds, offers, margin) => {
           const action = nextAction(transcriptOf(offers), { bounds, counterMargin: margin });
           if (action.type !== "COUNTER") return true;
+          countered += 1;
           const floor = Math.round(bounds.reservation.minor * (1 - margin));
           return action.amount.minor >= floor && action.amount.minor <= bounds.ceiling.minor;
         },
       ),
       { numRuns: 500 },
     );
+
+    expect(countered, "runs that reached the invariant").toBeGreaterThan(100);
   });
 
   /** A margin can never turn an ask into a debt, however absurd the value. */
   it("never counters below nothing", () => {
+    let countered = 0;
     fc.assert(
       fc.property(boundsArb, fc.double({ min: -5, max: 5, noNaN: true }), (bounds, margin) => {
         const action = nextAction(transcriptOf([0]), { bounds, counterMargin: margin });
-        return action.type !== "COUNTER" || action.amount.minor >= 0;
+        if (action.type !== "COUNTER") return true;
+        countered += 1;
+        return action.amount.minor >= 0;
       }),
       { numRuns: 500 },
     );
+
+    expect(countered, "runs that reached the invariant").toBeGreaterThan(100);
   });
 
   it("always cites a clause when it counters — never an unsupported number", () => {
+    let countered = 0;
     fc.assert(
       fc.property(boundsArb, offersArb, (bounds, offers) => {
         const action = nextAction(transcriptOf(offers), { bounds });
         if (action.type !== "COUNTER") return true;
-        return action.justification.policy_clause.trim().length > 0;
+        countered += 1;
+        // The generated title, verbatim. Non-emptiness was all this asserted while every
+        // case carried the same constant, and non-emptiness is not the claim.
+        return action.justification.policy_clause === bounds.clause.title;
       }),
       { numRuns: 500 },
     );
+
+    expect(countered, "runs that reached the invariant").toBeGreaterThan(100);
   });
 });

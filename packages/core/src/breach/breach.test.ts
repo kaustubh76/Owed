@@ -735,15 +735,30 @@ describe("what a detection says it saw", () => {
     );
   });
 
+  /**
+   * `checked` is the point, not decoration.
+   *
+   * `spans` has no `minLength`, so `[]` is generated often and is also what fast-check
+   * shrinks towards; a span drawn entirely from the hour *before* the window is clipped away
+   * by `observedWithin` too. Either way the loop body never runs and the property passes
+   * having asserted nothing. The two tiling properties above want those degenerate cases —
+   * "no sightings tile to one gap the width of the window" is a real claim — so the
+   * arbitrary stays as it is and this one counts the stretches it actually inspected
+   * instead.
+   */
   it("never claims to have seen anything outside the window it judged", () => {
+    let checked = 0;
     fc.assert(
       fc.property(spans, (observed) => {
         for (const seen of detectionFrom(observed).observed) {
+          checked += 1;
           expect(toEpochMs(seen.start)).toBeGreaterThanOrEqual(toEpochMs(evaluation.start));
           expect(toEpochMs(seen.end)).toBeLessThanOrEqual(toEpochMs(evaluation.end));
         }
       }),
       { numRuns: 400 },
     );
+
+    expect(checked, "stretches the property actually inspected").toBeGreaterThan(100);
   });
 });

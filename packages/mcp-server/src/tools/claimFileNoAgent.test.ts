@@ -60,7 +60,8 @@ describe("claim_file when no agent answers", () => {
     const result = await call("claim_file", { promise_id: "prm_011", confirm: true });
 
     // Not an error. There is nobody to argue with, but there is still a claim.
-    expect(result.isError).toBeFalsy();
+    // `toBeFalsy()` would also pass on `0` and `""`; `contract.test.ts` uses this form.
+    expect(result.isError ?? false).toBe(false);
     const view = ClaimViewSchema.parse(result.structuredContent);
     expect(view.claim_id).toBe("clm_prm_011");
     expect(view.merchant).toBe("Northwind Parcel");

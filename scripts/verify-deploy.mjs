@@ -17,6 +17,16 @@
  * three real validators — shellcheck, systemd-analyze, caddy — run when the binary is
  * present and are reported as skipped when it is not, which is honest about what a green
  * run on a Mac does and does not establish. GitHub's ubuntu runners carry the first two.
+ *
+ * **`OWED_REQUIRE_VALIDATORS=1` turns an absent binary into a failure**, and CI sets it.
+ * Reporting a skip and exiting 0 is right on a laptop — a clean clone must run `pnpm verify`
+ * green with nothing installed — and wrong where all three are supposed to exist: if the
+ * caddy-extraction step in the workflow broke, or a runner image dropped shellcheck, every
+ * validator here would quietly become a no-op and this gate would still pass. That is the
+ * same hole `OWED_REQUIRE_DYNAMO` was added to close for the DynamoDB adapter, and
+ * `docs/product-feedback.md` names the shape of it: the failure mode that survives a test
+ * suite is the one where the check itself cannot fail. This was the last instance of it
+ * inside Owed's own gates.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -29,6 +39,9 @@ const DEPLOY = join(REPO_ROOT, "deploy");
 
 const failures = [];
 const skipped = [];
+
+/** Set in CI, where all three validators are supposed to be on the box. */
+const REQUIRED = process.env.OWED_REQUIRE_VALIDATORS === "1";
 
 /** Same shape as the other gates: print what was checked, and what it came out as. */
 function check(label, actual, expected) {
@@ -264,8 +277,16 @@ if (validated !== undefined) {
 }
 
 if (skipped.length > 0) {
+  const absent = [...new Set(skipped)].join(", ");
+  if (REQUIRED) {
+    failures.push(
+      `OWED_REQUIRE_VALIDATORS=1 but these are not on this machine: ${absent}. ` +
+        "Every check they own was about to be reported as skipped on a run that claims to " +
+        "run all three. Install them, or unset the variable and accept a weaker gate.",
+    );
+  }
   process.stdout.write(
-    `\n  not run here (binary absent): ${[...new Set(skipped)].join(", ")}\n` +
+    `\n  ${REQUIRED ? "FAIL" : "not run here"} (binary absent): ${absent}\n` +
       "  The structural checks above do not depend on them. CI runs all three: its runners\n" +
       "  carry shellcheck and systemd-analyze, and the workflow lifts caddy out of the\n" +
       "  official image before this step.\n",

@@ -91,6 +91,12 @@ describe("discovery documents", () => {
   });
 
   it("registers several redirect URIs per client, so linking works across regions", () => {
+    // "per client" presupposes clients. There is no Dynamic Client Registration here —
+    // `auth/config.ts` ships a static list — so no clients is not an empty starting state,
+    // it is the configuration in which account linking cannot happen at all. Without this
+    // line the loop below would report that configuration as passing.
+    expect(harness.authConfig.clients.length, "statically registered clients").toBeGreaterThan(0);
+
     for (const client of harness.authConfig.clients) {
       expect(client.redirect_uris.length).toBeGreaterThan(1);
     }
