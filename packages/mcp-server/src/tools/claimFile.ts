@@ -9,12 +9,16 @@ import {
   remedyContextFor,
 } from "@owed/core";
 import {
+  addMs,
+  CLAIM_WINDOW_DAYS,
   type ClaimRoute,
   type ClaimView,
   ClaimViewSchema,
   coveragePercent,
+  DAY_MS,
   formatMoney,
   isActionable,
+  MAX_CLAIMS_PER_MERCHANT,
   numberToWords,
   type PromiseStatus,
 } from "@owed/domain";
@@ -25,7 +29,7 @@ import type { ProtocolEra } from "../server.js";
 import { VIEW_URIS } from "../views.js";
 import { assertSpeakable, joinSpoken, speakClaim } from "../voice.js";
 import { loadContext, NotFoundError, spokenError } from "./context.js";
-import { claimViewFor, findClaimForPromise } from "./projections.js";
+import { claimsAgainstMerchantSince, claimViewFor, findClaimForPromise } from "./projections.js";
 
 /**
  * Which of the two agentless routes a merchant's own policy implies.
@@ -231,6 +235,35 @@ async function handleClaimFile(
       result: spokenError(
         assertSpeakable(
           `${view.promise.merchant} has published nothing covering this, so there is nothing for me to claim.`,
+        ),
+      ),
+    };
+  }
+
+  /**
+   * The per-merchant frequency cap — `product_ideation.md` §10's "to avoid vexatious
+   * filing", which was listed as required and never built.
+   *
+   * Last of the refusals on purpose. A household that cannot see enough of a promise, or
+   * whose merchant published nothing covering it, deserves to hear *that* rather than a
+   * rate limit — so this only fires for a claim Owed was otherwise about to file, which is
+   * the only case the merchant would experience as vexatious.
+   *
+   * Counted over the ledger rather than kept in memory, so it survives a restart and means
+   * the same thing on every store adapter.
+   */
+  const since = addMs(context.now, -CLAIM_WINDOW_DAYS * DAY_MS);
+  const recent = claimsAgainstMerchantSince(context.state, view.promise.merchant, since);
+  if (recent >= MAX_CLAIMS_PER_MERCHANT) {
+    return {
+      kind: "result",
+      result: spokenError(
+        // Spelled out, because `assertSpeakable` forbids digits — `numberToWords` is
+        // already how every other spoken figure in this file gets said.
+        assertSpeakable(
+          `I've already filed ${numberToWords(recent)} claims against ` +
+            `${view.promise.merchant} this week, so I'll hold this one back rather than ` +
+            "pile on. Ask me again in a few days.",
         ),
       ),
     };

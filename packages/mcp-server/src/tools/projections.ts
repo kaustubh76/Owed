@@ -1,5 +1,11 @@
 import { claimRoundCount, coverageGaps, type LedgerState } from "@owed/core";
-import type { Claim, ClaimView, EvidenceView } from "@owed/domain";
+import {
+  type Claim,
+  type ClaimView,
+  type EvidenceView,
+  type Instant,
+  toEpochMs,
+} from "@owed/domain";
 import { NotFoundError, requirePromise, type ToolContext } from "./context.js";
 
 function uriOf(item: { uri?: string }): string | undefined {
@@ -96,6 +102,29 @@ export function claimViewFor(claim: Claim): ClaimView {
 }
 
 /** The evidence view a promise with no claim still deserves. */
+/**
+ * How many claims this household has filed against one merchant inside the window.
+ *
+ * Dated from the opening `CLAIM` round rather than a `filed_at` field, because a claim does
+ * not carry one — the first round *is* the filing, and `rounds[0].at` is the instant it was
+ * sent. Claims with no rounds at all are not counted: there is nothing to date them by, and
+ * a claim that was never sent is not one a merchant experienced.
+ */
+export function claimsAgainstMerchantSince(
+  state: LedgerState,
+  merchant: string,
+  since: Instant,
+): number {
+  const from = toEpochMs(since);
+  let filed = 0;
+  for (const claim of state.claims.values()) {
+    if (claim.merchant !== merchant) continue;
+    const openedAt = claim.rounds[0]?.at;
+    if (openedAt !== undefined && toEpochMs(openedAt) >= from) filed += 1;
+  }
+  return filed;
+}
+
 export function findClaimForPromise(state: LedgerState, promiseId: string): Claim | undefined {
   const claimId = state.promises.get(promiseId)?.claim_id;
   return claimId === undefined ? undefined : state.claims.get(claimId);
