@@ -69,9 +69,14 @@ describe("what the corpus measures", () => {
    * gates, and sixty timelines say so alongside the property tests in core.
    */
   it("never claims a breach it could not see enough of", () => {
-    for (const outcome of report.outcomes) {
-      if (outcome.observable) continue;
-      expect(outcome.verdict).not.toBe("Breached");
+    // `continue` skips every observable case, so without this the safety invariant would
+    // report success over nothing. Eight is what the corpus test above asserts the
+    // committed cases contain; this counts the ones that reached the engine.
+    const starved = report.outcomes.filter((outcome) => !outcome.observable);
+    expect(starved.length, "starved cases the engine actually judged").toBeGreaterThanOrEqual(8);
+
+    for (const outcome of starved) {
+      expect(outcome.verdict, outcome.id).not.toBe("Breached");
     }
   });
 

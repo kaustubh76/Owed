@@ -53,6 +53,10 @@ describe("the helpers a consumer of this library gets", () => {
 
   it("finds every clause the shipped policies declare, by id", () => {
     // A lookup that works for one id and not the rest would pass the test above.
+    // And an empty library would pass this one, which is why the count is asserted: the
+    // four merchants are the ones the sibling test in "the shipped library" names.
+    expect(library.merchants(), "shipped merchants").toHaveLength(4);
+
     for (const merchant of library.merchants()) {
       const p = policy(merchant);
       for (const clause of p.clauses) {
@@ -78,7 +82,16 @@ describe("the shipped library", () => {
    * so this is an invariant of the library rather than an editorial preference.
    */
   it("gives every clause a source and the merchant's own words", () => {
-    for (const merchant of library.all()) {
+    // The product's claim is only as good as the number of clauses it actually holds for,
+    // and this loop reported success over an empty library. Both levels are counted.
+    const policies = library.all();
+    expect(policies, "shipped policies").toHaveLength(4);
+    expect(
+      policies.flatMap((merchant) => merchant.clauses).length,
+      "clauses across every policy",
+    ).toBeGreaterThan(4);
+
+    for (const merchant of policies) {
       for (const clause of merchant.clauses) {
         expect(clause.source.trim().length, `${clause.id} source`).toBeGreaterThan(0);
         expect(clause.quote.trim().length, `${clause.id} quote`).toBeGreaterThan(0);
@@ -151,6 +164,7 @@ describe("remedyFor", () => {
    * it ask for less than the merchant promised — the wrong failure to have.
    */
   it("never resolves a ceiling below the stated remedy", () => {
+    let resolved = 0;
     fc.assert(
       fc.property(
         fc.constantFrom(...library.all()),
@@ -169,10 +183,18 @@ describe("remedyFor", () => {
             shortfall: { minor, currency: "USD" },
           });
           if (remedy === undefined) return true;
+          resolved += 1;
           return remedy.ceiling.minor >= remedy.reservation.minor;
         },
       ),
       { numRuns: 400 },
     );
+
+    // Most of the grid is inapplicable by design — four merchants x six breach kinds, and
+    // no merchant publishes a clause for every kind — so three runs in four take the early
+    // return. 82 to 116 of 400 reached the invariant over five measurements; 40 is the
+    // floor. Without this the property would still pass if `remedyFor` started returning
+    // `undefined` for everything, which is the one regression it exists to notice.
+    expect(resolved, "pairs that resolved to a remedy").toBeGreaterThan(40);
   });
 });

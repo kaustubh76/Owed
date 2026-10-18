@@ -11,14 +11,45 @@ async function dueAt(instant: string) {
   return commitmentsDue(project(await store.read(HOUSEHOLD_ID, instant)), instant, HOUSEHOLD_ID);
 }
 
+/**
+ * How many announcements crossing Sunday evening produces.
+ *
+ * `docs/demo-script.md` tells whoever records the video that "crossing the evening fires
+ * **three** announcements, not one, oldest first", and nothing asserted any part of that.
+ * Five tests below loop this list with an `expect` in the body, so a projection that
+ * produced nothing would have passed every one of them while the demo's loudest beat did
+ * not happen.
+ */
+const SUNDAY_EVENING_ANNOUNCEMENTS = 3;
+
+/** The same list, with its size asserted, so a caller cannot loop over nothing. */
+async function sundayEvening() {
+  const events = await dueAt(at("sun", "19:30"));
+  expect(events, "announcements on crossing Sunday evening").toHaveLength(
+    SUNDAY_EVENING_ANNOUNCEMENTS,
+  );
+  return events;
+}
+
 describe("the proactive scheduler", () => {
+  /** The shape the recording guide promises, asserted rather than described. */
+  it("fires three announcements on crossing Sunday evening, oldest first", async () => {
+    const events = await sundayEvening();
+
+    const occurred = events.map((event) => event.occurred_at);
+    expect([...occurred].sort(), "oldest first").toEqual(occurred);
+    expect(
+      events.filter((event) => event.kind === "promise_breached"),
+      "exactly one of them is the breach the household is asked about",
+    ).toHaveLength(1);
+  });
+
   it("says nothing before anything has broken", async () => {
     expect(await dueAt(at("mon", "08:00"))).toEqual([]);
   });
 
   it("raises a breach once, and only once it has been detected", async () => {
-    const events = await dueAt(at("sun", "19:30"));
-    expect(events.length).toBeGreaterThan(0);
+    const events = await sundayEvening();
     for (const event of events) expect(() => CommitmentEventSchema.parse(event)).not.toThrow();
   });
 
@@ -39,7 +70,7 @@ describe("the proactive scheduler", () => {
   });
 
   it("never raises a promise it has already filed a claim for", async () => {
-    const events = await dueAt(at("sun", "19:30"));
+    const events = await sundayEvening();
     const settled = events.filter((event) => event.kind === "promise_breached");
     for (const event of settled) {
       expect(event.subject.claim_id).toBeUndefined();
@@ -69,7 +100,7 @@ describe("the proactive scheduler", () => {
   });
 
   it("speaks lines a device could say as they are", async () => {
-    for (const event of await dueAt(at("sun", "19:30"))) {
+    for (const event of await sundayEvening()) {
       expect(event.spoken.length).toBeLessThanOrEqual(MAX_SPOKEN_CHARS);
       expect(event.spoken).not.toMatch(/[0-9]/);
       expect(event.spoken).not.toMatch(/prm_|clm_|evd_|brc_/);
@@ -77,7 +108,9 @@ describe("the proactive scheduler", () => {
   });
 
   it("gives every announcement a next step the household can say", async () => {
-    for (const event of await dueAt(at("sun", "19:30"))) {
+    // The `continue` below filters twice over, so the dedicated test above pins that
+    // exactly one breach announcement exists to reach these assertions at all.
+    for (const event of await sundayEvening()) {
       if (event.kind !== "promise_breached") continue;
       expect(event.offer?.tool).toBe("claim_file");
       expect(event.offer?.arguments.promise_id).toBe(event.subject.promise_id);
@@ -93,7 +126,7 @@ describe("the proactive scheduler", () => {
   });
 
   it("stops offering an announcement once it has gone stale", async () => {
-    const events = await dueAt(at("sun", "19:30"));
+    const events = await sundayEvening();
     for (const event of events) {
       expect(new Date(event.expires_at).getTime()).toBeGreaterThan(
         new Date(event.occurred_at).getTime(),

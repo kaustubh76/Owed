@@ -119,6 +119,8 @@ describe("every advertised tool is real", () => {
 
   it("gives every tool a description a model could route on", async () => {
     const { tools } = await client.listTools();
+    expect(tools.length, "advertised tools").toBeGreaterThan(0);
+
     for (const tool of tools) {
       expect((tool.description ?? "").length, tool.name).toBeGreaterThan(40);
     }
@@ -126,8 +128,16 @@ describe("every advertised tool is real", () => {
 });
 
 describe("what the household hears", () => {
+  /**
+   * Guarded for the same reason `everyViewUri()` is: three tests loop this, and the list is
+   * derived from `tools/list` rather than written down. An empty one would pass all of them
+   * — including the check that nothing internal is ever spoken aloud, which Amazon requires
+   * verbatim and which is the last place to accept a vacuous green.
+   */
   async function everySpokenLine(): Promise<Array<{ tool: string; spoken: string }>> {
     const { tools } = await client.listTools();
+    expect(tools.length, "tools to collect spoken lines from").toBeGreaterThan(0);
+
     return Promise.all(
       tools.map(async (tool) => ({
         tool: tool.name,
@@ -140,6 +150,8 @@ describe("what the household hears", () => {
 
   it("says exactly one thing, and says it inside the spoken limit", async () => {
     const { tools } = await client.listTools();
+    expect(tools.length, "advertised tools").toBeGreaterThan(0);
+
     for (const tool of tools) {
       const result = await client.callTool({
         name: tool.name,
