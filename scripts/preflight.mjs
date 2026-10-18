@@ -46,16 +46,59 @@ record(
     ".nvmrc; `nvm use` picks it up.",
 );
 
+// The requirement is read from `packageManager`, not typed here.
+//
+// This check used to test only that pnpm *exists*, which cleared pnpm 8 — and pnpm 8
+// cannot read `lockfileVersion: '9.0'`, so the next command a judge runs is
+// `pnpm install --frozen-lockfile` failing on a lockfile it has no parser for. Same class
+// of mistake as the Node check above, which "said `>= 20` and therefore cleared a
+// configuration that cannot work".
+//
+// CI never saw it: `pnpm/action-setup@v4` takes no `version:` input, so it reads
+// `packageManager` and installs exactly what is pinned. The gap was only ever on a human's
+// machine, which is the only kind a judge has.
+//
+// Reading the pin rather than restating it is the point. The old remedy line below carried
+// its own copy of `10.18.2`, which is a second number to forget to update — and this
+// session has been closing that exact class of bug everywhere else in the repo.
+const PACKAGE_MANAGER = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+).packageManager;
+const pinned = /^pnpm@(\d+)\.\d+\.\d+/.exec(PACKAGE_MANAGER ?? "");
+
 const pnpmVersion = version("pnpm --version");
-record(
-  "pnpm",
-  pnpmVersion !== undefined,
-  pnpmVersion ?? "not found",
-  // Not `corepack enable pnpm`: corepack was removed from Node, and this repo pins 26 in
-  // .nvmrc — so the fix this line used to suggest fails on the very version it tells you
-  // to use. See docs/product-feedback.md.
-  "Install it with `npm install -g pnpm@10.18.2`, or see https://pnpm.io/installation.",
-);
+const pnpmMajor = Number(pnpmVersion?.split(".")[0]);
+
+if (pinned === null) {
+  // A check that cannot find its own requirement has not cleared anything, so it says so
+  // rather than passing.
+  record(
+    "pnpm",
+    false,
+    `cannot read the pin: packageManager is ${JSON.stringify(PACKAGE_MANAGER)}`,
+    'package.json must carry `packageManager: "pnpm@<x>.<y>.<z>"`. This check reads the ' +
+      "required version from it and has nothing to compare against without it.",
+  );
+} else {
+  const requiredMajor = Number(pinned[1]);
+  // The major, not the exact version: somebody on 10.19 is fine and should not be stopped.
+  // And the major rather than a separate "lockfile 9.0 needs pnpm >= 9" floor, because that
+  // floor would be another hardcoded number with its own drift — the repo's promise is the
+  // pin.
+  record(
+    "pnpm",
+    pnpmVersion !== undefined && pnpmMajor >= requiredMajor,
+    pnpmVersion === undefined
+      ? "not found"
+      : `${pnpmVersion}${pnpmMajor >= requiredMajor ? "" : `, needs ${requiredMajor}.x or newer`}`,
+    // Not `corepack enable pnpm`: corepack was removed from Node, and this repo pins 26 in
+    // .nvmrc — so the fix this line used to suggest fails on the very version it tells you
+    // to use. See docs/product-feedback.md.
+    `This repository pins ${pinned[0]} and its lockfile is version 9, which pnpm 8 cannot ` +
+      `read. Install it with \`npm install -g ${pinned[0]}\`, or see ` +
+      "https://pnpm.io/installation.",
+  );
+}
 
 let installed = false;
 try {
