@@ -442,6 +442,52 @@ const extraction = results("extraction");
 const breach = results("breach");
 const recourse = results("recourse");
 
+/**
+ * The robustness run's shape, where the prose describes it in words.
+ *
+ * `readme.md` §10 and `eval/README.md` both used to say "41 passes", which counted the
+ * forty jitter arms and the deterministic run and silently left out the eighteen concession
+ * passes the same command produces. Replacing a derived total with the structure fixes the
+ * understatement, but the structure is quoted as number-words in two files and can drift the
+ * same way — so it is read out of the harness's own output here.
+ */
+const robustness = results("robustness");
+if (robustness !== undefined) {
+  const prose = {
+    "readme.md": read(join(REPO_ROOT, "readme.md")).toLowerCase().replace(/\s+/g, " "),
+    "eval/README.md": read(join(REPO_ROOT, "eval/README.md")).toLowerCase().replace(/\s+/g, " "),
+  };
+  const shape = [
+    { what: "seeds", count: (robustness.seeds ?? []).length, noun: "seeds" },
+    { what: "jitter levels", count: (robustness.jitters ?? []).length, noun: "jitter levels" },
+    {
+      what: "concession margins",
+      count: (robustness.conceding?.margins ?? []).length,
+      noun: "margins",
+    },
+  ];
+
+  for (const { what, count, noun } of shape) {
+    const spelled = NUMBER_WORDS[count];
+    const phrase = `${spelled} ${noun}`;
+    const quoting = Object.entries(prose).filter(([, text]) => text.includes(phrase));
+    // Only files that actually quote the figure are checked — neither document is required
+    // to mention all three, but one that mentions it has to get it right.
+    const wrong = Object.entries(prose).filter(
+      ([, text]) => text.includes(noun) && !text.includes(phrase),
+    );
+    want(
+      `the robustness ${what} are described as ${spelled}`,
+      spelled !== undefined && wrong.length === 0,
+      spelled === undefined
+        ? `${count} is past what this check can spell`
+        : wrong.length === 0
+          ? `${count}, quoted by ${quoting.length === 0 ? "neither document" : quoting.map(([name]) => name).join(" and ")}`
+          : `${wrong.map(([name]) => name).join(", ")} mentions ${noun} but not "${phrase}"`,
+    );
+  }
+}
+
 if (extraction === undefined || breach === undefined || recourse === undefined) {
   want(
     "the committed evaluation results are present",

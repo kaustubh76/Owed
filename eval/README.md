@@ -492,8 +492,14 @@ representative as the parameter space above.
 **And they were perfectly predictable, which turns out to carry the result.**
 `pnpm --filter @owed/eval robustness` re-runs the whole grid with each merchant's three
 continuous parameters drawn from a seeded source instead of taken exactly — five seeds, two
-jitter levels, 41 passes of 1,620 sessions. It does not touch the pre-registered run; a test
-pins that the two are byte-identical when no variability is supplied.
+jitter levels, four arms (all three parameters together, then each alone), and on top of that
+two concession levers at three margins each. Every pass is a full 1,620-session grid.
+
+The earlier version of this sentence said "41 passes", which counted the forty jitter arms and
+the deterministic run and left out the eighteen concession passes the same command produces —
+an understatement of its own work rather than an error, but the structure above is what it
+actually does and does not go stale as passes are added. It does not touch the pre-registered
+run; a test pins that the two are byte-identical when no variability is supplied.
 
 | varying | jitter | negotiator | lift | beat the baseline |
 |---|---|---|---|---|

@@ -462,7 +462,7 @@ criterion and **still not met** on the first two, and `eval/README.md` says so p
 **And the merchants being deterministic turns out to carry the lift.** That used to be a
 caveat in a sentence; it is now a measurement. `pnpm --filter @owed/eval robustness` re-runs
 the whole grid with each merchant's three continuous parameters drawn from a seeded source
-instead of taken exactly — 41 passes of 1,620 sessions, five seeds, `eval/results/robustness.json`
+instead of taken exactly — five seeds across two jitter levels and four arms, plus two concession levers at three margins, every pass a full 1,620-session grid, `eval/results/robustness.json`
 — without touching the pre-registered run, which a test pins as byte-identical when no
 variability is supplied.
 
