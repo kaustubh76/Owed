@@ -88,6 +88,17 @@ export function openSession(options: SessionOptions): SessionHandle {
 
   let session: Promise<Client> | undefined;
   let renewTimer: NodeJS.Timeout | undefined;
+  /**
+   * The reconnect backoff, held so `stop()` can cut it short.
+   *
+   * Deliberately **not** unref'd, unlike `renewTimer`. That distinction is the whole of a
+   * bug that broke `pnpm demo`: during boot the brain binds no port until it has a live
+   * session, so while it is backing off this timer is the only pending work in the process.
+   * Unref'd, Node drained the event loop and exited 13 — "Detected unsettled top-level
+   * await" — after a single attempt, out of the forty `main.ts` says it makes. A renewal
+   * must never hold the process open; a reconnect is the only thing that should.
+   */
+  let backoff: { timer: NodeJS.Timeout; wake: () => void } | undefined;
   let failures = 0;
   let stopped = false;
   /** Distinguishes "my attempt failed" from "a newer attempt replaced me". */
@@ -98,6 +109,15 @@ export function openSession(options: SessionOptions): SessionHandle {
   function clearRenew(): void {
     if (renewTimer !== undefined) clearTimeout(renewTimer);
     renewTimer = undefined;
+  }
+
+  /** Cancel a pending backoff and wake whoever is waiting on it, so `stop()` is prompt. */
+  function clearBackoff(): void {
+    if (backoff === undefined) return;
+    const { timer, wake } = backoff;
+    backoff = undefined;
+    clearTimeout(timer);
+    wake();
   }
 
   /**
@@ -192,9 +212,18 @@ export function openSession(options: SessionOptions): SessionHandle {
 
     const attempt = (async () => {
       if (delay > 0) {
-        await new Promise((resolve) => {
-          setTimeout(resolve, delay).unref?.();
+        await new Promise<void>((resolve) => {
+          clearBackoff();
+          backoff = {
+            timer: setTimeout(() => {
+              backoff = undefined;
+              resolve();
+            }, delay),
+            wake: resolve,
+          };
         });
+        // `stop()` wakes the backoff early rather than leaving the process hanging on it.
+        if (stopped) throw new Error("session stopped");
       }
       try {
         return await establish();
@@ -233,6 +262,7 @@ export function openSession(options: SessionOptions): SessionHandle {
     stop(): void {
       stopped = true;
       clearRenew();
+      clearBackoff();
       const closing = session;
       session = undefined;
       if (closing !== undefined) discard(closing);
