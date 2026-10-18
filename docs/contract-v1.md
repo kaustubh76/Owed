@@ -102,14 +102,32 @@ figures, the verdicts and the transcripts are all outcomes.
 
 ## 3. Tool surface (6 tools, `snake_case`, frozen)
 
-| Tool | Input | Output | View |
+| Tool | Input | Output (`outputSchema`) | View |
 |---|---|---|---|
-| `ledger_summary` | `{ period?: "week" \| "month" }` | `{ recovered, open, kept, items[] }` | `ui://owed/ledger` |
-| `promises_list` | `{ status?, merchant? }` | `{ promises[] }` | `ui://owed/ledger` |
-| `promise_check` | `{ promise_id }` | `{ status, breach?, coverage, evidence[] }` | `ui://owed/evidence` |
-| `claim_file` | `{ promise_id, confirm?, attach_evidence? }` | `{ claim_id, state, offer?, settled? }` | `ui://owed/claim` |
-| `claim_status` | `{ claim_id }` | `{ state, rounds[], amount? }` | `ui://owed/claim` |
-| `evidence_get` | `{ evidence_id }` | `{ kind, uri, captured_at, coverage }` | `ui://owed/evidence` |
+| `ledger_summary` | `{ period?: "week" \| "month" }` | `LedgerSummaryView` | `ui://owed/ledger` |
+| `promises_list` | `{ status?, merchant? }` | `LedgerSummaryView`, filtered | `ui://owed/ledger` |
+| `promise_check` | `{ promise_id }` | `EvidenceView` | `ui://owed/evidence` |
+| `claim_file` | `{ promise_id, confirm?, attach_evidence? }` | `ClaimView` | `ui://owed/claim` |
+| `claim_status` | `{ claim_id }` | `ClaimView` | `ui://owed/claim` |
+| `evidence_get` | `{ evidence_id, promise_id }` | `EvidenceView` | `ui://owed/evidence` |
+
+Three view schemas, not six output shapes, and each is declared as the tool's `outputSchema`
+so a client validates against it:
+
+| schema | fields |
+|---|---|
+| `LedgerSummaryView` | `currency`, `recovered`, `open`, `kept`, `declined`, `items`, `period`, `as_of` |
+| `ClaimView` | `claim_id`, `promise_id`, `merchant`, `state`, `ask`, `expected`, `settled_amount`, `recovered_amount`, `rounds`, `round_count` |
+| `EvidenceView` | `promise_id`, `merchant`, `kind`, `status`, `verdict`, `coverage`, `evaluation_interval`, `gaps`, `promised_in`, `explanation`, `items` |
+
+**Amended D18.** This table was wrong in two ways, and it is the table everything else
+references, so the correction is recorded rather than quietly applied. `evidence_get` was
+listed as taking `{ evidence_id }` alone; it requires `promise_id` too, because an evidence
+id does not say whose promise it belongs to — `readme.md` §4 fixed that in its own copy of
+the table and this one was missed. And the output column described five shapes that do not
+exist: `promise_check` was given a `breach?` and an `evidence[]` it has never had, and
+`claim_file` an `offer?` and `settled?`. A reader following the old column would have
+validated against fields the server does not send.
 
 **Every result carries exactly one text content block** — self-sufficient, spoken-quality,
 no markdown, no URLs, ≤ 240 characters. Plus `structuredContent`, plus `_meta.ui` on both the
@@ -206,6 +224,12 @@ Merchants are fictional: **Northwind Parcel**, **Meridian Rides**, **Calder & Co
 
 Item 10 is the trust beat: carrier scan "delivered 16:40", doorbell uptime only 16:20–16:32,
 so coverage over the `16:10–17:10` evaluation interval is **0.20** — below the 0.70 gate.
+
+**Ten here, eleven in the ledger.** `prm_011` is deliberately absent from this table: it is
+the promise the demo files *during* the take, the one `readme.md` §5 traces as `clm_prm_011`
+and the capture settles at $8.00. The ten above are the week as it stands when the recording
+starts; the eleventh is what the household does next. The headline figures below count the
+ten, which is why "Open: $8.00" does not include it.
 Owed says so instead of claiming.
 
 ### Headline numbers (the golden test asserts these exactly)
@@ -217,6 +241,29 @@ Owed says so instead of claiming.
 
 ### Spoken lines
 
-- **Tue 18:40, proactive (Echo Show):** *"Your Northwind parcel was scanned delivered at 2:12 this afternoon. Nobody came to the door between 1:42 and 2:42. Want me to file it?"*
-- **After settlement:** *"Settled for twelve dollars in two rounds, under Northwind's own delivery guarantee."*
-- **Sun 19:30, "Alexa, what am I owed?":** *"You've recovered forty-seven dollars this week, and eight dollars is still open. Two promises were kept. There's one I'm not claiming — I only watched twenty percent of the window."*
+Transcribed from `docs/demo-capture.json`, which is a recording of the running server rather
+than a draft of what it might say. `pnpm verify:ui` asserts the capture against what the
+browser renders and against the headline figures above, so these cannot drift from the
+product without the gate failing.
+
+- **Sun 18:25, proactive (Echo Show):** *"Northwind Parcel missed the delivery window they promised. They owe you eight dollars under their own policy. Shall I file it?"*
+- **After settlement:** *"Northwind Parcel settled at eight dollars in two rounds. I'll tell you when the credit lands."*
+- **Sun 19:30, "Alexa, what am I owed?":** *"You've recovered forty-seven dollars this week, and eight dollars is still open. Two promises were kept. There's one I'm not claiming, because I only watched twenty percent of the window. There's one more I can file."*
+
+**Amended D18.** All three were previously written by hand, and all three were sentences the
+server cannot produce.
+
+The first contained digits — *"scanned delivered at 2:12"*, *"between 1:42 and 2:42"* — and
+`packages/mcp-server/src/voice.ts` forbids `/[0-9]/` outright ("numbers must be written the
+way they are said"), with `assertSpeakable` wrapping every proactive line in
+`proactive/scheduler.ts`. That sentence would have thrown rather than been spoken. It also
+had no template behind it: announcements are
+`<merchant> <phrase>. They owe you <money> under their own policy. Shall I file it?`, and the
+beat it described does not fall on Tuesday evening.
+
+The second matched no branch of `speakClaim`. The third dropped the fourth sentence —
+*"There's one more I can file."* — which is the one that makes the ledger card an offer
+rather than a report, and used an em-dash where the sentence says "because".
+
+A document that freezes the contract should not be the place where the spoken surface is
+imagined. These are now transcriptions.

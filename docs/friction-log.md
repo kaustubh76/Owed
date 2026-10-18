@@ -87,7 +87,7 @@ For a self-hosted add-on that must issue its own tokens — which is exactly wha
 add-on contract describes — there is no supported route. We wrote the authorization server
 ourselves: metadata, authorize, consent, token, PKCE `S256`, refresh.
 
-**Workaround.** A ~400-line authorization server using `jose`, in `packages/mcp-server/src/auth`.
+**Workaround.** A 954-line authorization server using `jose`, in `packages/mcp-server/src/auth` (`router.ts` alone is 363).
 
 **Suggestion.** Either keep a minimal reference authorization server in the SDK for
 self-hosted servers, or publish a short "you now need an AS, here is a worked example"
@@ -228,11 +228,19 @@ exactly three paths, so a normal Vite build with hashed assets 404s; an origin g
 any request whose `Host`/`Origin` is not its own port with 403, so a dev server on another
 port cannot call it; and the page sets `x-frame-options: DENY`, so it cannot be iframed.
 
-**Workaround.** Used its genuinely reusable parts — `McpSessionManager`, `linkAccount`,
-`callTool` — inside our own Node process, and built our own MCP Apps host on
-`@modelcontextprotocol/ext-apps/app-bridge`. This turned out better anyway: the MCP client
-stays in Node where OAuth and SSE are debuggable, and the protocol inspector shows frames
-captured at the transport rather than reconstructed.
+**Workaround.** Backed the dependency out of the application entirely and wrote the pieces
+ourselves: our own account linking (`packages/mcp-server/src/auth/link.ts`), a session over
+`@modelcontextprotocol/client`, and our own MCP Apps host on
+`@modelcontextprotocol/ext-apps/app-bridge`. Nothing in `packages/`, `apps/`, `eval/` or
+`scripts/` imports `mcp-voice-simulator`; it survives only as a binary the conformance gate
+spawns. This turned out better anyway: the MCP client stays in Node where OAuth and SSE are
+debuggable, and the protocol inspector shows frames captured at the transport rather than
+reconstructed.
+
+*An earlier version of this entry said we had reused its `McpSessionManager`, `linkAccount`
+and `callTool` inside our own process. That was wrong in a way worth recording, because it
+reads as more credit to the package than it earned: `linkAccount` is ours, `callTool` is the
+MCP client's, and `McpSessionManager` is never imported at all.*
 
 **Suggestion.** State in the README that the server is a standalone app, not an embeddable
 component, and point library users at the session/brain API directly.
@@ -422,7 +430,7 @@ the fourth failed on a clean checkout with `TS2307: Cannot find module '@owed/ui
 from a tree that built fine on two other machines, with no change to any file involved.
 Nothing in the output suggests a missing reference; `TS2307` reads as a typo or a bad path.
 
-**Workaround.** Add the reference, then assert the whole graph: a 60-line script checks that
+**Workaround.** Add the reference, then assert the whole graph: a 147-line script checks that
 every `@owed/*` import is both declared in `dependencies` and present in `references`, and
 runs before the build it protects.
 
@@ -520,7 +528,7 @@ actionable.
 
 **Actual.** Measured against systemd 255 in a container. A unit whose `ExecStart`
 interpreter is absent exits **1** — which is every unit here on any machine that is not the
-target box, because they name `/usr/local/bin/node`. And `Restart=nonsense-value` exits
+target box, because they name `/usr/local/bin/node`, or `/usr/local/bin/caddy` in `caddy.service`'s case. And `Restart=nonsense-value` exits
 **0**, printing `Failed to parse service restart specifier, ignoring: nonsense-value` to
 stderr. So the exit code fails everywhere for a reason that is not a defect, and passes on a
 directive systemd has already given up on. Everything it says goes to stderr; stdout is

@@ -113,8 +113,10 @@ const remedy = remedyFor(policy, "phantom_delivery", context);
 const owed = remedy?.reservation ?? nothingOwed(policy);
 
 // The clause behind a citation, resolved back from the id a claim carries — which is
-// what lets a recipient check a claim against the merchant's own wording.
-const clause = findClause(policy, "delivery-guarantee-4-1");
+// what lets a recipient check a claim against the merchant's own wording. The id is the
+// namespaced one, matched exactly: `findClause` does no normalising, and the slugified
+// form this example used to pass ("delivery-guarantee-4-1") matches nothing.
+const clause = findClause(policy, "northwind/delivery-guarantee#4.1");
 ```
 
 Owed itself calls neither helper, and that is deliberate rather than an oversight: where

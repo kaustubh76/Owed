@@ -10,6 +10,7 @@
  * Not wired into CI, which has no browser. Run it before recording anything.
  */
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright-core";
 
@@ -17,14 +18,71 @@ const SERVER_PORT = process.env.OWED_PORT ?? "3939";
 const HOME_URL = process.env.OWED_HOME_URL ?? "http://127.0.0.1:5173/";
 const BOOT_TIMEOUT_MS = 40_000;
 
-/** The exact figures the storyboard commits to — docs/contract-v1.md §6. */
+/**
+ * The recorded capture, which until now nothing read.
+ *
+ * `readme.md` §5 says every id, instant and amount in its sequence diagram is re-derivable
+ * from `docs/demo-capture.json` — "which `pnpm verify:ui` asserts against what the browser
+ * renders". That sentence was false. `scripts/capture-demo.mjs` wrote the file, 315 KB of
+ * it, and no test, gate or app opened it; this script carried its own typed copy of the
+ * figures instead. A judge following the readme's invitation would have found a claim about
+ * a file nothing reads, which is the same shape as the §2 defect this gate was written for.
+ *
+ * So the figures below are now read out of the capture. The browser is asserted against the
+ * recording, the recording is asserted against the frozen contract, and a re-capture that
+ * moved any of the three numbers fails here instead of going unnoticed.
+ */
+const CAPTURE = JSON.parse(
+  readFileSync(new URL("../docs/demo-capture.json", import.meta.url), "utf8"),
+);
+
+const money = (amount) => `$${(amount.minor / 100).toFixed(2)}`;
+
+/** The scrubber position the take opens on — Sunday 19:30, `docs/demo-script.md`. */
+function capturedAt(id) {
+  const position = CAPTURE.positions.find((candidate) => candidate.id === id);
+  if (position?.ledger?.structuredContent === undefined) {
+    throw new Error(
+      `docs/demo-capture.json has no ledger at position "${id}". ` +
+        `It records ${CAPTURE.positions.map((candidate) => candidate.id).join(", ")}. ` +
+        "Re-record it with `node scripts/capture-demo.mjs`.",
+    );
+  }
+  return position.ledger.structuredContent;
+}
+
+const opening = capturedAt("query");
+const settlement = CAPTURE.claim_file?.accepted?.structuredContent;
+if (settlement?.settled_amount === undefined) {
+  throw new Error("docs/demo-capture.json records no accepted claim_file settlement.");
+}
+
 const EXPECTED = {
-  recovered: "$47.00",
-  open: "$8.00",
-  kept: "2",
+  recovered: money(opening.recovered),
+  open: money(opening.open),
+  kept: String(opening.kept),
+  settled: money(settlement.settled_amount),
   canvas: { width: 768, height: 480 },
   utterance: "Alexa, what am I owed?",
 };
+
+/**
+ * And the frozen figures, so the capture cannot drift quietly either.
+ *
+ * `docs/contract-v1.md` §6 is the submission's commitment and `readme.md` quotes it in four
+ * places. Deriving the expectations from the capture alone would make this gate agree with
+ * whatever was recorded last; checking both ways is what makes the recording evidence.
+ */
+const FROZEN = { recovered: "$47.00", open: "$8.00", kept: "2", settled: "$8.00" };
+for (const [key, value] of Object.entries(FROZEN)) {
+  if (EXPECTED[key] !== value) {
+    throw new Error(
+      `docs/demo-capture.json disagrees with the frozen storyboard: ${key} is ` +
+        `${EXPECTED[key]}, docs/contract-v1.md §6 says ${value}. One of the two is wrong, ` +
+        "and neither should be edited to match the other without knowing which.",
+    );
+  }
+}
 
 /**
  * Accessibility, computed rather than eyeballed.
@@ -489,7 +547,7 @@ try {
   // than on a button that happens to agree with it.
   await page.locator(".app__proactive-offer").click();
 
-  check("claim settles", await cardText(".claim__amount"), "$8.00");
+  check("claim settles", await cardText(".claim__amount"), EXPECTED.settled);
   const steps = await card().locator(".claim__step-label").allTextContents();
   check(
     "claim shows the exchange",

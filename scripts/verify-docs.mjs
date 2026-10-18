@@ -25,7 +25,7 @@
  * mechanical would have.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -220,15 +220,174 @@ want("every relative link resolves", broken === 0, `${links} checked, ${broken} 
 process.stdout.write("\n--- the §11 repository tree ---\n");
 
 const readme = read(join(REPO_ROOT, "readme.md"));
-for (const name of readdirSync(DOCS)
-  .filter((entry) => entry.endsWith(".md"))
-  .sort()) {
+
+/**
+ * Every entry in `docs/`, not only the Markdown ones.
+ *
+ * This filter was `.endsWith(".md")`, and it is why `docs/demo-capture.json` — 315 KB that
+ * §5 invites a reader to open — was absent from the tree while this check passed. A gate
+ * written to stop a document going missing had a blind spot the exact shape of the thing it
+ * was watching for.
+ */
+for (const name of readdirSync(DOCS).sort()) {
   want(
     `§11's tree lists docs/${name}`,
     readme.includes(name),
     readme.includes(name) ? "listed" : "absent",
   );
 }
+
+// ---------------------------------------------------------------------------
+// Counts that drifted, and now cannot.
+//
+// A cross-document audit found eight numbers in this repository's prose that no longer
+// matched the files they described — a 147-line script called 60 lines, a 954-line
+// authorization server called "~400", 3,794 linted lines called 2,145, seven import sites
+// called thirteen. Every one was true when it was written. That is the whole problem with
+// a number in prose: it is a measurement with no instrument attached, and it rots quietly
+// while the sentence around it stays grammatical.
+//
+// `readme.md` already stopped quoting a test count for exactly this reason (§14, "this repo
+// already stopped quoting a test count that drifted"). The alternative to not saying it is
+// measuring it, which is what this section does. Each row re-counts the thing and looks for
+// the rendered figure in the document that claims it, so changing the file fails the gate
+// until the sentence is updated too.
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- counts that drifted once, now measured ---\n");
+
+/** Newline count, so this agrees with `wc -l` rather than being off by one. */
+const lineCount = (path) => read(join(REPO_ROOT, path)).split("\n").length - 1;
+
+const linesUnder = (dir, predicate) => {
+  let total = 0;
+  for (const entry of readdirSync(join(REPO_ROOT, dir), { recursive: true })) {
+    const name = String(entry);
+    if (!predicate(name)) continue;
+    const full = join(REPO_ROOT, dir, name);
+    if (statSync(full).isFile()) total += lineCount(join(dir, name));
+  }
+  return total;
+};
+
+// Deliberately not a total of `.mjs` lines. That is the one count here whose files are
+// still being edited, so pinning it would fire the gate on every unrelated change; the
+// prose dropped the figure instead, which is what §14 of the readme did with its test count.
+const COUNTS = [
+  {
+    what: "lines in deploy/Caddyfile",
+    measured: lineCount("deploy/Caddyfile"),
+    rendered: String(lineCount("deploy/Caddyfile")),
+    document: "docs/product-feedback.md",
+  },
+  {
+    what: "lines of deployment shell script",
+    measured: lineCount("deploy/bootstrap.sh") + lineCount("deploy/create-cli-user.sh"),
+    rendered: String(lineCount("deploy/bootstrap.sh") + lineCount("deploy/create-cli-user.sh")),
+    document: "docs/product-feedback.md",
+  },
+  {
+    what: "lines in scripts/verify-graph.mjs",
+    measured: lineCount("scripts/verify-graph.mjs"),
+    rendered: String(lineCount("scripts/verify-graph.mjs")),
+    document: "docs/friction-log.md",
+  },
+  {
+    what: "lines of authorization server",
+    measured: linesUnder(
+      "packages/mcp-server/src/auth",
+      (name) => name.endsWith(".ts") && !name.endsWith(".test.ts"),
+    ),
+    rendered: String(
+      linesUnder(
+        "packages/mcp-server/src/auth",
+        (name) => name.endsWith(".ts") && !name.endsWith(".test.ts"),
+      ),
+    ),
+    document: "docs/friction-log.md",
+  },
+];
+
+for (const count of COUNTS) {
+  const prose = read(join(REPO_ROOT, count.document));
+  const found = prose.includes(count.rendered);
+  want(
+    `${count.document} quotes ${count.measured} ${count.what}`,
+    found,
+    found ? `${count.rendered} found` : `${count.rendered} is not in the document`,
+  );
+}
+
+/**
+ * The import-site count, which `docs/product-feedback.md` used to put at thirteen.
+ *
+ * It matters more than a line count does, because the sentence around it is an argument:
+ * "Owed is an MCP server, not an application with an MCP wrapper". A number that says
+ * thirteen when seven files import the SDK is the wrong kind of wrong for that claim.
+ */
+const SDK_IMPORT = 'from "@modelcontextprotocol/server"';
+const sdkImporters = [...readdirSync(REPO_ROOT, { recursive: true })]
+  .map(String)
+  .filter(
+    (name) =>
+      name.endsWith(".ts") &&
+      !name.endsWith(".test.ts") &&
+      !name.includes("node_modules") &&
+      !name.includes(`dist${sep}`),
+  )
+  .filter((name) => read(join(REPO_ROOT, name)).includes(SDK_IMPORT));
+// Whitespace-normalised, because the prose wraps and "Seven\nimport sites" is the same
+// sentence as "Seven import sites".
+const feedback = read(join(DOCS, "product-feedback.md")).toLowerCase().replace(/\s+/g, " ");
+const spelled = NUMBER_WORDS[sdkImporters.length];
+want(
+  "product-feedback quotes the real number of SDK import sites",
+  spelled !== undefined && feedback.includes(`${spelled} import sites`),
+  spelled === undefined
+    ? `${sdkImporters.length} importers — too many for this check to spell`
+    : feedback.includes(`${spelled} import sites`)
+      ? `${spelled}, and the prose says so`
+      : `${spelled} files import the SDK; the prose does not say "${spelled} import sites"`,
+);
+
+/**
+ * The evidence kinds, which `readme.md` §8.2 listed as five when the schema froze six.
+ *
+ * `price_drop` is a breach kind and `price_observed` is the only evidence kind that can
+ * carry a price, so a list missing it describes a system that cannot detect one of its own
+ * breach kinds. Read out of the schema source rather than counted by hand.
+ */
+const evidenceSource = read(join(REPO_ROOT, "packages/domain/src/evidence.ts"));
+// Scoped to the one enum. Read whole-file, this matched every 2-space-indented string in
+// it — carrier scan statuses and doorbell event types included — and reported nine kinds
+// missing from a readme that was only ever supposed to list these.
+const evidenceBlock = /EvidenceKindSchema = z\.enum\(\[([^\]]*)\]\)/.exec(evidenceSource);
+const evidenceKinds = [...(evidenceBlock?.[1] ?? "").matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
+/**
+ * Scoped to §8.2's own bullet, not the whole file.
+ *
+ * Searching the readme for each kind anywhere passed while the list was short, because the
+ * sentence explaining *why* `price_observed` exists also names it. A check satisfied by the
+ * prose about the list rather than the list is the shape this whole section is here to stop,
+ * and it was caught by deleting the kind and watching the check stay green.
+ */
+const readmeText = read(join(REPO_ROOT, "readme.md"));
+// Up to the first full stop, which is the one that ends the list. No kind contains a
+// period, and this deliberately stops before the sentence that explains the list —
+// that sentence names `price_observed` too, so including it let a deletion pass.
+const kindsBullet = /^- Evidence kinds v1:([^.]*)/m.exec(readmeText);
+const listed = kindsBullet?.[1] ?? "";
+const missingKinds = evidenceKinds.filter((kind) => !listed.includes(`\`${kind}\``));
+want(
+  "§8.2 lists every evidence kind the schema declares",
+  evidenceKinds.length > 0 && kindsBullet !== null && missingKinds.length === 0,
+  evidenceKinds.length === 0
+    ? "could not read the kinds out of packages/domain/src/evidence.ts"
+    : kindsBullet === null
+      ? "could not find the `Evidence kinds v1:` bullet in readme.md"
+      : missingKinds.length === 0
+        ? `all ${evidenceKinds.length}`
+        : `missing ${missingKinds.join(", ")}`,
+);
 
 // ---------------------------------------------------------------------------
 // The recording guide, which makes empirical claims and had nothing checking them.

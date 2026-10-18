@@ -122,8 +122,19 @@ A badge appears — **simulated proactive** — and Owed speaks without being as
 
 Say:
 
-> "That's the one thing Alexa+ add-ons can't do. They can only answer. So we wrote the
-> primitive we'd need as a schema, and the inspector shows it on the wire."
+> "We couldn't find a way for an Alexa+ add-on to speak first — the published docs describe
+> no proactive channel. So we wrote the primitive we'd need as a schema, and the inspector
+> shows it on the wire."
+
+**Say "we couldn't find", not "can't be done".** The earlier wording here was *"that's the
+one thing Alexa+ add-ons can't do"*, and it is the one line in this file that contradicted the
+rest of the submission: `docs/proactive.md`, `readme.md` §8.5 and §15, and
+`docs/product-feedback.md` all carry the same correction — we checked the documentation, not
+the platform, and were later told the public docs omit a good deal, so a proactive path may
+well exist. The claim we can evidence is a documentation gap, and that is the claim to make on
+camera. Saying the stronger thing would have put a sentence on video that four documents in
+the repository already walk back, which is exactly what the "Do not say" list below exists to
+prevent.
 
 *(Point at the `commitment/promise_breached` row in the inspector.)*
 
@@ -138,8 +149,8 @@ is left looking at the most recent. That is deliberate.
 
 **Click the "File it" button Owed put on the screen**, under its own announcement — not the
 third chip. The chip does the same thing; the button is the point. An announcement a
-household cannot answer is a dead end, and the host has no way to offer one, so the
-`CommitmentEvent` carries the utterance and the tool with it.
+household cannot answer is a dead end, and we found no documented way for a host to offer
+one, so the `CommitmentEvent` carries the utterance and the tool with it.
 
 The claim card: **Asked $10 · They offered $3 · Countered $8, Delivery Guarantee 4.1 ·
 Settled $8**, and underneath, what was sent with it.
@@ -216,6 +227,10 @@ tuning. Showing both, and showing the one that went against us, is the point.
 - **"It works on Alexa+."** It has never run against the real client. The README's §13
   real-vs-simulated table, the contract doc and the submission all say so, and the video must
   match them.
+- **"Alexa+ add-ons can't speak first."** We checked the docs, not the platform, and were told
+  afterwards that the public docs omit a good deal. Say that we could not find the capability
+  documented — which is true, and is the gap the schema answers. `docs/proactive.md` has the
+  wording the rest of the submission uses.
 - **"Ninety-nine percent recall."** That is the tuned corpus. There are **two** held-out
   figures — 73.7% precision and 58.3% recall — and the table above quotes both. Never the
   tuned one alone.

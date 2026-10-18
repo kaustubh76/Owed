@@ -95,9 +95,16 @@ model's ARN — two separate things, and the console request has a wait. Results
 
 ## Numbers
 
-None yet. Nothing in this package has run against Bedrock — the model access is a console
-request, and until it lands the honest statement is that the wiring in `bedrock.ts` is
-unverified and there are no results to report.
+None yet. **No model has ever run**: the access is a console request, and until it lands
+there are no extraction figures to report.
+
+Be careful about what that does and does not leave unverified, because this section used to
+overstate it. The wiring is tested — `bedrock.test.ts` points a real `BedrockRuntimeClient`
+at a local `node:http2` server speaking Converse over h2c and asserts what reaches the wire,
+how the envelope is read back, and which failures are retried. What is untested is the one
+thing a local server cannot stand in for: whether a real model, given this prompt, returns
+promises this parser can read. That is the gap, and it is narrower than "the wiring is
+unverified" claimed.
 
 Everything either side of that call is tested: the prompt, the parser, the evidence guard
 and the failure modes, against fakes, with no credentials.

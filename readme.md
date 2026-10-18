@@ -72,7 +72,7 @@ flowchart LR
         TOOLS[Six tools<br/>promises_list · promise_check<br/>claim_file · claim_status<br/>ledger_summary · evidence_get]
         UI[MCP Apps<br/>ui://owed/ledger · ui://owed/claim<br/>ui://owed/evidence]
         ELIC[Elicitation<br/>file it? · attach the evidence?<br/>where the connection can carry it]
-        CME[/control/commitments<br/>the proactive channel Alexa+ lacks/]
+        CME[/control/commitments<br/>the proactive channel we found no docs for/]
     end
 
     subgraph CORE["Core engines"]
@@ -106,7 +106,7 @@ flowchart LR
     DOOR & CLOCK --> BRE
     BRE --> LED
     TOOLS --> NEG
-    NEG <-->|recourse protocol over MCP| M1 & M2 & M3
+    NEG <-->|recourse protocol over MCP| M1 & M2 & M3 & M4
     NEG --> POL
     NEG --> LED
     INS -.observes.- BRAIN & NEG & CME
@@ -321,7 +321,10 @@ Measured on 120 labelled messages and, separately, on 40 held out — see §10 a
 `breach = f(promise, evidence[])` → `{kind, confidence, coverage, evidence_ids, explanation}`.
 - Coverage = fraction of the promise window observed by any evidence source. Below threshold → `Suspected`, never `Breached`. The card says what was and wasn't seen.
 - Breach kinds v1: `late_eta`, `missed_window`, `phantom_delivery`, `no_show`, `late_refund`, `price_drop`.
-- Evidence kinds v1: `timestamp`, `carrier_scan`, `doorbell_event`, `doorbell_snapshot`, `refund_observed`.
+- Evidence kinds v1: `timestamp`, `carrier_scan`, `doorbell_event`, `doorbell_snapshot`,
+  `refund_observed`, `price_observed`. Six, not five: `price_observed` was added at D5
+  (`docs/contract-v1.md` §1) because `price_drop` is on the line above and none of the
+  original five could carry a price, so that detector had no input to reason over.
 
 ### 8.3 Ledger
 Append-only and event-sourced (`PromiseCaptured`, `EvidenceObserved`, `PromiseAssessed`, `ClaimProposed`, `ClaimFiled`, `Settled`, `Recovered`, …). Every event carries both `occurred_at`, when the thing happened in the household's week, and `recorded_at`, when Owed learned of it — so the ledger replays to any instant and every tool answers for the clock rather than for now. That is what makes the timeline scrubber truthful rather than cosmetic.
@@ -363,6 +366,7 @@ Three hypotheses, pre-registered before the code that answers them, and referred
 | **H1** | Can a promise be extracted from what a merchant actually wrote? | 120 labelled messages + 40 held out, 7 promise kinds | `eval/src/extraction/` |
 | **H2** | Can a breach be detected reliably, per promise kind, without crying wolf? | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/src/breach/` |
 | **H3** | Does arguing recover more than accepting the merchant's first offer? | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
+| — | Does a tool answer fast enough for voice? | all six tools, 50 calls each, driven by a real MCP client over Streamable HTTP against a booted server | `eval/latency/` |
 
 H3 was pre-registered with **three** criteria, not two — `product_ideation.md:162`: ≥ 60% of
 owed value, ≥ 1.5× the accept-first-offer baseline, **and a median of ≤ 2 rounds**. The
@@ -377,7 +381,6 @@ The matrix is also larger than the one pre-registered: 270 policies where the id
 thirteen times the size is a harder test, not a softer one — a third of it refuses every
 claim outright — but it is a change to a pre-registered quantity and is stated as such
 rather than left for a reader to notice.
-| — | Does a tool answer fast enough for voice? | all six tools, 50 calls each, driven by a real MCP client over Streamable HTTP against a booted server | `eval/latency/` |
 
 **Measured so far (promise extraction, `eval/README.md`):** the rule-based extractor
 reaches **100% precision and 99% recall** on the 120-message labelled corpus — and
@@ -547,10 +550,11 @@ owed/
 ├─ deploy/                  # one box: Caddyfile, four systemd units, bootstrap, IAM policy
 ├─ docs/
 │  ├─ contract-v1.md        # the frozen v1 contract, with its amendments recorded
-│  ├─ proactive.md          # the one primitive Alexa+ is missing, written as a schema
+│  ├─ proactive.md          # the one primitive we found no docs for, written as a schema
 │  ├─ friction-log.md       # per-tool friction, nineteen entries
 │  ├─ product-feedback.md   # submission requirement (d), per tool and SDK
 │  ├─ architecture.excalidraw # the whole system in one canvas, end to end
+│  ├─ demo-capture.json     # the storyboard recorded off the running server, asserted by verify:ui
 │  ├─ demo-script.md        # what to say, and what not to claim, while recording
 │  └─ policies/             # the merchant policy documents the claims are argued from
 ├─ LICENSE                  # Apache-2.0, verbatim
@@ -807,7 +811,7 @@ nothing in this submission should be read as claiming otherwise.
 | Six tools, three `ui://` MCP Apps views in sandboxed opaque-origin iframes, elicitation where the connection can carry it | The device frames. An Echo Show 8 at its documented canvas and an Echo Dot with no screen, drawn in a browser |
 | The breach engine, coverage accounting, and the refusal to claim below the gates | The household's evidence. Doorbell events, snapshots, camera uptime, carrier scans and prices are seeded, not live |
 | The rule extractor, and eleven merchant messages every seeded promise is provably readable from | The eleven promises themselves are authored rather than extracted, so the demo is deterministic. A test proves the extractor recovers each one to the minute |
-| Merchant agents in **their own process**, argued with over MCP. The inspector shows that traffic | Their policies and their willingness to settle. Three merchants, plus a 270-merchant grid for the evaluation |
+| Merchant agents in **their own process**, argued with over MCP. The inspector shows that traffic | Their policies and their willingness to settle. Four merchants, plus a 270-merchant grid for the evaluation |
 | The event-sourced ledger, replayable to any instant — which is what makes the scrubber truthful — and a SQLite store behind the same port when `OWED_DB` is set | Persistence is **off by default**, because a demo that reseeds identically beats one that drifts |
 | All three hypotheses measured against pre-registered corpora and reported met or not — H1 extraction, H2 breach detection, H3 recourse | Speaker identity and household roles. Not built |
 | — | A real Echo. The bridge was cut early; nothing here has run on a device |
@@ -831,7 +835,7 @@ nothing in this submission should be read as claiming otherwise.
 | Docker, moderated walkthroughs (H4) | **not done** |
 | Real Echo, Fire TV, phone rail | **cut** |
 | AWS | **done after the fact** — the ledger runs on DynamoDB with an append-only guarantee from one conditional write and an atomic sequence counter (§12), verified against the real service in `us-east-1`; also the SDK v3 clients, the `aws` CLI, a nine-action IAM policy — eight on DynamoDB tables named `owed-*`, one `sts:GetCallerIdentity` — Amazon Linux 2023 and CloudShell. `deploy/` holds a one-instance deployment. Listed as cut for most of the build, and it was |
-| The deployment, checked like the code | done — 35 structural checks on the four units and the Caddyfile, plus `shellcheck`, `systemd-analyze verify` and `caddy validate` in CI. It was the one directory with nothing automated pointed at it, and both defects found by reading it by hand are now checks (§12) |
+| The deployment, checked like the code | done — 34 structural checks on the four units and the Caddyfile, plus `shellcheck`, `systemd-analyze verify` and `caddy validate` in CI. It was the one directory with nothing automated pointed at it, and both defects found by reading it by hand are now checks (§12) |
 | H3 under merchants that are not perfectly predictable | done, and it does not flatter the result — **the 1.10× lift becomes 0.95× at 10% wobble and 0.90× at 25%**: once a merchant's acceptance threshold is uncertain, arguing loses to taking the first offer. Decomposed to the parameter that causes it and the knife-edge that explains it (§10) |
 | The fix §10 predicted for that | done, and **the prediction was wrong**. Conceding below the published figure trades about one for one and never gets the lift back above 1.0; the lever the prediction did not name costs nothing on the grid and still falls short at 0.99×. The sentence that predicted otherwise has been replaced by the table that refutes it |
 
@@ -853,7 +857,7 @@ rather than in a drawer.
 - [x] **(d) Product feedback** for every tool, API and SDK used — what it was used for, what worked well, what needs work, how onboarding felt, whether we would build with it again, **and the AWS services described in that same answer**: **[docs/product-feedback.md](docs/product-feedback.md)**. Only tools this repo actually imports or invokes appear in it; where something was written but never executed against the service — Bedrock — it says so.
 - [x] **(g) Friction log**, the optional one: **[docs/friction-log.md](docs/friction-log.md)**, nineteen entries, each with the task, what was expected, what happened, severity, the workaround and what would have prevented it. An earlier draft of this README offered this file as the answer to (d) as well. It was not: it is the right shape for (g) and the wrong shape for (d), and it mentioned no AWS service at all.
 - [x] Built entirely inside the submission window — first commit 2026-09-28, nothing pre-existing to declare
-- [x] Feature request, written as a schema rather than a paragraph: **[docs/proactive.md](docs/proactive.md)** — `CommitmentEvent` and the proactive channel Alexa+ add-ons do not have
+- [x] Feature request, written as a schema rather than a paragraph: **[docs/proactive.md](docs/proactive.md)** — `CommitmentEvent` and the proactive channel we could not find documented for Alexa+ add-ons
 - [x] Real-vs-simulated map (§13), and the statement that **none of this has run against the real Alexa+ client** because it is partner-gated
 - [x] All three pre-registered hypotheses published met or not, with the numbers (§10):
   - **H1 — can a promise be extracted from what a merchant wrote?** 100% precision / 99% recall on the 120-message corpus it was tuned against, and **73.7% / 58.3%** on 40 held-out messages. **Met on the corpus it was tuned against, missed on data it had not seen** — and that gap is the most useful number in this repository.
