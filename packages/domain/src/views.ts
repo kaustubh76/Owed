@@ -75,6 +75,14 @@ export const EvidenceViewSchema = z.object({
   /** The merchant's own sentence the promise was read out of, where there is one. */
   promised_in: z.string().optional(),
   explanation: z.string().optional(),
+  /**
+   * Whether anything is actually watching this promise.
+   *
+   * `false` means no detector covers it, so no verdict is coming — a state the card and the
+   * spoken line both used to render as "still watching". One field so the two cannot
+   * disagree, which is the rule the rest of this view already follows.
+   */
+  watched: z.boolean().optional(),
   items: z.array(
     z.object({
       evidence_id: z.string(),

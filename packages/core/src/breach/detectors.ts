@@ -14,6 +14,7 @@ import {
   isPriceObserved,
   isRefundObserved,
   MINUTE_MS,
+  type OwedPromise,
   toEpochMs,
   withinWindow,
 } from "@owed/domain";
@@ -24,6 +25,7 @@ import {
   type Detector,
   type DetectorInput,
   hasPassed,
+  SEVERITY,
 } from "./types.js";
 
 /** How far either side of a claimed moment counts as "around" it. */
@@ -461,6 +463,105 @@ export const priceDrop: Detector = {
   },
 };
 
+/**
+ * A promise whose only evidence is another promise.
+ *
+ * `guarantee` and `warranty` were extractable from the day the schema froze — the rules
+ * extractor has four patterns for them and `eval/results/extraction.json` publishes per-kind
+ * precision and recall for both (`guarantee` eleven true positives, `warranty` eleven and one
+ * miss) — and no detector covered either. So they were read out of a merchant's words,
+ * written into the ledger, and never judged: `assessPromise` returned `undefined` and
+ * `speakPromiseCheck` fell through to "I'm still watching the Northwind Parcel guarantee",
+ * which was false and permanent. `seed/build.ts` throws when nothing produces a verdict,
+ * which is the only reason the seeded week never contained one.
+ *
+ * What makes them assessable is that they are not independent claims about the world.
+ * "Delivered between one and five, guaranteed or your money back" is one sentence and two
+ * promises: a `delivery_window` the home can watch, and a `guarantee` that is broken exactly
+ * when that window is broken. A household cannot produce evidence for the guarantee itself —
+ * there is no doorbell event for "or your money back" — so the only honest reading is its
+ * sibling's. That is inheritance, not inference.
+ *
+ * Three consequences worth being explicit about:
+ *
+ * It reports **the sibling's breach kind**, never a new one, so `docs/contract-v1.md`'s six
+ * frozen breach kinds stay six. A guarantee over a missed delivery window is a
+ * `missed_window`; what the guarantee adds is the clause to argue from, not a new way to
+ * fail.
+ *
+ * It inherits the sibling's **coverage and confidence** rather than asserting its own. A
+ * derived verdict cannot be better evidenced than the thing it derives from, so the gates
+ * apply to it unchanged and a guarantee over a breach Owed could not see enough of is not
+ * claimable either.
+ *
+ * And it deliberately does **not** create a second claim. `claim_file` resolves a derivative
+ * promise to the claim already filed for its message, because one failure is one claim — see
+ * `findClaimForMessage` in `mcp-server/src/tools/projections.ts`.
+ */
+export const derivedBreach: Detector = {
+  // Registry metadata only; the reported kind is inherited. See `Detector.kind`.
+  kind: "missed_window",
+  appliesTo: (promise) => promise.kind === "guarantee" || promise.kind === "warranty",
+  detect({ promise, siblings }: DetectorInput): Detection | undefined {
+    const kin = (siblings ?? []).filter(
+      (other) => other.promise.source_ref === promise.source_ref && other.promise.id !== promise.id,
+    );
+    // Nothing to derive from is not a verdict. The promise stays unassessed and
+    // `watchableNow` is what tells the household so, rather than a guessed "Kept".
+    if (kin.length === 0) return undefined;
+
+    // The worst news in the message decides, and among equals the best-evidenced one:
+    // a guarantee over two windows, one missed, is a guarantee that was not honoured.
+    const ranked = [...kin].sort(
+      (a, b) =>
+        SEVERITY[b.detection.verdict] - SEVERITY[a.detection.verdict] ||
+        b.detection.coverage - a.detection.coverage,
+    );
+    const source = ranked[0];
+    if (source === undefined) return undefined;
+
+    const what = promise.kind === "warranty" ? "warranty" : "guarantee";
+    const outcome =
+      source.detection.verdict === "Breached"
+        ? "broken"
+        : source.detection.verdict === "Kept"
+          ? "kept"
+          : "unknown";
+
+    return conclude({
+      promise,
+      // Inherited, never invented.
+      kind: source.detection.kind,
+      evaluation: source.detection.evaluation_interval,
+      observed: source.detection.observed,
+      confidence: source.detection.confidence,
+      // The sibling's evidence is the derivation's evidence: a reader following the ids
+      // lands on what was actually seen rather than on nothing.
+      evidence_ids: [...source.detection.evidence_ids],
+      explanation:
+        outcome === "broken"
+          ? `The ${what} covered this, and ${source.detection.explanation}`
+          : outcome === "kept"
+            ? `They kept what the ${what} covered.`
+            : `Still waiting on what the ${what} covers.`,
+      outcome,
+      decidable: source.detection.verdict !== "Undetermined",
+    });
+  },
+};
+
+/**
+ * Whether this promise's verdict is inherited rather than observed.
+ *
+ * Asks `derivedBreach` itself rather than restating its kinds, so the rule lives in one
+ * place. `claim_file` needs it to keep one failure to one claim: a guarantee broken by a
+ * missed delivery window is the same failure as the missed window, and filing twice would
+ * double the money a household appears to be owed for it.
+ */
+export function derivesFromSiblings(promise: OwedPromise): boolean {
+  return derivedBreach.appliesTo(promise);
+}
+
 /** Ordered most specific first: a phantom delivery outranks a missed window. */
 export const DETECTORS: readonly Detector[] = [
   phantomDelivery,
@@ -469,4 +570,5 @@ export const DETECTORS: readonly Detector[] = [
   lateEta,
   lateRefund,
   priceDrop,
+  derivedBreach,
 ];

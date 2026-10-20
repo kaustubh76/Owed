@@ -18,14 +18,55 @@ export interface DetectorInput {
   /** Stretches some source was actually watching. */
   uptime: readonly Interval[];
   now: Instant;
+  /**
+   * Verdicts already reached for promises read from the same merchant message.
+   *
+   * Only derivative kinds consult it. "Delivered between one and five, guaranteed or your
+   * money back" is two promises from one sentence — a `delivery_window` the home can watch,
+   * and a `guarantee` that is broken exactly when that window is. There is no evidence a
+   * household could produce for the guarantee itself, so the only honest reading of it is
+   * the reading of its sibling. `capture.ts` sets every promise's `source_ref` to the id of
+   * the message it came from, which is what makes "sibling" a fact rather than a guess.
+   *
+   * Optional, so a caller with one promise and no context — the H2 eval harness, which
+   * measures detectors one scenario at a time — is unaffected.
+   */
+  siblings?: readonly SiblingVerdict[];
+}
+
+/** One already-assessed promise from the same message. */
+export interface SiblingVerdict {
+  promise: OwedPromise;
+  detection: Detection;
 }
 
 export interface Detector {
+  /**
+   * The breach kind this detector reports.
+   *
+   * Registry metadata: nothing reads it, and a detection carries its own kind through
+   * `conclude`. `derivedBreach` is the one detector whose reported kind is not fixed — it
+   * inherits its sibling's — so it declares the kind it reports most often and the
+   * inheritance is asserted by test rather than by this field.
+   */
   kind: BreachKind;
   /** Whether this detector has anything to say about this promise. */
   appliesTo(promise: OwedPromise): boolean;
   detect(input: DetectorInput): Detection | undefined;
 }
+
+/**
+ * How bad a verdict is, for picking between detectors that both have something to say.
+ *
+ * Lifted here from `engine.ts` so `derivedBreach` can rank its siblings by it without
+ * importing the engine, which imports the detector registry — a cycle.
+ */
+export const SEVERITY: Readonly<Record<Verdict, number>> = {
+  Breached: 3,
+  Suspected: 2,
+  Kept: 1,
+  Undetermined: 0,
+};
 
 export interface ConcludeInput {
   promise: OwedPromise;

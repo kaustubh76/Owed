@@ -1,4 +1,5 @@
 import {
+  assessedEvent,
   assessPromise,
   fileClaim,
   type IdGen,
@@ -121,11 +122,11 @@ export async function arcEvents(
     throw new Error(`no detector produced a verdict for ${arc.promise.id}`);
   }
 
-  events.push({
-    ...envelope(idGen, household_id, arc.assessed_at),
-    type: "PromiseAssessed",
-    assessment: { ...detection, id: idGen.next("brc"), detected_at: arc.assessed_at },
-  });
+  // Through the shared constructor, so the seeded week and the live path write the same
+  // event. The seed still refuses to proceed without a verdict, above: a storyboard promise
+  // nobody judges is a hole in the demo, while at runtime it is a state the household is
+  // told about.
+  events.push(assessedEvent({ householdId: household_id, detection, now: arc.assessed_at, idGen }));
 
   const claim = arc.claim;
   if (!claim) return events;

@@ -2,14 +2,24 @@ import { createMcpExpressApp } from "@modelcontextprotocol/express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import {
+  assessPromises,
   type Clock,
   capturePromises,
   type FixedClock,
   project,
+  type SiblingVerdict,
   SystemClock,
   TRACKING_CONFIDENCE,
 } from "@owed/core";
-import type { Instant } from "@owed/domain";
+import {
+  type Evidence,
+  EvidenceSchema,
+  type Instant,
+  type Interval,
+  type ObservationWindow,
+  ObservationWindowSchema,
+  toEpochMs,
+} from "@owed/domain";
 import { extractPromises } from "@owed/extractor";
 import type { Express, NextFunction, Request, Response } from "express";
 import type { AuthConfig } from "./auth/config.js";
@@ -21,6 +31,110 @@ import type { RecourseLog } from "./merchants/log.js";
 import { commitmentsDue } from "./proactive/scheduler.js";
 import { CURRENCY, SEED_UTC_OFFSET } from "./seed/storyboard.js";
 import { createOwedServer } from "./server.js";
+
+/**
+ * Run the breach engine over whatever the household has not had judged yet.
+ *
+ * **The gap this closes.** `PromiseAssessed` was emitted in exactly one place —
+ * `seed/build.ts` — so the engine ran once, when the seeded week was built, and never
+ * again. A promise captured at runtime through `/control/messages` was written to the
+ * ledger and never judged, for any kind. Seven detectors and the coverage gate were
+ * reachable only from the seed builder, and `promise_check` answered "I'm still watching"
+ * about a promise nothing was watching.
+ *
+ * **A promise is judged when it has never been judged, and re-judged when something new
+ * bearing on it has arrived since.** The first draft only did the former, which read as a
+ * reasonable conservatism and was in fact useless: a judge posting a message and then the
+ * evidence for it watched the verdict never move, because the promise had already been
+ * judged — on no evidence — the moment it was captured.
+ *
+ * "Bearing on it" is narrow on purpose. Evidence tagged to the promise counts, and uptime
+ * counts only where it overlaps the interval that promise was judged over. Household-wide
+ * uptime does not re-open every verdict in the ledger, which is what keeps the seeded week
+ * still: nothing new arrives for it at runtime, so none of its promises qualify. That is
+ * asserted rather than assumed — `messages.test.ts` and `evidence.test.ts` both check the
+ * storyboard's figures across a live post, the golden test pins them, and `verify:ui` reads
+ * three of them out of a browser.
+ *
+ * Existing assessments are passed in as `known`, because a derived promise inherits from its
+ * sibling and that sibling may have been judged in an earlier request.
+ */
+async function assessWhatIsPending(
+  deps: OwedDeps,
+  now: Instant,
+  /**
+   * The first `seq` this request wrote. Anything from here up is what just arrived.
+   *
+   * Scoped to the request rather than to "newer than the verdict", which was the first
+   * attempt and was wrong in a way worth recording: the seeded week interleaves its arcs, so
+   * a later arc's uptime carries a higher `seq` than an earlier arc's assessment and overlaps
+   * its interval. Every delivered message then re-judged six seeded promises as well as its
+   * own. The figures survived it, which is exactly why it would have gone unnoticed.
+   */
+  floor?: number,
+): Promise<number> {
+  // Raw events as well as the projection, because the decision below turns on ledger
+  // *order* and the projection keeps none.
+  const stored = await deps.store.read(deps.householdId, now);
+  const state = project(stored);
+  const views = [...state.promises.values()];
+
+  const known: SiblingVerdict[] = views.flatMap((view) =>
+    view.assessment === undefined ? [] : [{ promise: view.promise, detection: view.assessment }],
+  );
+
+  const overlaps = (a: Interval, b: Interval) =>
+    toEpochMs(a.start) < toEpochMs(b.end) && toEpochMs(a.end) > toEpochMs(b.start);
+
+  /**
+   * By `seq`, not by time.
+   *
+   * The obvious reading of "has anything new arrived since this was judged?" is a timestamp
+   * comparison, and it cannot work here: the scrubber runs on a `FixedClock`, so a verdict
+   * reached at the current instant and an item posted a moment later carry the *same*
+   * `recorded_at` and nothing ever looks newer. `seq` is the ledger's monotonic order — the
+   * reason §12 makes it the DynamoDB sort key instead of time — so it answers the question
+   * time cannot.
+   */
+  const assessedAtSeq = new Map<string, number>();
+  for (const event of stored) {
+    if (event.type === "PromiseAssessed") {
+      assessedAtSeq.set(event.assessment.promise_id, event.seq);
+    }
+  }
+
+  const needsJudging = views.filter((view) => {
+    const judged = view.assessment;
+    const since = assessedAtSeq.get(view.promise.id);
+    if (judged === undefined || since === undefined) return true;
+
+    return stored.some((event) => {
+      if (event.seq <= since) return false;
+      if (floor !== undefined && event.seq < floor) return false;
+      if (event.type === "EvidenceObserved") return event.evidence.promise_id === view.promise.id;
+      if (event.type === "SourceUptimeRecorded") {
+        return (
+          event.window.household_id === view.promise.household_id &&
+          overlaps(event.window.interval, judged.evaluation_interval)
+        );
+      }
+      return false;
+    });
+  });
+
+  const { events } = assessPromises({
+    householdId: deps.householdId,
+    promises: needsJudging.map((view) => view.promise),
+    evidence: views.flatMap((view) => view.evidence),
+    uptime: state.uptime,
+    now,
+    idGen: deps.idGen,
+    known,
+  });
+
+  if (events.length > 0) await deps.store.append(events);
+  return events.length;
+}
 
 export interface OwedAppOptions {
   deps: OwedDeps;
@@ -194,7 +308,13 @@ export function createOwedApp({
       reads,
       idGen: deps.idGen,
     });
-    await deps.store.append(events);
+    const appended = await deps.store.append(events);
+
+    // Judge it now rather than never. A promise read out of a message with evidence already
+    // on file — a window that closed before the receipt arrived — is decidable the moment it
+    // is captured, and used to sit at `Captured` for the life of the process.
+    await assessWhatIsPending(deps, receivedAt, appended[0]?.seq);
+    const judged = project(await deps.store.read(deps.householdId, receivedAt));
 
     res.json({
       received_at: receivedAt,
@@ -203,10 +323,97 @@ export function createOwedApp({
       promises: promises.map((promise) => ({
         promise_id: promise.id,
         kind: promise.kind,
+        /**
+         * The capture status — whether Owed is tracking this read — and not the verdict.
+         *
+         * These are two different questions and this field answers the first: `Candidate`
+         * below `TRACKING_CONFIDENCE`, `Captured` at or above it. Reporting the projected
+         * status here instead briefly turned a `Captured` promise into `Suspected` as soon
+         * as assessment began running, which reads like the endpoint changed its mind about
+         * the extraction. What the engine made of it goes in `verdict`.
+         */
         status: promise.status,
         confidence: promise.confidence,
         promised_in: promise.source_quote,
+        /** `null` until something is decidable, rather than absent. */
+        verdict: judged.promises.get(promise.id)?.assessment?.verdict ?? null,
       })),
+    });
+  });
+
+  /**
+   * Record something the home saw.
+   *
+   * The counterpart to `/control/messages`, and the half that was missing. A merchant
+   * message could arrive at runtime and a doorbell event could not, so a live promise had
+   * nothing to be judged against even once something was willing to judge it: of the
+   * control routes, `auth`, `clock`, `commitments`, `messages` and `recourse` all existed
+   * and evidence had none. The seeded week was the only data the breach engine ever saw.
+   *
+   * Validated through the domain schemas rather than by hand, so a malformed item is a 400
+   * here instead of a projection that silently drops it — `projections.ts` discards evidence
+   * with no `promise_id`, which would have made a typo look like a successful post.
+   *
+   * Same seam and same justification as the clock control: a property of the simulated home,
+   * not of the add-on contract, so it stays outside the MCP surface.
+   */
+  app.post("/control/evidence", async (req: Request, res: Response) => {
+    const body = req.body as Partial<Record<"evidence" | "uptime", unknown>>;
+    const items = Array.isArray(body?.evidence) ? body.evidence : [];
+    const windows = Array.isArray(body?.uptime) ? body.uptime : [];
+    if (items.length === 0 && windows.length === 0) {
+      res
+        .status(400)
+        .json({ error: "expected { evidence?: Evidence[], uptime?: ObservationWindow[] }" });
+      return;
+    }
+
+    const evidence: Evidence[] = [];
+    const uptime: ObservationWindow[] = [];
+    try {
+      for (const item of items) evidence.push(EvidenceSchema.parse(item));
+      for (const window of windows) uptime.push(ObservationWindowSchema.parse(window));
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+      return;
+    }
+
+    const now = deps.clock.now();
+    const appended = await deps.store.append([
+      ...uptime.map((window) => ({
+        id: deps.idGen.next("evt"),
+        household_id: deps.householdId,
+        occurred_at: window.interval.start,
+        recorded_at: now,
+        type: "SourceUptimeRecorded" as const,
+        window,
+      })),
+      ...evidence.map((item) => ({
+        id: deps.idGen.next("evt"),
+        household_id: deps.householdId,
+        occurred_at: item.captured_at,
+        recorded_at: now,
+        type: "EvidenceObserved" as const,
+        evidence: item,
+      })),
+    ]);
+
+    const assessed = await assessWhatIsPending(deps, now, appended[0]?.seq);
+    const state = project(await deps.store.read(deps.householdId, now));
+
+    res.json({
+      now,
+      recorded: { evidence: evidence.length, uptime: uptime.length },
+      assessed,
+      verdicts: [...state.promises.values()]
+        .filter((view) => view.assessment !== undefined)
+        .map((view) => ({
+          promise_id: view.promise.id,
+          kind: view.promise.kind,
+          verdict: view.assessment?.verdict,
+          breach: view.assessment?.kind,
+          coverage: view.assessment?.coverage,
+        })),
     });
   });
 

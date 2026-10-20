@@ -1,13 +1,6 @@
-import type {
-  Detection,
-  Evidence,
-  Instant,
-  ObservationWindow,
-  OwedPromise,
-  Verdict,
-} from "@owed/domain";
+import type { Detection, Evidence, Instant, ObservationWindow, OwedPromise } from "@owed/domain";
 import { DETECTORS } from "./detectors.js";
-import type { Detector, DetectorInput } from "./types.js";
+import { type Detector, type DetectorInput, SEVERITY, type SiblingVerdict } from "./types.js";
 
 /**
  * How loudly a verdict speaks.
@@ -17,12 +10,6 @@ import type { Detector, DetectorInput } from "./types.js";
  * nobody came to the door (so it may never have arrived). The most severe reading
  * wins, and ties fall to the more specific detector.
  */
-const SEVERITY: Readonly<Record<Verdict, number>> = {
-  Breached: 3,
-  Suspected: 2,
-  Kept: 1,
-  Undetermined: 0,
-};
 
 export function assess(
   input: DetectorInput,
@@ -43,12 +30,41 @@ export function assess(
   return best;
 }
 
+/**
+ * Whether any detector covers this promise as it stands.
+ *
+ * Derived from the registry's own `appliesTo`, so it cannot fall out of step with what the
+ * detectors actually do — there is no second list of kinds to keep in sync.
+ *
+ * It exists because an unassessed promise had no way to say *why*. `assessPromise` returns
+ * `undefined` both for "the moment of judgement has not come yet" and for "nothing here will
+ * ever judge this", and `speakPromiseCheck` answered both with "I'm still watching", which is
+ * true of the first and false of the second. Every one of the seven promise kinds now has a
+ * detector, so what remains in the second class is a promise missing the field its detector
+ * needs — an `eta` with no `deadline`, a `price_match` with no window — which a weak
+ * extraction can produce.
+ */
+export function watchable(
+  promise: OwedPromise,
+  detectors: readonly Detector[] = DETECTORS,
+): boolean {
+  return detectors.some((detector) => detector.appliesTo(promise));
+}
+
 export interface AssessPromiseInput {
   promise: OwedPromise;
   evidence: readonly Evidence[];
   uptime: readonly ObservationWindow[];
   now: Instant;
   detectors?: readonly Detector[];
+  /**
+   * Verdicts already reached for other promises from the same message.
+   *
+   * Only `derivedBreach` reads them. Passed straight through rather than filtered here:
+   * matching on `source_ref` is the detector's own business, and a detector that has to
+   * decide what counts as a sibling should be the one holding the rule.
+   */
+  siblings?: readonly SiblingVerdict[];
 }
 
 /** Assess one promise against everything observed for it. */
@@ -58,6 +74,7 @@ export function assessPromise({
   uptime,
   now,
   detectors,
+  siblings,
 }: AssessPromiseInput): Detection | undefined {
   return assess(
     {
@@ -92,6 +109,7 @@ export function assessPromise({
         .filter((window) => window.household_id === promise.household_id)
         .map((window) => window.interval),
       now,
+      ...(siblings === undefined ? {} : { siblings }),
     },
     detectors,
   );

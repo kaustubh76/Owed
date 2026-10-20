@@ -661,6 +661,26 @@ threshold is `TRACKING_CONFIDENCE` (0.85), and it is the whole reason `PromiseSt
 120-message pre-registered corpus the rules extractor reads 89 promises at 0.95 and 11
 below, so the threshold splits real input rather than sitting somewhere nothing reaches.
 
+**Then tell it what the home saw.** The counterpart route, and the half that was missing
+until D20: a merchant message could arrive at runtime and a doorbell event could not, so the
+breach engine only ever ran over the seeded week. A live promise was captured and never
+judged.
+
+```bash
+curl -X POST http://127.0.0.1:3939/control/evidence \
+  -H 'content-type: application/json' \
+  -d '{"uptime":[{"source_id":"src_doorbell","household_id":"hh_demo",
+       "interval":{"start":"2026-10-11T08:00:00-07:00","end":"2026-10-11T12:00:00-07:00"}}]}'
+```
+
+Both promises come back **Breached** at `missed_window` with coverage 1.0 — the window,
+because the camera was up across it and nothing arrived, and the guarantee because it is the
+same failure described twice. A guarantee has no evidence of its own, so it inherits its
+sibling's verdict, breach kind and coverage rather than asserting any; filing on it returns
+the claim the window already has, because one failure is one claim. Posting evidence that
+overlaps a promise already judged re-judges it, which is why the verdict moves from
+`Suspected` to `Breached` here rather than being fixed at capture.
+
 Asking Owed to file a `Candidate` gets a refusal that says what is actually true — *"I'm not
 tracking that one. I wasn't sure enough that Calder & Co. actually promised it."* — rather
 than claiming it is still looking. The extraction pipeline used to have no caller at all:

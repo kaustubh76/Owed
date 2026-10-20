@@ -213,6 +213,16 @@ note a human can check the label against without running anything.
 - **Precision and recall** are measured over cases the corpus marks `observable`, meaning
   the window was watched to at least 0.7. That is what H2 claims.
 - **False-positive rate on kept scenarios** is measured over every `kept` case.
+
+**Six breach kinds, seven promise kinds, and what this corpus does not cover.** `guarantee`
+and `warranty` are assessed derivatively — a guarantee has no evidence of its own, so
+`derivedBreach` gives it the verdict of a promise read from the same merchant message, and
+reports that promise's breach kind rather than a seventh. Nothing here measures that path:
+`measureBreachDetection` judges one scenario at a time and passes no siblings, which is why
+these figures re-ran **byte-identical** when the seventh detector landed. The derivation is
+covered by `packages/core/src/breach/kinds.test.ts` and by the live path in
+`packages/mcp-server/src/control/evidence.test.ts` instead, and it is correct to say H2
+measures six kinds of evidence-bearing detection rather than all seven promise kinds.
 - **Held back** is reported separately: of the cases where something really was broken but
   the camera was starved, how often Owed refused to claim. Rolling those into recall would
   quietly punish the engine for the one behaviour the product most needs it to have.

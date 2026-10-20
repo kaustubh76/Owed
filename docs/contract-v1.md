@@ -23,6 +23,25 @@
 > so the detector had no input to reason over. Adding the evidence kind is the honest fix;
 > the alternative was smuggling prices through `timestamp` labels.
 
+> **Amended D20 — two of the seven promise kinds had no detector.** `guarantee` and
+> `warranty` were extractable from the day this froze, and `eval/results/extraction.json`
+> publishes precision and recall for both, but `appliesTo` covered five kinds. They were read
+> out of a merchant's words, written to the ledger, and never judged: `assessPromise` returned
+> nothing and `promise_check` answered "I'm still watching", which was false and permanent.
+>
+> Both are covered now by a seventh detector, `derivedBreach`, and **the six breach kinds
+> stay six**. A guarantee has no evidence of its own — there is no doorbell event for "or your
+> money back" — so it inherits the verdict, breach kind, coverage and evidence ids of a
+> promise read from the same merchant message. A guarantee over a missed delivery window *is*
+> a `missed_window`; what the guarantee adds is the clause to argue from, which the negotiator
+> was already citing. `claim_file` resolves a derived promise to the claim its message already
+> has, so one failure stays one claim.
+>
+> `EvidenceView` gains one optional field, `watched`. It is `false` only when no detector
+> covers the promise at all — which, now that all seven kinds are covered, means a read too
+> weak to judge, such as an `eta` with no deadline. The card and the spoken line read that one
+> field, so they cannot disagree about whether anything is watching.
+
 **Promise status**
 `Candidate → Captured → Watching → {Kept | Suspected | Breached} → Filed → Negotiating → {Settled | Escalated} → {Recovered | WrittenOff}`
 
@@ -118,7 +137,7 @@ so a client validates against it:
 |---|---|
 | `LedgerSummaryView` | `currency`, `recovered`, `open`, `kept`, `declined`, `items`, `period`, `as_of` |
 | `ClaimView` | `claim_id`, `promise_id`, `merchant`, `state`, `ask`, `expected`, `settled_amount`, `recovered_amount`, `rounds`, `round_count` |
-| `EvidenceView` | `promise_id`, `merchant`, `kind`, `status`, `verdict`, `coverage`, `evaluation_interval`, `gaps`, `promised_in`, `explanation`, `items` |
+| `EvidenceView` | `promise_id`, `merchant`, `kind`, `status`, `verdict`, `coverage`, `evaluation_interval`, `gaps`, `promised_in`, `explanation`, `watched`, `items` |
 
 **Amended D18.** This table was wrong in two ways, and it is the table everything else
 references, so the correction is recorded rather than quietly applied. `evidence_get` was

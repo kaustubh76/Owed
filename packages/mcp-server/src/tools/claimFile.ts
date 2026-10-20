@@ -1,6 +1,7 @@
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { inputRequired, inputResponse, type McpServer } from "@modelcontextprotocol/server";
 import {
+  derivesFromSiblings,
   fileClaim,
   fileWithoutAgent,
   merchantPriors,
@@ -29,7 +30,12 @@ import type { ProtocolEra } from "../server.js";
 import { VIEW_URIS } from "../views.js";
 import { assertSpeakable, joinSpoken, speakClaim } from "../voice.js";
 import { loadContext, NotFoundError, spokenError } from "./context.js";
-import { claimsAgainstMerchantSince, claimViewFor, findClaimForPromise } from "./projections.js";
+import {
+  claimsAgainstMerchantSince,
+  claimViewFor,
+  findClaimForMessage,
+  findClaimForPromise,
+} from "./projections.js";
 
 /**
  * Which of the two agentless routes a merchant's own policy implies.
@@ -207,6 +213,27 @@ async function handleClaimFile(
   const existing = findClaimForPromise(context.state, promiseId);
   if (existing !== undefined) {
     return { kind: "result", result: claimResult(claimViewFor(existing)) };
+  }
+
+  /**
+   * One failure, one claim.
+   *
+   * A `guarantee` or `warranty` has no evidence of its own: `derivedBreach` gives it the
+   * verdict of a promise from the same merchant message, because "delivered between one and
+   * five, guaranteed or your money back" is one sentence describing one way to fail. Filing
+   * the guarantee separately would argue the same missed window twice and double what the
+   * household appears to be owed for it — and the guarantee's clause is already what the
+   * negotiator cites when it counters, so nothing is lost by resolving to the claim that
+   * exists.
+   *
+   * `derivesFromSiblings` asks the detector rather than restating its kinds, so this cannot
+   * drift from what actually derives.
+   */
+  if (derivesFromSiblings(view.promise)) {
+    const sibling = findClaimForMessage(context.state, view.promise);
+    if (sibling !== undefined) {
+      return { kind: "result", result: claimResult(claimViewFor(sibling)) };
+    }
   }
 
   const assessment = view.assessment;

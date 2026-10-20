@@ -1,9 +1,10 @@
-import { claimRoundCount, coverageGaps, type LedgerState } from "@owed/core";
+import { claimRoundCount, coverageGaps, type LedgerState, watchable } from "@owed/core";
 import {
   type Claim,
   type ClaimView,
   type EvidenceView,
   type Instant,
+  type OwedPromise,
   toEpochMs,
 } from "@owed/domain";
 import { NotFoundError, requirePromise, type ToolContext } from "./context.js";
@@ -81,6 +82,9 @@ export function evidenceViewFor(
           explanation: assessment.explanation,
         }),
     gaps,
+    // Only worth saying when it is bad news: a promise under a detector's care needs no
+    // announcement, and an assessed one is self-evidently watched.
+    ...(assessment === undefined && !watchable(view.promise) ? { watched: false } : {}),
     ...(view.promise.source_quote === undefined ? {} : { promised_in: view.promise.source_quote }),
     items,
   };
@@ -123,6 +127,27 @@ export function claimsAgainstMerchantSince(
     if (openedAt !== undefined && toEpochMs(openedAt) >= from) filed += 1;
   }
   return filed;
+}
+
+/**
+ * The claim already filed for another promise read from the same merchant message.
+ *
+ * Only meaningful for a promise whose verdict is derived from its siblings. Two independent
+ * promises in one message — a delivery window and a refund deadline — are two different
+ * failures and deserve two claims; a guarantee broken *by* that delivery window is the same
+ * failure described twice, and the clause it offers is already what the negotiator cites.
+ * So this resolves a derivative promise to the claim that exists rather than filing a second
+ * one for one event.
+ */
+export function findClaimForMessage(state: LedgerState, promise: OwedPromise): Claim | undefined {
+  for (const view of state.promises.values()) {
+    if (view.promise.id === promise.id) continue;
+    if (view.promise.source_ref !== promise.source_ref) continue;
+    if (view.claim_id === undefined) continue;
+    const claim = state.claims.get(view.claim_id);
+    if (claim !== undefined) return claim;
+  }
+  return undefined;
 }
 
 export function findClaimForPromise(state: LedgerState, promiseId: string): Claim | undefined {

@@ -124,13 +124,29 @@ describe("POST /control/messages", () => {
     });
 
     const after = await harness.deps.store.read(harness.deps.householdId);
-    expect(after.length).toBe(before.length + 1);
+    const promiseId = json.promises[0]?.promise_id;
 
+    /**
+     * Captured *and* judged, named rather than counted.
+     *
+     * This asserted `before.length + 1`, which was one event because delivering a message
+     * only ever captured. The endpoint now runs the breach engine over what it captured —
+     * the step that was missing, and the reason a live promise could never be judged — so
+     * the count is two. Naming both events says what the endpoint does instead of how many
+     * rows it happens to add, and it fails if either half stops happening.
+     */
     const captured = after.find(
-      (event) =>
-        event.type === "PromiseCaptured" && event.promise.id === json.promises[0]?.promise_id,
+      (event) => event.type === "PromiseCaptured" && event.promise.id === promiseId,
     );
-    expect(captured).toBeDefined();
+    expect(captured, "the promise reached the ledger").toBeDefined();
+
+    const assessed = after.find(
+      (event) => event.type === "PromiseAssessed" && event.assessment.promise_id === promiseId,
+    );
+    expect(assessed, "and the breach engine judged it").toBeDefined();
+    // Exactly two: the capture and its verdict. A looser assertion here let a draft of the
+    // re-assessment rule re-judge six seeded promises on every delivered message.
+    expect(after.length).toBe(before.length + 2);
   });
 
   /**

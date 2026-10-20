@@ -25,8 +25,8 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 
 | Requirement | Where | Checked by | Verdict |
 |---|---|---|---|
-| Seven promise kinds, six breach kinds | `domain/src/promise.ts`, `domain/src/breach.ts` | Read out of the schemas: `PromiseKindSchema` has 7, `BreachKindSchema` has 6 | **holds** |
-| Extractor and breach engine with published precision/recall | `eval/src/extraction/`, `eval/src/breach/` | `pnpm eval:all`; figures in readme §10, including the held-out ones | **holds** |
+| Seven promise kinds, six breach kinds | `domain/src/promise.ts`, `domain/src/breach.ts`, `core/src/breach/detectors.ts` | Read out of the schemas (7 and 6), and `kinds.test.ts` asserts a detector covers every one of the seven, with no exemption list | **holds — completed on 2026-10-20.** Two of the seven, `guarantee` and `warranty`, were extractable and had no detector: read out of a merchant's words, written to the ledger, never judged. `derivedBreach` covers both by inheriting the verdict of a promise from the same message, so the six breach kinds stay six |
+| Extractor and breach engine with published precision/recall | `eval/src/extraction/`, `eval/src/breach/` | `pnpm eval:all`; figures in readme §10, including the held-out ones. `breach.json` re-ran byte-identical after the seventh detector landed — the H2 harness passes no siblings, so derivation cannot touch the 60-scenario corpus | **holds** |
 | Six tools | `mcp-server/src/tools/` | `tools/list` over a real client against the booted server returns exactly the six frozen names | **holds** |
 | Three `ui://` views | `mcp-server/src/views.ts` | `verify:docs` compares the contract's table to the registered tools; `verify:ui` reads all three back over the wire | **holds** |
 | Elicitation | `tools/claimFile.ts` | `alexa/contract.test.ts` drives both branches — the declared-capability one and the explicit `confirm` | **holds** |
@@ -42,6 +42,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 | Protocol inspector | `apps/home/` | `verify:ui`: the commitment event and the recourse exchange both appear, captured at the transport | **holds** |
 | Proactive badge | `apps/home/`, `proactive/` | `verify:ui`: the announcement is labelled `simulated proactive` and carries its offer | **holds** |
 | Seeded inbox and doorbell scenarios | `mcp-server/src/seed/` | 81 ledger events — 11 `PromiseCaptured`, 18 `EvidenceObserved` — and every promise re-extracted from its own message to the minute | **holds** |
+| The breach engine runs on what arrives, not only on the seed | `mcp-server/src/app.ts`, `core/src/ledger/assess.ts` | `POST /control/messages` then `POST /control/evidence` against a booted stack: both promises judged, the guarantee inheriting `missed_window` at coverage 1.0. `evidence.test.ts` drives the same path | **holds — completed on 2026-10-20.** `PromiseAssessed` was emitted only by `seed/build.ts`, so a promise captured at runtime was never judged for any kind, and there was no route by which evidence could arrive. Both paths now share one assessment step |
 | Event-sourced ledger | `core/src/ledger/` | Append-only behind a two-method port; memory, `node:sqlite` and DynamoDB adapters replay identically | **holds** |
 | README with numbers, friction log, feature request, real-vs-simulated map | `readme.md`, `docs/` | `verify:docs` checks entry counts, citations, links and the hypothesis verdicts against the harness output | **holds** |
 | Demo video | — | Not recorded | **outstanding** — the last unchecked box in readme §15 |
@@ -82,10 +83,24 @@ pnpm verify:ui        # 52 browser assertions and four accessibility audits, nee
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
-Measured on 2026-10-18, on an 8-core machine: `pnpm verify` 12s, `pnpm verify:ui` 10–18s,
-450 tests across 42 files.
+Measured on an 8-core machine: `pnpm verify` 12s, `pnpm verify:ui` 10–18s (52 browser
+assertions, zero failures), 473 tests across 44 files.
 
 The two rows marked **exceeded** are expansions of a pre-registered quantity, which is
 recorded as such in readme §10 rather than treated as a free upgrade. The two marked **holds
 differently** deliver the property under another name, and the difference is named so a reader
 can disagree with the substitution.
+
+The two rows marked **completed on 2026-10-20** were found by this walk rather than by the
+gates, which is the argument for doing it: 450 tests, five gates and two document audits were
+all green while two of seven promise kinds went unjudged and the breach engine never ran
+outside the seed builder. Both are now covered by tests that fail if they regress —
+`kinds.test.ts` has no exemption list, and `evidence.test.ts` drives the live path a judge
+touches.
+
+One consequence worth stating. Posting evidence or uptime that overlaps a promise the ledger
+has already judged re-judges it, including promises in the seeded week — that is correct on new
+information, and it is also the one way a live request could move the figures the demo rests
+on. Three tests hold that line: `messages.test.ts` and `evidence.test.ts` each assert
+`recovered`, `open` and `kept` across a live post, and `verify:ui` reads three of them out of a
+browser.

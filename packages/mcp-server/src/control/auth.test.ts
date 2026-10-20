@@ -94,6 +94,11 @@ describe("/control/* with a token configured", () => {
       text: "Your parcel will arrive on Tuesday between 1pm and 5pm.",
     });
 
+    // Measured around the refusal, which is what the claim below is about. This used to
+    // compare before-and-after the *accepted* request and assert exactly one new event,
+    // which tested the refusal only by implication and broke the moment delivering a
+    // message also assessed it.
+    const beforeDenied = (await harness.deps.store.read(harness.deps.householdId)).length;
     const denied = await fetch(new URL("/control/messages", harness.baseUrl), {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -101,16 +106,19 @@ describe("/control/* with a token configured", () => {
     });
     expect(denied.status).toBe(401);
 
-    const before = (await harness.deps.store.read(harness.deps.householdId)).length;
+    // The refused one really wrote nothing, rather than being refused after the write.
+    const afterDenied = (await harness.deps.store.read(harness.deps.householdId)).length;
+    expect(afterDenied).toBe(beforeDenied);
+
     const allowed = await fetch(new URL("/control/messages", harness.baseUrl), {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${TOKEN}` },
       body,
     });
     expect(allowed.status).toBe(200);
-
-    // And the refused one really wrote nothing, rather than being refused after the write.
-    expect((await harness.deps.store.read(harness.deps.householdId)).length).toBe(before + 1);
+    expect((await harness.deps.store.read(harness.deps.householdId)).length).toBeGreaterThan(
+      afterDenied,
+    );
   });
 
   /**

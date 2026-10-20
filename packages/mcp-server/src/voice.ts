@@ -185,6 +185,23 @@ export function speakPromiseCheck(view: EvidenceView): string {
   if (view.verdict === "Breached") {
     return assertSpeakable(joinSpoken([`${capitalize(subject)} was broken`, watched]));
   }
+  /**
+   * Nothing is coming, said plainly.
+   *
+   * This fell straight through to "I'm still watching", which was false for any promise no
+   * detector covers — and `guarantee` and `warranty` had no detector at all, so Owed
+   * announced it was watching two of its seven kinds for the life of the process. Both have
+   * one now, and what is left is a promise read too weakly to judge: an `eta` with no
+   * deadline has nothing to be late against.
+   */
+  if (view.watched === false) {
+    return assertSpeakable(
+      joinSpoken([
+        `I've written down ${subject}`,
+        "but I can't tell from here whether they keep it, so I'm not watching it",
+      ]),
+    );
+  }
   return assertSpeakable(joinSpoken([`I'm still watching ${subject}`]));
 }
 
