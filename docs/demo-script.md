@@ -269,6 +269,43 @@ curl -X POST http://127.0.0.1:3939/control/messages \
   -d '{"merchant":"Northwind Parcel","text":"Delivered between 1 and 5pm, guaranteed or your money back."}'
 ```
 
-It is the extraction threshold made visible, and it is the only beat here that shows Owed
-declining to track something rather than declining to claim it. It does not fit in three
-minutes alongside everything above; it is a good answer to a judge's question.
+It is the extraction threshold made visible. Each promise now comes back with a `verdict`
+too — the breach engine runs on what arrives, not only on the seeded week — so both of these
+are judged the moment they are captured rather than sitting at `Captured` for the life of the
+process.
+
+Then show the home seeing something, and the verdict move:
+
+```bash
+curl -X POST http://127.0.0.1:3939/control/evidence \
+  -H 'content-type: application/json' \
+  -d '{"uptime":[{"source_id":"src_doorbell","household_id":"hh_demo",
+       "interval":{"start":"2026-10-11T08:00:00-07:00","end":"2026-10-11T12:00:00-07:00"}}]}'
+```
+
+Use a **morning** window in the message for this — "Delivered between 9 and 11am" — because
+the scrubber's clock is Sunday evening and a bare "1 to 5pm" resolves to *tomorrow*, which no
+past evidence can cover. Both promises then read `Breached` at `missed_window` with coverage
+1.0: the window because the camera was up across it and nothing arrived, and the guarantee
+because it is the same failure described twice. A guarantee has no evidence of its own, so it
+inherits its sibling's verdict; filing on it returns the claim the window already has.
+
+**The strongest version of this beat is the one where Owed refuses to watch at all:**
+
+```bash
+curl -X POST http://127.0.0.1:3939/control/messages \
+  -H 'content-type: application/json' \
+  -d '{"merchant":"Northwind Parcel","text":"Covered for 24 months under our manufacturer warranty."}'
+```
+
+That reads as a **tracked** warranty at 0.95 — not a `Candidate` — and asking about it gets
+*"I've written the Northwind Parcel warranty down, but nothing the home sees would tell me
+whether they keep it, so I'm not claiming to watch it."* The card says `not watched` and gives
+the same reason. A warranty is broken by a product failing in month fourteen and no doorbell
+event settles that, so there is nothing to inherit and nothing to observe.
+
+So there are three different refusals available here, which is worth knowing if a judge pushes
+on whether Owed overclaims: declining to **track** a weak read, declining to **claim** a
+breach it could not see enough of, and declining to **watch** a promise a household cannot
+evidence at all. None of this fits in three minutes alongside everything above; all of it is a
+good answer to a question.
