@@ -7,11 +7,13 @@ import {
 import { STANCE_LABEL, UNWATCHED_REASON } from "./labels.js";
 
 /**
- * Both maps are keyed by the domain's own unions rather than by `string`.
+ * Keyed by the domain's own union rather than by `string`.
  *
- * As `Record<string, string>` a new evidence kind or verdict compiled fine and rendered
- * `undefined` on the card — which is the failure a label map exists to prevent.
- * `ledger/labels.ts` was already keyed this way; these two were not.
+ * As `Record<string, string>` a new evidence kind compiled fine and rendered `undefined` on
+ * the card — which is the failure a label map exists to prevent. The verdict map that used to
+ * sit beside this one is now `STANCE_LABEL` in `./labels.js`, keyed the same way and shared
+ * with the spoken line; `voice.ts`'s two maps and `ClaimCard`'s were keyed by `string` until
+ * this rule was followed through to them.
  */
 const KIND_LABEL: Readonly<Record<EvidenceKind, string>> = {
   timestamp: "timestamp",
