@@ -1,4 +1,9 @@
-import { type ClaimState, type ClaimView, formatMoney } from "@owed/domain";
+import {
+  type ClaimState,
+  type ClaimView,
+  formatMoney,
+  type RecourseMessageType,
+} from "@owed/domain";
 
 /** Keyed by the named union rather than by reaching through `ClaimView` for it. */
 const STATE_LABEL: Readonly<Record<ClaimState, string>> = {
@@ -11,7 +16,12 @@ const STATE_LABEL: Readonly<Record<ClaimState, string>> = {
   WrittenOff: "written off",
 };
 
-const STEP_LABEL: Readonly<Record<string, string>> = {
+/**
+ * Keyed by the union, like `evidence/labels.ts`. As `Record<string, string>` with
+ * `?? round.type` a new recourse message type rendered its own wire name — "ACCEPT" — in a
+ * column of plain English, and nothing failed.
+ */
+const STEP_LABEL: Readonly<Record<RecourseMessageType, string>> = {
   CLAIM: "Asked",
   OFFER: "They offered",
   COUNTER: "Countered",
@@ -70,7 +80,7 @@ export function ClaimCard({ claim }: { claim: ClaimView }) {
       <ol className="claim__steps">
         {claim.rounds.map((round) => (
           <li className={`claim__step claim__step--${round.type.toLowerCase()}`} key={round.seq}>
-            <span className="claim__step-label">{STEP_LABEL[round.type] ?? round.type}</span>
+            <span className="claim__step-label">{STEP_LABEL[round.type]}</span>
             <span className="claim__step-amount">
               {round.amount ? formatMoney(round.amount) : round.reason ? round.reason : ""}
             </span>

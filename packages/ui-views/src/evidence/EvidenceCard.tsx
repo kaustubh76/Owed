@@ -118,7 +118,7 @@ export function EvidenceCard({ evidence }: { evidence: EvidenceView }) {
       <ul className="evidence__items">
         {evidence.items.slice(0, 3).map((item) => (
           <li className="evidence__item" key={item.evidence_id}>
-            <span className="evidence__item-kind">{KIND_LABEL[item.kind] ?? item.kind}</span>
+            <span className="evidence__item-kind">{KIND_LABEL[item.kind]}</span>
             <span className="evidence__item-detail">{item.detail ?? ""}</span>
             <span className="evidence__item-time">{clock(item.captured_at)}</span>
           </li>

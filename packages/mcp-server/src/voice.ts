@@ -1,4 +1,5 @@
 import {
+  type ClaimState,
   type ClaimView,
   coveragePercent,
   type EvidenceView,
@@ -6,6 +7,7 @@ import {
   isZeroMoney,
   type LedgerSummaryView,
   numberToWords,
+  type PromiseKind,
   speakMoney,
 } from "@owed/domain";
 
@@ -119,7 +121,13 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-const KIND_SPOKEN: Readonly<Record<string, string>> = {
+/**
+ * Keyed by the union, like the cards' label maps and for the reason their header gives: as
+ * `Record<string, string>` an added promise kind compiled fine and was spoken as the word
+ * "promise" via a `??` fallback. The fallback was the problem — it guaranteed the code would
+ * never complain. All seven are here, and an eighth will not compile until it is.
+ */
+const KIND_SPOKEN: Readonly<Record<PromiseKind, string>> = {
   delivery_window: "delivery",
   eta: "arrival time",
   refund_sla: "refund",
@@ -169,7 +177,7 @@ export function speakPromisesList(view: LedgerSummaryView, filter: PromisesListF
  * rather than quietly declining to act.
  */
 export function speakPromiseCheck(view: EvidenceView): string {
-  const subject = `the ${view.merchant} ${KIND_SPOKEN[view.kind] ?? "promise"}`;
+  const subject = `the ${view.merchant} ${KIND_SPOKEN[view.kind]}`;
   const watched =
     view.coverage === undefined
       ? ""
@@ -224,7 +232,8 @@ export function speakEvidence(view: EvidenceView): string {
   );
 }
 
-const CLAIM_STATE_SPOKEN: Readonly<Record<string, string>> = {
+/** Keyed by the union for the same reason; `?? "open"` hid an unspoken state as "open". */
+const CLAIM_STATE_SPOKEN: Readonly<Record<ClaimState, string>> = {
   Proposed: "waiting on your say-so",
   Filed: "filed",
   Negotiating: "still being argued",
@@ -271,7 +280,7 @@ export function speakClaim(view: ClaimView): string {
   }
   return assertSpeakable(
     joinSpoken([
-      `The ${view.merchant} claim is ${CLAIM_STATE_SPOKEN[view.state] ?? "open"}`,
+      `The ${view.merchant} claim is ${CLAIM_STATE_SPOKEN[view.state]}`,
       `${speakMoney(view.expected)} is at stake`,
     ]),
   );
