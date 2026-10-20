@@ -2,6 +2,7 @@ import {
   type ClaimView,
   coveragePercent,
   type EvidenceView,
+  evidenceStance,
   isZeroMoney,
   type LedgerSummaryView,
   numberToWords,
@@ -174,15 +175,17 @@ export function speakPromiseCheck(view: EvidenceView): string {
       ? ""
       : `I watched ${numberToWords(coveragePercent(view.coverage))} percent of the window`;
 
-  if (view.verdict === "Suspected") {
+  const stance = evidenceStance(view);
+
+  if (stance === "Suspected") {
     return assertSpeakable(
       joinSpoken([`I'm not claiming ${subject}`, watched, "That isn't enough to be sure"]),
     );
   }
-  if (view.verdict === "Kept") {
+  if (stance === "Kept") {
     return assertSpeakable(joinSpoken([`They kept ${subject}`]));
   }
-  if (view.verdict === "Breached") {
+  if (stance === "Breached") {
     return assertSpeakable(joinSpoken([`${capitalize(subject)} was broken`, watched]));
   }
   /**
@@ -194,11 +197,13 @@ export function speakPromiseCheck(view: EvidenceView): string {
    * one now, and what is left is a promise read too weakly to judge: an `eta` with no
    * deadline has nothing to be late against.
    */
-  if (view.watched === false) {
+  if (stance === "Unwatched") {
+    // One part, not two. `joinSpoken` ends every part with a full stop, so splitting this
+    // produced "…whether they keep it. so I'm not claiming to watch it." — a lowercase
+    // sentence of its own.
     return assertSpeakable(
       joinSpoken([
-        `I've written down ${subject}`,
-        "but I can't tell from here whether they keep it, so I'm not watching it",
+        `I've written ${subject} down, but nothing the home sees would tell me whether they keep it, so I'm not claiming to watch it`,
       ]),
     );
   }

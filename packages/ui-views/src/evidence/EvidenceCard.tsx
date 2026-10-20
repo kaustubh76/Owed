@@ -1,4 +1,10 @@
-import { coveragePercent, type EvidenceKind, type EvidenceView, type Verdict } from "@owed/domain";
+import {
+  coveragePercent,
+  type EvidenceKind,
+  type EvidenceView,
+  evidenceStance,
+} from "@owed/domain";
+import { STANCE_LABEL, UNWATCHED_REASON } from "./labels.js";
 
 /**
  * Both maps are keyed by the domain's own unions rather than by `string`.
@@ -7,13 +13,6 @@ import { coveragePercent, type EvidenceKind, type EvidenceView, type Verdict } f
  * `undefined` on the card — which is the failure a label map exists to prevent.
  * `ledger/labels.ts` was already keyed this way; these two were not.
  */
-const VERDICT_LABEL: Readonly<Record<Verdict, string>> = {
-  Kept: "kept",
-  Suspected: "not enough to claim",
-  Breached: "broken",
-  Undetermined: "still watching",
-};
-
 const KIND_LABEL: Readonly<Record<EvidenceKind, string>> = {
   timestamp: "timestamp",
   carrier_scan: "carrier scan",
@@ -42,6 +41,7 @@ function minutes(start: string, end: string): number {
  * this" is owed the reason in a form it can check.
  */
 export function EvidenceCard({ evidence }: { evidence: EvidenceView }) {
+  const stance = evidenceStance(evidence);
   const percent = evidence.coverage === undefined ? undefined : coveragePercent(evidence.coverage);
   const window = evidence.evaluation_interval;
   const total = window ? minutes(window.start, window.end) : 0;
@@ -50,10 +50,8 @@ export function EvidenceCard({ evidence }: { evidence: EvidenceView }) {
     <main className="evidence">
       <header className="evidence__headline">
         <span className="evidence__merchant">{evidence.merchant}</span>
-        <span
-          className={`evidence__verdict evidence__verdict--${(evidence.verdict ?? "Undetermined").toLowerCase()}`}
-        >
-          {VERDICT_LABEL[evidence.verdict ?? "Undetermined"]}
+        <span className={`evidence__verdict evidence__verdict--${stance.toLowerCase()}`}>
+          {STANCE_LABEL[stance]}
         </span>
       </header>
 
@@ -84,6 +82,15 @@ export function EvidenceCard({ evidence }: { evidence: EvidenceView }) {
           </p>
         </section>
       ) : null}
+
+      {/*
+        The reason, where there is no coverage bar to show one.
+
+        A household told "not watched" is owed the same thing a household told "not enough to
+        claim" is owed: why. There is no interval to draw here — nothing was ever evaluated —
+        so the card says what it would have needed instead.
+      */}
+      {stance === "Unwatched" ? <p className="evidence__unwatched">{UNWATCHED_REASON}</p> : null}
 
       {evidence.explanation ? <p className="evidence__why">{evidence.explanation}</p> : null}
 

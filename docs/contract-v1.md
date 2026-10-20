@@ -37,10 +37,25 @@
 > was already citing. `claim_file` resolves a derived promise to the claim its message already
 > has, so one failure stays one claim.
 >
-> `EvidenceView` gains one optional field, `watched`. It is `false` only when no detector
-> covers the promise at all — which, now that all seven kinds are covered, means a read too
-> weak to judge, such as an `eta` with no deadline. The card and the spoken line read that one
-> field, so they cannot disagree about whether anything is watching.
+> `EvidenceView` gains one optional field, `watched`, `false` when nothing in the ledger will
+> ever reach a verdict on that promise. The card and the spoken line both render it through
+> `evidenceStance`, which is asserted over every stance by
+> `packages/mcp-server/src/voice.stance.test.ts` — the only place both renderers can be
+> reached from.
+>
+> **Corrected the same day it was written.** This paragraph first said `watched` was `false`
+> only where no detector covers the promise, and that the card and the spoken line read the
+> one field. Both halves were wrong. `watchable` asks the registry's `appliesTo`, which
+> receives the promise and not the ledger, so `derivedBreach` matches `warranty` on kind alone
+> and then abstains forever when there is no sibling — leaving "Covered for 24 months under
+> our manufacturer warranty." a **tracked** promise at 0.95 that nothing judged and that
+> `promise_check` described as "I'm still watching the Northwind Parcel warranty". And the
+> card was never wired to the field at all: it went on rendering `VERDICT_LABEL`'s
+> `Undetermined` — "still watching" — for exactly that promise.
+>
+> So `watched` is answered from ledger state, not from the kind: a derived promise is watched
+> only when its own message holds a promise that can be judged on its own terms. Two
+> warranties in one message are correctly both unwatched.
 
 **Promise status**
 `Candidate → Captured → Watching → {Kept | Suspected | Breached} → Filed → Negotiating → {Settled | Escalated} → {Recovered | WrittenOff}`

@@ -1,4 +1,10 @@
-import { claimRoundCount, coverageGaps, type LedgerState, watchable } from "@owed/core";
+import {
+  claimRoundCount,
+  coverageGaps,
+  derivesFromSiblings,
+  type LedgerState,
+  watchable,
+} from "@owed/core";
 import {
   type Claim,
   type ClaimView,
@@ -28,6 +34,34 @@ function detailOf(item: {
  * The gaps are computed rather than described: `coverageGaps` returns the stretches
  * nobody was watching, so the card can name them instead of rounding them away.
  */
+/**
+ * Whether anything in this ledger will ever reach a verdict on this promise.
+ *
+ * `watchable` answers a structural question — does any detector's `appliesTo` match — and
+ * that is not the same question. `derivedBreach` matches `guarantee` and `warranty` on kind
+ * alone, because `appliesTo` only receives the promise and cannot see whether a sibling
+ * exists; with no sibling it then abstains forever. So "Covered for 24 months under our
+ * manufacturer warranty." produced a tracked 0.95 promise that `watchable` called watched,
+ * nothing ever judged, and `promise_check` described as "I'm still watching the Northwind
+ * Parcel warranty" — the exact sentence the `watched` field was added to prevent.
+ *
+ * A derived promise is watched only if something in its own message can be judged on its own
+ * terms. One level, and it cannot recurse: the sibling it looks for is required not to be
+ * derived itself, so two warranties in one message are correctly both unwatched.
+ */
+function anythingIsWatching(state: LedgerState, promise: OwedPromise): boolean {
+  if (!watchable(promise)) return false;
+  if (!derivesFromSiblings(promise)) return true;
+
+  return [...state.promises.values()].some(
+    (other) =>
+      other.promise.id !== promise.id &&
+      other.promise.source_ref === promise.source_ref &&
+      !derivesFromSiblings(other.promise) &&
+      watchable(other.promise),
+  );
+}
+
 export function evidenceViewFor(
   context: ToolContext,
   promiseId: string,
@@ -84,7 +118,9 @@ export function evidenceViewFor(
     gaps,
     // Only worth saying when it is bad news: a promise under a detector's care needs no
     // announcement, and an assessed one is self-evidently watched.
-    ...(assessment === undefined && !watchable(view.promise) ? { watched: false } : {}),
+    ...(assessment === undefined && !anythingIsWatching(context.state, view.promise)
+      ? { watched: false }
+      : {}),
     ...(view.promise.source_quote === undefined ? {} : { promised_in: view.promise.source_quote }),
     items,
   };

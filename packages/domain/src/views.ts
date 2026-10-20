@@ -1,4 +1,5 @@
 import * as z from "zod/v4";
+import type { Verdict } from "./breach.js";
 import { ClaimRoundSchema, ClaimStateSchema } from "./claim.js";
 import { CoverageSchema } from "./coverage.js";
 import { EvidenceKindSchema } from "./evidence.js";
@@ -94,3 +95,21 @@ export const EvidenceViewSchema = z.object({
   ),
 });
 export type EvidenceView = z.infer<typeof EvidenceViewSchema>;
+
+/**
+ * What an evidence view says about itself, as one key.
+ *
+ * The card and the spoken line both render this and neither decides it, which is the only
+ * way they can be kept from disagreeing. They did disagree: `watched` was added for the
+ * spoken line and the card went on rendering `VERDICT_LABEL["Undetermined"]` — "still
+ * watching" — for a promise nothing was watching, while `docs/contract-v1.md` claimed both
+ * read the one field. One function, two renderers, and a label map keyed by this union so a
+ * missing case fails to compile rather than rendering `undefined`.
+ */
+export type EvidenceStance = Verdict | "Unwatched";
+
+export function evidenceStance(view: EvidenceView): EvidenceStance {
+  if (view.verdict !== undefined) return view.verdict;
+  // `undefined` is "not yet", `false` is "not ever". Only the second is worth saying.
+  return view.watched === false ? "Unwatched" : "Undetermined";
+}

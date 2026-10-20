@@ -681,6 +681,24 @@ the claim the window already has, because one failure is one claim. Posting evid
 overlaps a promise already judged re-judges it, which is why the verdict moves from
 `Suspected` to `Breached` here rather than being fixed at capture.
 
+**And one it will not pretend to watch.** Some promises a household is given cannot be
+policed from a household:
+
+```bash
+curl -X POST http://127.0.0.1:3939/control/messages \
+  -H 'content-type: application/json' \
+  -d '{"merchant":"Northwind Parcel","text":"Covered for 24 months under our manufacturer warranty."}'
+```
+
+That reads as a **tracked** `warranty` at 0.95 — not a `Candidate` — and Owed answers *"I've
+written the Northwind Parcel warranty down, but nothing the home sees would tell me whether
+they keep it, so I'm not claiming to watch it."* The evidence card says `not watched` and
+gives the same reason. A warranty is broken by a product failing in month fourteen, and no
+doorbell event settles that; a `guarantee` in the same sentence as a delivery window *is*
+judged, because it inherits that window's verdict. The two cases differ by whether anything
+in the message can be judged on its own terms, and that is read off the ledger rather than off
+the kind.
+
 Asking Owed to file a `Candidate` gets a refusal that says what is actually true — *"I'm not
 tracking that one. I wasn't sure enough that Calder & Co. actually promised it."* — rather
 than claiming it is still looking. The extraction pipeline used to have no caller at all:

@@ -13,6 +13,16 @@
 .evidence__verdict--breached { color: var(--accent-open); }
 .evidence__verdict--kept { color: var(--accent-positive); }
 .evidence__verdict--suspected { color: var(--accent-quiet); }
+/* Both of these had no rule at all, so the label rendered in the inherited colour. */
+.evidence__verdict--undetermined { color: var(--accent-quiet); }
+.evidence__verdict--unwatched { color: var(--accent-quiet); }
+
+.evidence__unwatched {
+  margin: 0;
+  color: var(--accent-quiet);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
 
 .evidence__coverage { display: flex; flex-direction: column; gap: var(--space-2xs); }
 

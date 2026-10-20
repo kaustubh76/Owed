@@ -285,3 +285,75 @@ describe("filing on a guarantee", () => {
     ).toBe(first);
   });
 });
+
+/**
+ * A promise nothing can ever judge, reached by one ordinary sentence.
+ *
+ * This is the case the first draft of `watched` missed. `watchable()` asks the registry's
+ * `appliesTo`, and `derivedBreach` matches `warranty` on kind alone — `appliesTo` only
+ * receives the promise, so it cannot see whether a sibling exists. With no sibling it
+ * abstains forever, so the promise was never judged, `watched` was never set, and both the
+ * card and the spoken line said "still watching" about it permanently.
+ *
+ * Worth being precise about what this is: a **tracked** promise at 0.95 confidence, not a
+ * `Candidate` the household was warned about. One merchant sentence with no other promise in
+ * it reaches it.
+ */
+describe("a warranty with nothing to derive from", () => {
+  const LONE = "Covered for 24 months under our manufacturer warranty.";
+
+  it("says it is not watching, rather than that it is", async () => {
+    const { json } = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: LONE,
+    });
+    const promises = json.promises as unknown as Delivered[];
+    const warranty = promises.find((p) => p.kind === "warranty");
+    if (warranty === undefined) {
+      throw new Error(`expected a warranty, read ${promises.map((p) => p.kind)}`);
+    }
+
+    // Tracked, not a Candidate: this is not a promise the household was told to discount.
+    expect(warranty.status).toBe("Captured");
+    expect(warranty.verdict).toBeNull();
+
+    const result = await check(warranty.promise_id);
+    const view = EvidenceViewSchema.parse(result.structuredContent);
+
+    expect(view.watched, "nothing can judge this promise").toBe(false);
+    expect(spokenOf(result), "the sentence this whole field exists to prevent").not.toMatch(
+      /still watching/,
+    );
+    expect(spokenOf(result)).toMatch(/not claiming to watch it/);
+  });
+
+  /** Two derivative promises in one message are both unwatched — neither can inherit. */
+  it("does not count another derived promise as something to inherit from", async () => {
+    const { json } = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Covered for 24 months under our manufacturer warranty, guaranteed.",
+    });
+    const promises = json.promises as unknown as Delivered[];
+
+    for (const promise of promises) {
+      const view = EvidenceViewSchema.parse((await check(promise.promise_id)).structuredContent);
+      if (view.verdict !== undefined) continue;
+      expect(view.watched, `${promise.kind} has nothing to inherit from`).toBe(false);
+    }
+  });
+
+  /**
+   * And the watched path is untouched: a window the home can see is still watched.
+   *
+   * The failure to guard against is a fix that marks everything unwatched, which would read
+   * as restraint and be just as wrong in the other direction.
+   */
+  it("still reports a watchable promise as watched", async () => {
+    const promises = await deliver();
+    const window = promises.find((p) => p.kind === "delivery_window");
+    if (window === undefined) throw new Error("no delivery window captured");
+
+    const view = EvidenceViewSchema.parse((await check(window.promise_id)).structuredContent);
+    expect(view.watched).not.toBe(false);
+  });
+});

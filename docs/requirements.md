@@ -42,7 +42,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 | Protocol inspector | `apps/home/` | `verify:ui`: the commitment event and the recourse exchange both appear, captured at the transport | **holds** |
 | Proactive badge | `apps/home/`, `proactive/` | `verify:ui`: the announcement is labelled `simulated proactive` and carries its offer | **holds** |
 | Seeded inbox and doorbell scenarios | `mcp-server/src/seed/` | 81 ledger events — 11 `PromiseCaptured`, 18 `EvidenceObserved` — and every promise re-extracted from its own message to the minute | **holds** |
-| The breach engine runs on what arrives, not only on the seed | `mcp-server/src/app.ts`, `core/src/ledger/assess.ts` | `POST /control/messages` then `POST /control/evidence` against a booted stack: both promises judged, the guarantee inheriting `missed_window` at coverage 1.0. `evidence.test.ts` drives the same path | **holds — completed on 2026-10-20.** `PromiseAssessed` was emitted only by `seed/build.ts`, so a promise captured at runtime was never judged for any kind, and there was no route by which evidence could arrive. Both paths now share one assessment step |
+| The breach engine runs on what arrives, not only on the seed | `mcp-server/src/app.ts`, `core/src/ledger/assess.ts`, `tools/projections.ts` | `POST /control/messages` then `POST /control/evidence` against a booted stack: both promises judged, the guarantee inheriting `missed_window` at coverage 1.0. `evidence.test.ts` drives the same path | **holds — completed on 2026-10-20.** `PromiseAssessed` was emitted only by `seed/build.ts`, so a promise captured at runtime was never judged for any kind, and there was no route by which evidence could arrive. Both paths now share one assessment step |
 | Event-sourced ledger | `core/src/ledger/` | Append-only behind a two-method port; memory, `node:sqlite` and DynamoDB adapters replay identically | **holds** |
 | README with numbers, friction log, feature request, real-vs-simulated map | `readme.md`, `docs/` | `verify:docs` checks entry counts, citations, links and the hypothesis verdicts against the harness output | **holds** |
 | Demo video | — | Not recorded | **outstanding** — the last unchecked box in readme §15 |
@@ -84,12 +84,22 @@ pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
 Measured on an 8-core machine: `pnpm verify` 12s, `pnpm verify:ui` 10–18s (52 browser
-assertions, zero failures), 473 tests across 44 files.
+assertions, zero failures), 483 tests across 46 files.
 
 The two rows marked **exceeded** are expansions of a pre-registered quantity, which is
 recorded as such in readme §10 rather than treated as a free upgrade. The two marked **holds
 differently** deliver the property under another name, and the difference is named so a reader
 can disagree with the substitution.
+
+A fix in the first of those rows was itself half-done, and is worth recording because it is
+the same failure one level up. `promise_check` was supposed to stop claiming to watch a
+promise nothing watches, and it decided that from `watchable()` — a structural predicate that
+asks each detector's `appliesTo`. `derivedBreach` matches `guarantee` and `warranty` on kind
+alone, because `appliesTo` receives the promise and not the ledger, so **"Covered for 24
+months under our manufacturer warranty."** stayed a tracked 0.95 promise that nothing judged
+and that Owed described as "I'm still watching". The evidence card was never wired to the new
+field at all, while this document and the contract both said it was. Both are fixed, both are
+mutation-proved, and `watched` is now answered from ledger state.
 
 The two rows marked **completed on 2026-10-20** were found by this walk rather than by the
 gates, which is the argument for doing it: 450 tests, five gates and two document audits were

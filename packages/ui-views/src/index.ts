@@ -14,6 +14,7 @@
  * for something they are not.
  */
 
+export { STANCE_LABEL, UNWATCHED_REASON } from "./evidence/labels.js";
 export { byAttention, KIND_LABEL, PERIOD_LABEL, STATUS_LABEL } from "./ledger/labels.js";
 export { applyTheme } from "./shared/theme.js";
 export {
