@@ -41,16 +41,41 @@ const NOWHERE = "http://127.0.0.1:59999/mcp";
  * It used to sleep a flat 3 s and then count attempts. That budget looks generous — the
  * brain's first attempt is immediate and its backoff is 500 ms — but it was measured from
  * `spawn`, so it also had to cover Node starting and `dist/main.js` loading the MCP SDK and
- * Express. On an idle machine that is a few hundred milliseconds; under the full 583-test
+ * Express. On an idle machine that is a few hundred milliseconds; under the full test
  * suite it is not, and a fresh clone produced exactly one attempt inside the window and a
  * red test. The same suite passed on the next run, which is the signature.
  *
  * So the deadline is long and the wait is short: stop as soon as the thing being asserted is
  * true, and give a slow machine room before calling it a failure. Nothing about what is
  * asserted changes — the brain must not exit, and it must try more than once.
+ *
+ * And the deadline was *still* unreachable, because a test has **two** budgets and this file
+ * set one of them. Vitest's default `testTimeout` is 5 s and `vitest.config.ts` sets no
+ * global, so the runner killed this test at 5 000 ms — a quarter of the window below — and
+ * the twenty seconds it believed it had was fifteen seconds of fiction. It surfaced once in
+ * eight runs (`Test timed out in 5000ms`, at 5041 ms); an earlier unexplained four-failure run
+ * is plausibly the same thing, but it was never captured, so that stays a guess.
+ *
+ * The margin is the whole story, and it is thinner than it looks: this test takes **1.85 s on
+ * an idle machine**, so the ceiling it was running under gave it under 3x headroom, for work
+ * that is a cold Node process competing with the rest of the suite for eight cores. Chasing
+ * the trigger was the wrong move — a cold module cache did not reproduce it, nor did the full
+ * suite under sixteen CPU-bound hogs at load 117 — because the trigger is *whatever happened
+ * to be running*, and the defect is the ceiling, not the weather. Raising `SETTLED_ATTEMPTS`
+ * to 14 so the poll must outlast 5 s reproduces it on demand and settles it: red at 5007 ms
+ * without the option below, green at 20.23 s with it, same code, same minute.
+ *
+ * So the `it` below passes that ceiling explicitly, derived from `DEADLINE_MS` instead of
+ * re-typed beside it, in the shape `alexa/contract.test.ts` already uses. **Only the smaller
+ * of a wall-clock test's two budgets is real**, and the runner owns one of them.
+ * `tests/wall-clock-budgets.test.ts` now asserts that for every test file, so the next one
+ * cannot ship with a deadline it is not allowed to reach.
  */
 const DEADLINE_MS = 20_000;
 const SETTLED_ATTEMPTS = 2;
+
+/** What happens after the poll returns: the `SIGTERM`, and three assertions over the output. */
+const GRACE_MS = 5_000;
 
 async function bootAgainstNothing(): Promise<{ output: string; exitCode: number | null }> {
   if (!existsSync(MAIN)) {
@@ -89,7 +114,9 @@ async function bootAgainstNothing(): Promise<{ output: string; exitCode: number 
 }
 
 describe("the brain coming up before the server does", () => {
-  it("keeps retrying rather than exiting after one attempt", async () => {
+  it("keeps retrying rather than exiting after one attempt", {
+    timeout: DEADLINE_MS + GRACE_MS,
+  }, async () => {
     const { output, exitCode } = await bootAgainstNothing();
     const attempts = output.split("\n").filter((line) => line.includes("waiting for"));
 

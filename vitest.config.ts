@@ -40,7 +40,14 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["packages/**/*.test.ts", "apps/**/*.test.ts", "eval/**/*.test.ts"],
+    // `tests/` holds assertions about the repository rather than about one package —
+    // currently the wall-clock budget rule, which has to read every other test file.
+    include: [
+      "packages/**/*.test.ts",
+      "apps/**/*.test.ts",
+      "eval/**/*.test.ts",
+      "tests/**/*.test.ts",
+    ],
     environment: "node",
     maxWorkers,
     minWorkers: 1,

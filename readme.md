@@ -557,6 +557,7 @@ owed/
 │  ├─ draw-architecture.mjs # regenerates docs/architecture.excalidraw
 │  ├─ capture-demo.mjs      # records the storyboard; --check re-derives without writing
 │  └─ aws-smoke.mjs         # proves the ledger against real DynamoDB, in a named account
+├─ tests/                   # assertions about the repository rather than about one package
 ├─ deploy/                  # one box: Caddyfile, four units, bootstrap, two IAM policies
 ├─ docs/
 │  ├─ contract-v1.md        # the frozen v1 contract, with its amendments recorded

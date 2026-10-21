@@ -333,7 +333,7 @@ want(
 // a number in prose: it is a measurement with no instrument attached, and it rots quietly
 // while the sentence around it stays grammatical.
 //
-// `readme.md` already stopped quoting a test count for exactly this reason (§14, "this repo
+// `readme.md` already stopped quoting a test count for exactly this reason (§13, "this repo
 // already stopped quoting a test count that drifted"). The alternative to not saying it is
 // measuring it, which is what this section does. Each row re-counts the thing and looks for
 // the rendered figure in the document that claims it, so changing the file fails the gate
