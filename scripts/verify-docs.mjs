@@ -622,6 +622,66 @@ want(
 );
 
 // ---------------------------------------------------------------------------
+// The messages the script tells a judge to POST
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the curl payloads the script ships ---\n");
+
+const demoScriptText = read(join(DOCS, "demo-script.md"));
+
+/**
+ * A code block a reader copies has to be the one that produces the described result.
+ *
+ * The bonus beat shipped `"Delivered between 1 and 5pm, guaranteed or your money back."`
+ * and then told you, in prose below it, to use a morning window instead — because the
+ * scrubber's clock is Sunday evening, so an afternoon window resolves to tomorrow and no
+ * past evidence can cover it. Run the block as printed and both promises come back
+ * `Suspected` at coverage 0.05; the paragraph underneath says they read `Breached` at
+ * coverage 1.0. Measured both ways before changing it.
+ *
+ * The first version of this check required every payload to appear somewhere in
+ * `control/evidence.test.ts`, and could not fail: that file tests *both* windows, the
+ * afternoon one for the low-coverage case, so reverting the script passed. What
+ * discriminates is the property the prose gives as the reason — the window has to be a
+ * morning, because the clock is Sunday evening and anything later resolves to tomorrow.
+ */
+const controlTest = read(
+  join(REPO_ROOT, "packages", "mcp-server", "src", "control", "evidence.test.ts"),
+);
+const payloads = [...demoScriptText.matchAll(/"text"\s*:\s*"([^"]+)"/g)].map((m) => m[1]);
+
+want(
+  "the script still ships curl payloads this can read",
+  payloads.length > 0,
+  payloads.length === 0 ? 'no `"text":"…"` in any code block' : `${payloads.length} payload(s)`,
+);
+
+const windows = payloads.filter((text) => /\bdelivered between\b/i.test(text));
+const afternoon = windows.filter((text) => !/\d\s*(?:and|to|-|–)\s*\d+\s*am\b/i.test(text));
+want(
+  "the delivery window a judge is told to POST is a morning",
+  windows.length > 0 && afternoon.length === 0,
+  windows.length === 0
+    ? "no `Delivered between …` payload was read, so this proves nothing"
+    : afternoon.length === 0
+      ? `${windows.length} window(s), all am — coverage 1.0 against the Sunday-evening clock`
+      : `resolves to tomorrow, so the evidence cannot cover it: ${afternoon
+          .map((t) => JSON.stringify(t))
+          .join(", ")}`,
+);
+
+// Still worth tying: a payload nothing drives is a procedure nobody has run.
+const untested = payloads.filter((text) => !controlTest.includes(text));
+want(
+  "and every message it ships is one the tests send",
+  payloads.length > 0 && untested.length === 0,
+  payloads.length === 0
+    ? "no payloads were read, so this proves nothing"
+    : untested.length === 0
+      ? `${payloads.length} payload(s), all in control/evidence.test.ts`
+      : `printed but never tested: ${untested.map((t) => JSON.stringify(t)).join(", ")}`,
+);
+
+// ---------------------------------------------------------------------------
 // The utterances, which exist in three independent copies
 // ---------------------------------------------------------------------------
 process.stdout.write("\n--- the words a presenter says, in the three places they live ---\n");

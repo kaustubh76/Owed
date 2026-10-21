@@ -280,7 +280,7 @@ and deliberately not:
 ```bash
 curl -X POST http://127.0.0.1:3939/control/messages \
   -H 'content-type: application/json' \
-  -d '{"merchant":"Northwind Parcel","text":"Delivered between 1 and 5pm, guaranteed or your money back."}'
+  -d '{"merchant":"Northwind Parcel","text":"Delivered between 9 and 11am, guaranteed or your money back."}'
 ```
 
 It is the extraction threshold made visible. Each promise now comes back with a `verdict`
@@ -303,12 +303,16 @@ the same failure described twice and the household should be interrupted about i
 `docs/contract-v1.md` D22 has the rule. Filing on the window silences it; before D22 the
 guarantee kept announcing after the claim existed.
 
-Use a **morning** window in the message for this — "Delivered between 9 and 11am" — because
-the scrubber's clock is Sunday evening and a bare "1 to 5pm" resolves to *tomorrow*, which no
-past evidence can cover. Both promises then read `Breached` at `missed_window` with coverage
-1.0: the window because the camera was up across it and nothing arrived, and the guarantee
-because it is the same failure described twice. A guarantee has no evidence of its own, so it
-inherits its sibling's verdict; filing on it returns the claim the window already has.
+**The window in that message is a morning on purpose.** The scrubber's clock is Sunday
+evening, so a bare "1 to 5pm" resolves to *tomorrow*, which no past evidence can cover: run it
+that way and both promises come back `Suspected` at coverage **0.05** instead, which is correct
+and is not the point being made. Measured both ways rather than reasoned about — 9-11am gives
+coverage 1.0, 1-5pm gives 0.05.
+
+With the morning window, both promises read `Breached` at `missed_window` with coverage 1.0:
+the window because the camera was up across it and nothing arrived, and the guarantee because
+it is the same failure described twice. A guarantee has no evidence of its own, so it inherits
+its sibling's verdict; filing on it returns the claim the window already has.
 
 **The strongest version of this beat is the one where Owed refuses to watch at all:**
 
@@ -324,10 +328,17 @@ whether they keep it, so I'm not claiming to watch it."* The card says `not watc
 the same reason. A warranty is broken by a product failing in month fourteen and no doorbell
 event settles that, so there is nothing to inherit and nothing to observe.
 
-Ask **"why aren't you watching that?"** after it — there is a chip for it — and the card comes
-up reading `not watched`, with the reason where a coverage bar would be. Before D21 that state
-existed and nothing in the home could reach it, because the brain only kept track of promises
-it had judged.
+Then ask **"Alexa, what am I owed?"** and only then **"why aren't you watching that?"** —
+there is a chip for each. The middle step is not optional: "that" means the thing just
+mentioned, and asking what is owed is what puts the warranty in mind, because the brain reads
+its unwatched slot off the household's own ledger summary rather than a side channel. Skip it
+and you get *"Tell me which promise you mean, or ask me what you're owed and I'll bring one
+up."* — the same deliberate rule the "File it" entry in Troubleshooting describes, for the same
+reason. `scripts/verify-ui.mjs` drives exactly this order.
+
+The card then comes up reading `not watched`, with the reason where a coverage bar would be.
+Before D21 that state existed and nothing in the home could reach it, because the brain only
+kept track of promises it had judged.
 
 So there are three different refusals available here, which is worth knowing if a judge pushes
 on whether Owed overclaims: declining to **track** a weak read, declining to **claim** a
