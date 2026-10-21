@@ -1,7 +1,7 @@
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { SystemClock } from "@owed/core";
-import { createMerchantAgentsApp } from "@owed/merchant-agents";
+import { createMerchantAgentsApp, STORYBOARD_MERCHANTS } from "@owed/merchant-agents";
 import {
   checkMerchantConformance,
   type Respondent,
@@ -46,7 +46,113 @@ const northwind = () =>
     }),
   );
 
-describe("a merchant agent over HTTP", () => {
+/**
+ * Every shipped agent, against the suite the protocol publishes, over real HTTP.
+ *
+ * `@owed/recourse-protocol` is offered for lifting in `readme.md` §15, and part of what makes
+ * it worth lifting is that it ships `checkMerchantConformance` — "here is the protocol, and
+ * here is how to check your agent speaks it". Four reference agents ship with it and only
+ * Northwind Parcel was run through it.
+ *
+ * Two breach kinds, because the agents differ on purpose and the replies they give decide
+ * which checks have anything to judge. `phantom_delivery` is covered by Northwind's published
+ * policy, so it negotiates; the rest have no published remedy for the sample claim and
+ * DECLINE, which is the protocol-correct answer and the only way
+ * `decline-carries-escalation-route` is exercised at all.
+ *
+ * That matters more than it looks. The single conformance test this file used to hold ran
+ * Northwind on `phantom_delivery` — which is the one combination of the eight below where
+ * that check does **not** fire. So the assertion that a refusal leaves the household
+ * somewhere to go, which `product_ideation.md` §10 lists as a required property, was passing
+ * vacuously in the only place it ran.
+ */
+const BREACH_KINDS = ["phantom_delivery", "late_refund"] as const;
+
+const agentFor = (merchant: string) =>
+  required(
+    httpMerchants({ baseUrl, log }).respondentFor(merchant, {
+      stated: { minor: 1200, currency: "USD" },
+      clause_title: "Delivery Guarantee 4.2",
+    }),
+  );
+
+describe("every shipped agent, against the published conformance suite", () => {
+  for (const config of STORYBOARD_MERCHANTS) {
+    for (const kind of BREACH_KINDS) {
+      it(`${config.merchant} conforms on ${kind}`, async () => {
+        const report = await checkMerchantConformance(
+          agentFor(config.merchant),
+          sampleClaim({ breach_kind: kind }),
+        );
+
+        expect(report.passed, JSON.stringify(report.results, null, 2)).toBe(true);
+      });
+    }
+  }
+
+  /**
+   * And the suite is not passing by never asking.
+   *
+   * A conformance run whose interesting checks had nothing to judge reports coverage it does
+   * not have, which is how the escalation assertion went unexercised in the single test this
+   * file used to hold. Every non-advisory check a passing run records has to be applicable for
+   * at least one agent and breach kind — countable because `MerchantCheck` reports it, rather
+   * than matched against the `detail` prose.
+   *
+   * Measured across the eight runs, which is worth writing down because one of them is close
+   * to the line:
+   *
+   *   valid-messages                     applicable 8 of 8
+   *   no-claimant-messages               applicable 8 of 8
+   *   echoes-claim-id                    applicable 8 of 8
+   *   reaches-a-conclusion               applicable 8 of 8
+   *   decline-carries-escalation-route   applicable 7 of 8
+   *   matching-currency                  applicable 1 of 8   <- only Northwind on phantom_delivery
+   *
+   * `matching-currency` needs a reply that names an amount, and seven of the eight runs
+   * DECLINE, which carries none. One is not zero, so it fires — but it is the check to watch
+   * if the agents' policies ever change.
+   *
+   * `replies-to-claim` is deliberately absent: `checkMerchantConformance` records it only in
+   * the `catch` around the first `respond`, to report an agent that throws, and returns early.
+   * A conformant agent never produces it, so it is a failure-only record rather than a check
+   * that passed without asking.
+   */
+  it("exercises every check a passing run records", async () => {
+    const applicable = new Map<string, boolean>();
+
+    for (const config of STORYBOARD_MERCHANTS) {
+      for (const kind of BREACH_KINDS) {
+        const report = await checkMerchantConformance(
+          agentFor(config.merchant),
+          sampleClaim({ breach_kind: kind }),
+        );
+        for (const check of report.results) {
+          if (check.advisory === true) continue;
+          applicable.set(
+            check.id,
+            (applicable.get(check.id) ?? false) || check.applicable !== false,
+          );
+        }
+      }
+    }
+
+    const never = [...applicable].filter(([, ever]) => !ever).map(([id]) => id);
+    expect(never, `these checks never had anything to judge: ${never.join(", ")}`).toStrictEqual(
+      [],
+    );
+
+    // The exact set, so a check cannot be added to the suite without being exercised here.
+    expect([...applicable.keys()].toSorted()).toStrictEqual([
+      "decline-carries-escalation-route",
+      "echoes-claim-id",
+      "matching-currency",
+      "no-claimant-messages",
+      "reaches-a-conclusion",
+      "valid-messages",
+    ]);
+  });
+
   it("satisfies the protocol's own conformance suite", async () => {
     const report = await checkMerchantConformance(northwind());
 

@@ -87,6 +87,23 @@ const report = await checkMerchantConformance(agent);
 `checkMerchantConformance` tests the obligations the specification imposes, not any
 particular negotiating stance. **A merchant that declines every claim is fully conformant.**
 
+Two of the checks can only be judged by a particular kind of reply — there is no escalation
+route to inspect unless the agent DECLINEs, and no currency to compare unless it names an
+amount — so each result carries `applicable`. Both pass when inapplicable, which is right: an
+agent that never declines is conformant, it simply has not demonstrated that property. The
+field is there so a caller running the suite over several agents can tell the difference
+between a check that passed and a check that was never asked.
+
+That distinction is not academic. This repository runs the suite over all four reference
+agents on two breach kinds — eight runs, in
+`packages/mcp-server/src/merchants/http.test.ts`, over real HTTP — and asserts that every
+check a passing run records was applicable at least once. Before that, the one place the suite
+ran was Northwind Parcel on `phantom_delivery`, which is the single combination of the eight
+where `decline-carries-escalation-route` does **not** fire: the assertion that a refusal leaves
+the household somewhere to go was passing without ever being asked. `matching-currency` is
+applicable in only one of the eight, because the other seven DECLINE and a DECLINE carries no
+amount.
+
 ## Validating from another language
 
 The JSON Schema is generated from the same definitions this package validates with, so the

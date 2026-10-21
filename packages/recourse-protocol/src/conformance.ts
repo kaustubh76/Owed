@@ -12,6 +12,22 @@ export interface MerchantCheck {
   description: string;
   /** Advisory checks report but never fail the run. */
   advisory?: boolean;
+  /**
+   * Whether the agent's reply gave this check anything to judge. Absent means yes.
+   *
+   * Two of the checks below can only be exercised by a particular kind of reply: there is no
+   * escalation route to inspect unless the agent DECLINEs, and no currency to compare unless
+   * it names an amount. Both are written to pass when inapplicable, which is correct — an
+   * agent that never declines is conformant, it simply has not demonstrated that property —
+   * but it meant the distinction lived only in the `detail` prose ("did not decline"), where
+   * a caller could read it and nothing could count it.
+   *
+   * It is reported because a conformance suite settling onto replies that exercise none of
+   * its interesting assertions is a real failure mode and a quiet one. `packages/mcp-server`
+   * runs every shipped agent across two breach kinds and asserts each check was applicable at
+   * least once; without this field that assertion would have to match on the prose.
+   */
+  applicable?: boolean;
   pass: boolean;
   detail: string;
 }
@@ -119,6 +135,8 @@ export async function checkMerchantConformance(
   const amount = "amount" in message ? message.amount : undefined;
   record({
     id: "matching-currency",
+    // Nothing to compare unless the reply names an amount: a DECLINE carries none.
+    applicable: amount !== undefined,
     description: "Any amount is in the currency of the claim.",
     pass: amount === undefined || sameCurrency(amount, claim.ask),
     detail:
@@ -128,6 +146,7 @@ export async function checkMerchantConformance(
   record({
     id: "decline-carries-escalation-route",
     description: "A DECLINE leaves the household somewhere to go.",
+    applicable: message.type === "DECLINE",
     pass: message.type !== "DECLINE" || message.escalation_route.trim().length > 0,
     detail: message.type === "DECLINE" ? message.escalation_route : "did not decline",
   });
