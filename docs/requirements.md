@@ -78,7 +78,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 
 ```bash
 pnpm preflight        # a machine that can run it says so
-pnpm verify           # five gates: graph, docs, build, lint, tests, conformance, deploy
+pnpm verify           # eight gates: graph, docs, build, lint, tests, eval, conformance, deploy
 pnpm verify:ui        # 55 browser assertions and four accessibility audits, needs Chrome
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```

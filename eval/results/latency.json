@@ -1,11 +1,11 @@
 {
-  "measured_at": "2026-10-15T10:47:30.966Z",
+  "measured_at": "2026-10-21T10:02:30.482Z",
   "environment": {
     "node": "v26.10.0",
     "platform": "darwin",
     "arch": "arm64",
     "cpus": 8,
-    "load_average_1m": 5.22
+    "load_average_1m": 2.31
   },
   "target_ms": 500,
   "samples_per_tool": 50,
@@ -14,60 +14,60 @@
       "tool": "ledger_summary",
       "samples": 50,
       "min_ms": 2,
-      "median_ms": 2.5,
-      "p95_ms": 3.7,
-      "max_ms": 5.4,
+      "median_ms": 2.4,
+      "p95_ms": 4.1,
+      "max_ms": 4.3,
       "mean_ms": 2.7
     },
     {
       "tool": "promises_list",
       "samples": 50,
       "min_ms": 1.8,
-      "median_ms": 2.2,
-      "p95_ms": 4,
-      "max_ms": 4.4,
-      "mean_ms": 2.5
+      "median_ms": 2.1,
+      "p95_ms": 2.8,
+      "max_ms": 4.8,
+      "mean_ms": 2.2
     },
     {
       "tool": "promise_check",
       "samples": 50,
       "min_ms": 1.6,
-      "median_ms": 2,
-      "p95_ms": 3.2,
-      "max_ms": 3.3,
-      "mean_ms": 2.1
+      "median_ms": 1.8,
+      "p95_ms": 2.9,
+      "max_ms": 3.4,
+      "mean_ms": 1.9
     },
     {
       "tool": "evidence_get",
       "samples": 50,
       "min_ms": 1.5,
-      "median_ms": 1.8,
+      "median_ms": 1.7,
       "p95_ms": 2.1,
       "max_ms": 3.1,
-      "mean_ms": 1.8
+      "mean_ms": 1.7
     },
     {
       "tool": "claim_status",
       "samples": 50,
       "min_ms": 1.5,
-      "median_ms": 1.8,
-      "p95_ms": 3.1,
-      "max_ms": 4.7,
-      "mean_ms": 2
+      "median_ms": 1.7,
+      "p95_ms": 3.4,
+      "max_ms": 4.5,
+      "mean_ms": 1.9
     },
     {
       "tool": "claim_file",
       "samples": 50,
       "min_ms": 1.4,
-      "median_ms": 1.6,
-      "p95_ms": 2.6,
-      "max_ms": 4,
-      "mean_ms": 1.7
+      "median_ms": 1.5,
+      "p95_ms": 2.5,
+      "max_ms": 3.2,
+      "mean_ms": 1.6
     }
   ],
   "worst": {
-    "tool": "promises_list",
-    "p95_ms": 4
+    "tool": "ledger_summary",
+    "p95_ms": 4.1
   },
   "met": true
 }
