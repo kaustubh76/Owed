@@ -663,10 +663,30 @@ exactly one machine. A full run went green without executing it. `verify:docs` n
 lists and fails if the workflow omits a gate in the chain, runs one out of order, or runs a
 gate the chain does not — the last because `verify:graph` taught this repository to check
 both directions, and a gate added to CI alone means `pnpm verify` has stopped being what a
-contributor can run before pushing. The two steps that are legitimately extra are named with
-their reasons rather than tolerated by pattern, so a third has to be argued for. All three
-are proved: today's gap replayed, `verify:graph` moved after the build it exists to protect,
-and `verify:ui` added to CI where it cannot run for want of a browser. Re-running it on Linux
+contributor can run before pushing. The one step that is legitimately extra is named with its
+reason rather than tolerated by pattern, so a second has to be argued for.
+
+**The first version of that check was itself written with a regex, and the regex was the
+problem.** It read both sides with `/^\s*(?:- )?run: +pnpm +([\w:]+)/gm` over the whole file
+and passed only because the chain and the workflow happened to be written in the single form
+it handled. It claimed in a comment to handle `run: |` blocks and could not, since `run: +pnpm`
+cannot cross a newline — and there is such a block in the file. `pnpm --filter y z` matched
+nothing, because `[\w:]+` cannot begin at `-`, and that is the house style for every
+package-scoped script. `pnpm run x` captured `run`, reporting the real gate missing *and*
+`run` as an unexplained extra. A flag on the chain side made the gate name `"test --silent"`,
+which can never match, so flags were tolerated in CI and fatal in `package.json`. And matching
+over the whole file meant a step in any second job satisfied "every gate is a step" while the
+`verify` job never ran it.
+
+Both sides now go through one resolver — which skips an env prefix, skips flags, unwraps
+`run`/`exec`, and keeps a `--filter` as part of a command's identity — and the workflow is read
+as the named job's steps rather than as text, so a step behind an `if:` or a
+`continue-on-error: true` is reported rather than counted. Order is taken from a gate's *last*
+appearance, because `pnpm test` runs twice and reading the first meant moving the other one
+after a later gate went unnoticed. Six forms are proved against the old version: a `run: |`
+block and a `pnpm run` step, both of which it falsely reported missing; a flag on the chain
+side, which it falsely reported missing; and three it passed — a gate moved to a second job, a
+gate left behind an `if:`, and a `pnpm test` moved after `verify:eval`. Re-running it on Linux
 also turned out to be worth more than the gate: the five reports are generated on macOS
 arm64 and re-derived identically on x64, which is the real evidence that they are a function
 of the code and a fixed seed and nothing else.

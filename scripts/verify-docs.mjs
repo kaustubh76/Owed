@@ -593,60 +593,177 @@ process.stdout.write("\n--- the gate chain, against the workflow that claims to 
  * The readme says the workflow runs the same sequence as `pnpm verify`. It did, until a
  * gate was added to one of them.
  *
- * `verify:eval` went into the `verify` script and nowhere near CI, because this job has
- * always listed the gates as individual steps rather than calling `pnpm verify` — which it
- * does deliberately, so a failure names the gate that failed and the second timezone pass
- * can sit between two of them. The gate was written, mutation-proved, documented and
+ * `verify:eval` went into the `verify` script and nowhere near CI, because this job lists
+ * the gates as individual steps rather than calling `pnpm verify` — which it does
+ * deliberately, so a failure names the gate that failed and the second timezone pass can
+ * sit between two of them. The gate was written, mutation-proved, documented and
  * committed, and protected nothing on any machine but the author's. A full run went green
  * without executing it.
  *
- * So: read both lists and insist the workflow runs every gate in the chain, in the chain's
- * order. Extra steps are fine — `pnpm install`, the repeated `pnpm test` under
- * `TZ=Pacific/Kiritimati` — since the claim is that nothing in the chain is *missing*,
- * not that the job does nothing else.
+ * The first version of this check read both sides with one regex over the whole file,
+ * `/^\s*(?:- )?run: +pnpm +([\w:]+)/gm`, and passed only because the chain and the
+ * workflow happened to be written in the single form it handled. It claimed in a comment
+ * to handle `run: |` blocks and could not — `run: +pnpm` cannot cross a newline, and there
+ * is such a block in the file. `pnpm --filter y z` matched nothing, because `[\w:]+`
+ * cannot begin at `-`, and that is the house style for every package-scoped script.
+ * `pnpm run x` captured `run`, reporting the real gate missing *and* `run` as an
+ * unexplained extra. A gate written with a flag on the chain side became the gate name
+ * `"test --coverage"`, which can never match, so flags were tolerated in CI and fatal in
+ * `package.json`. And matching over the whole file meant a step in some second job would
+ * satisfy "every gate is a step" while the `verify` job never ran it.
+ *
+ * So both sides go through one resolver instead, and the workflow is read as steps rather
+ * than as text.
  */
+
+/**
+ * The pnpm scripts a shell snippet invokes, in order.
+ *
+ * Skips an env prefix (`TZ=... pnpm test`), skips flags, unwraps `run`/`exec`, and keeps a
+ * `--filter` as part of the identity — `pnpm --filter @owed/eval breach` is a different
+ * command from `pnpm breach` and must not match it.
+ */
+function pnpmScripts(snippet) {
+  const found = [];
+  for (const command of snippet.split(/&&|\|\||;|\n/)) {
+    const words = command
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word !== "");
+    // An env prefix is any leading NAME=value pair.
+    let at = 0;
+    while (at < words.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[at] ?? "")) at += 1;
+    if ((words[at] ?? "").replace(/^.*\//, "").replace(/\.(cmd|exe)$/, "") !== "pnpm") continue;
+    at += 1;
+
+    let filter;
+    let script;
+    while (at < words.length) {
+      const word = words[at] ?? "";
+      if (word === "--filter" || word === "-F") {
+        filter = words[at + 1];
+        at += 2;
+        continue;
+      }
+      const inline = /^--filter=(.+)$/.exec(word);
+      if (inline) {
+        filter = inline[1];
+        at += 1;
+        continue;
+      }
+      if (word === "run" || word === "exec") {
+        at += 1;
+        continue;
+      }
+      if (word.startsWith("-")) {
+        at += 1;
+        continue;
+      }
+      script = word;
+      break;
+    }
+    if (script !== undefined) found.push(filter === undefined ? script : `${filter} ${script}`);
+  }
+  return found;
+}
+
+/**
+ * The `run:` scripts of one job's steps, with the steps that do not always run left out.
+ *
+ * Indentation-scoped rather than parsed as YAML, which keeps this dependency-free — but
+ * scoped to the named job, so another job's steps cannot answer for this one. A step
+ * carrying `if:` or `continue-on-error: true` is reported separately: it is in the file,
+ * and it is not something the chain can rely on.
+ */
+function jobSteps(workflowText, job) {
+  const lines = workflowText.split("\n");
+  const jobAt = lines.findIndex((line) => new RegExp(`^  ${job}:\\s*$`).test(line));
+  if (jobAt < 0) return undefined;
+
+  // The job ends at the next line indented two spaces or less that is not blank.
+  let end = lines.length;
+  for (let index = jobAt + 1; index < lines.length; index += 1) {
+    const line = lines[index] ?? "";
+    if (line.trim() !== "" && /^ {0,2}\S/.test(line)) {
+      end = index;
+      break;
+    }
+  }
+  const body = lines.slice(jobAt + 1, end);
+
+  const stepsAt = body.findIndex((line) => /^ {4}steps:\s*$/.test(line));
+  if (stepsAt < 0) return { steps: [], conditional: [] };
+
+  // Split the steps block into steps at each `- ` bullet.
+  const steps = [];
+  let current;
+  for (const line of body.slice(stepsAt + 1)) {
+    if (/^ {6}- /.test(line)) {
+      if (current !== undefined) steps.push(current);
+      current = [line.replace(/^ {6}- /, "")];
+    } else if (current !== undefined) {
+      current.push(line.replace(/^ {8}/, ""));
+    }
+  }
+  if (current !== undefined) steps.push(current);
+
+  const always = [];
+  const conditional = [];
+  for (const step of steps) {
+    const text = step.join("\n");
+    // `run: pnpm x` and `run: |` with the commands on following lines both end up here,
+    // because the whole step is handed to the resolver rather than one matched line.
+    const scripts = pnpmScripts(text.replace(/^run: *\|?/m, ""));
+    if (scripts.length === 0) continue;
+    const gated = /^if:/m.test(text) || /^continue-on-error:\s*true/m.test(text);
+    for (const script of scripts) (gated ? conditional : always).push(script);
+  }
+  return { steps: always, conditional };
+}
+
 const rootPackage = JSON.parse(read(join(REPO_ROOT, "package.json")));
-const chain = (rootPackage.scripts?.verify ?? "")
-  .split("&&")
-  .map((part) => part.trim().replace(/^pnpm\s+/, ""))
-  .filter((part) => part.length > 0);
+const chain = pnpmScripts(rootPackage.scripts?.verify ?? "");
 
 const workflowPath = join(REPO_ROOT, ".github", "workflows", "verify.yml");
 const workflow = exists(workflowPath) ? read(workflowPath) : "";
-// `- run: pnpm x` and the `- name:`/`run: |` form both reduce to the commands invoked.
-const steps = [...workflow.matchAll(/^\s*(?:- )?run: +pnpm +([\w:]+)/gm)].map((match) => match[1]);
+const job = jobSteps(workflow, "verify");
 
 want(
-  "the workflow exists and runs pnpm steps",
-  chain.length > 0 && steps.length > 0,
-  `${chain.length} gate(s) in the chain, ${steps.length} pnpm step(s) in the workflow`,
+  "the workflow has a `verify` job that runs pnpm steps",
+  chain.length > 0 && job !== undefined && job.steps.length > 0,
+  job === undefined
+    ? "no `verify` job in .github/workflows/verify.yml"
+    : `${chain.length} gate(s) in the chain, ${new Set(job.steps).size} distinct step(s) in the job`,
 );
+
+const steps = job?.steps ?? [];
+const conditional = job?.conditional ?? [];
 
 const missing = chain.filter((gate) => !steps.includes(gate));
 want(
   "every gate in `pnpm verify` is a step in the workflow",
   missing.length === 0,
-  missing.length === 0 ? chain.join(" -> ") : `not run on push: ${missing.join(", ")}`,
+  missing.length === 0
+    ? chain.join(" -> ")
+    : `not run on push: ${missing.join(", ")}${
+        missing.some((gate) => conditional.includes(gate))
+          ? " (present but behind an `if:` or `continue-on-error`)"
+          : ""
+      }`,
 );
 
-// Order, by first appearance: a gate that runs after the build in one and before it in the
-// other is not the same sequence, and `verify:graph` running late would defeat its purpose.
-const positions = chain.map((gate) => steps.indexOf(gate));
-const ordered = positions.every(
-  (position, index) => index === 0 || position < 0 || positions[index - 1] < position,
-);
 /**
  * And the other direction, because `verify:graph` taught this repository to check both.
  *
- * A gate added to the workflow alone is the milder failure — it runs on every push, so it
- * cannot be silently absent — but it means `pnpm verify` is no longer what a contributor
- * can run before pushing, which is the only reason that script exists. The two steps that
- * are legitimately extra are named here with their reasons rather than tolerated by
- * pattern, so a third one has to be argued for.
+ * A gate added to the workflow alone runs on every push, so it cannot be silently absent —
+ * but it means `pnpm verify` has stopped being what a contributor can run before pushing,
+ * which is the only reason that script exists. `install` is named here with its reason
+ * rather than tolerated by pattern, so a second one has to be argued for. `test` is *not*
+ * listed: it is in the chain, so it never reaches this check — the previous version listed
+ * it and then reported "2 step(s) extra by design", counting a dead entry.
  */
 const EXTRA_STEPS = {
   install: "dependencies, which the chain assumes are already there",
-  test: "run a second time under TZ=Pacific/Kiritimati; the chain runs it once",
 };
 const unexplained = [...new Set(steps)].filter(
   (step) => !chain.includes(step) && !(step in EXTRA_STEPS),
@@ -655,18 +772,29 @@ want(
   "and the workflow runs no gate the chain does not",
   unexplained.length === 0,
   unexplained.length === 0
-    ? `${Object.keys(EXTRA_STEPS).length} step(s) extra by design: ${Object.keys(EXTRA_STEPS).join(", ")}`
+    ? `extra by design: ${Object.keys(EXTRA_STEPS).join(", ")}`
     : `in CI only, so \`pnpm verify\` does not run it: ${unexplained.join(", ")}`,
 );
 
+/**
+ * Order, by *last* appearance rather than first.
+ *
+ * `pnpm test` runs twice — once plainly and once under `TZ=Pacific/Kiritimati` — and
+ * reading `indexOf` meant only the first was ever considered, so moving the plain one
+ * after `verify:eval` would have passed. Taking the last occurrence means every gate in
+ * the chain has to be finished with before the next one starts, which is what "the same
+ * sequence" claims.
+ */
+const positions = chain.map((gate) => steps.lastIndexOf(gate));
+const ordered = positions.every(
+  (position, index) => index === 0 || position < 0 || positions[index - 1] < position,
+);
 want(
   "and in the same order",
   ordered,
   // A gate the workflow does not run has no position to be out of, and the check above
   // already names it; this one is about the gates that are there.
-  ordered
-    ? `${chain.length - missing.length} gate(s) present, first appearance in order`
-    : "the orders disagree",
+  ordered ? `${chain.length - missing.length} gate(s) present, in order` : "the orders disagree",
 );
 
 // ---------------------------------------------------------------------------
