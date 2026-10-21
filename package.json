@@ -18,7 +18,6 @@
     "verify": "pnpm verify:graph && pnpm verify:docs && pnpm build && pnpm lint && pnpm test && pnpm verify:eval && pnpm conformance && pnpm verify:deploy",
     "dev:server": "pnpm --filter @owed/mcp-server dev",
     "demo": "concurrently -n merchants,server,brain,home -c yellow,cyan,magenta,green \"pnpm --filter @owed/merchant-agents start\" \"OWED_MERCHANTS_URL=http://127.0.0.1:3941 pnpm --filter @owed/mcp-server start\" \"pnpm --filter @owed/brain start\" \"pnpm --filter @owed/home dev\"",
-    "demo:build": "pnpm build",
     "conformance": "node scripts/conformance.mjs",
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "verify:docs": "node scripts/verify-docs.mjs",
