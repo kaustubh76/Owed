@@ -233,9 +233,11 @@ async function refuseIfBusy(ports) {
         "`pnpm demo` stack is the usual cause, and one that has been used has already filed\n" +
         "`prm_011`, so the proactive beat has nothing to announce and this run would fail\n" +
         "about twenty-five checks in, blaming the product.\n\n" +
-        "Stop it first. `pkill -f Owed` will not find it: the brain and the server run as\n" +
-        "`node dist/main.js`. Use the ports:\n\n" +
-        "  for p in 3939 3940 3941 5173; do lsof -nP -iTCP:$p -sTCP:LISTEN -t; done | xargs kill -9\n",
+        "Stop it first. `pkill -f Owed` will not find it, and neither will `lsof` — the\n" +
+        "brain and the server run as `node dist/main.js`, and lsof has been observed\n" +
+        "reporting no listener on these ports while they were answering. This finds them:\n\n" +
+        "  pkill -9 -f dist/main.js; pkill -9 -f dist/bin/serve.js; pkill -9 -f vite.js\n\n" +
+        "This check binds the ports rather than asking lsof, for the same reason.\n",
     );
     process.exit(1);
   }
