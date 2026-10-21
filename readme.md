@@ -160,6 +160,16 @@ what the browser renders. An earlier version of this diagram was invented: it sh
 `phantom_delivery` the recorded week does not contain, a `claim.file` tool that has never
 existed under that name, and amounts in rupees.
 
+**And the recording can be re-derived rather than trusted:** `node scripts/capture-demo.mjs
+--check` boots the server and the merchant agents again, walks OAuth again, drives the same
+tools again, and compares what it sees to the committed file in memory without writing it —
+the same `--check` idiom `draw-architecture.mjs` uses, for the same reason. Everything is
+compared except `captured_at`, `commit` and the wall-clock instants stamped on observed
+frames. That mattered: the capture committed before 2026-10-21 had gone 41 commits without
+being re-derived, and the re-run found its recorded `ledger_summary` output schema missing the
+`watched` field added since. Every figure, spoken line, claim id and negotiation round in it
+was still exactly right.
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -545,7 +555,7 @@ owed/
 │  ├─ verify-docs.mjs       # entry counts, citations by number, and every relative link
 │  ├─ verify-graph.mjs      # every cross-package import declared *and* referenced
 │  ├─ draw-architecture.mjs # regenerates docs/architecture.excalidraw
-│  ├─ capture-demo.mjs      # records the storyboard to docs/demo-capture.json
+│  ├─ capture-demo.mjs      # records the storyboard; --check re-derives without writing
 │  └─ aws-smoke.mjs         # proves the ledger against real DynamoDB, in a named account
 ├─ deploy/                  # one box: Caddyfile, four units, bootstrap, two IAM policies
 ├─ docs/
