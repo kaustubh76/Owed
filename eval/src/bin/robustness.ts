@@ -1,8 +1,7 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { SeededRng } from "@owed/core";
 import { generateGrid, VARIABLE_PARAMETERS } from "@owed/merchant-agents";
 import { type MatrixReport, runRecourseMatrix } from "../recourse.js";
+import { writeReport } from "../results.js";
 
 /**
  * Does the H3 result survive merchants that do not behave exactly as configured?
@@ -269,7 +268,4 @@ process.stdout.write(
     `${(byJitter.find((row) => row.jitter === 0.25)?.mean_lift ?? 0).toFixed(2)}x at jitter 0.25\n`,
 );
 
-const dir = fileURLToPath(new URL("../../results/", import.meta.url));
-mkdirSync(dir, { recursive: true });
-writeFileSync(`${dir}robustness.json`, `${JSON.stringify(report, null, 2)}\n`);
-process.stdout.write("\n  written to eval/results/robustness.json\n");
+process.stdout.write(`\n  written to ${writeReport("robustness", report)}\n`);

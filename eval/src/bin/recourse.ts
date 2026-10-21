@@ -1,6 +1,5 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { runRecourseMatrix } from "../recourse.js";
+import { writeReport } from "../results.js";
 
 const report = await runRecourseMatrix();
 const pct = (value: number) => `${(value * 100).toFixed(1)}%`;
@@ -76,7 +75,4 @@ for (const criterion of criteria) {
   );
 }
 
-const out = fileURLToPath(new URL("../../results/recourse.json", import.meta.url));
-mkdirSync(fileURLToPath(new URL("../../results/", import.meta.url)), { recursive: true });
-writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
-process.stdout.write(`\n  written to eval/results/recourse.json\n`);
+process.stdout.write(`\n  written to ${writeReport("recourse", report)}\n`);

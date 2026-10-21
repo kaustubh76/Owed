@@ -633,10 +633,20 @@ describes the detector you used to have, with the readme agreeing with it. `veri
 re-runs `extraction`, `breach`, `recourse`, `learning` and `robustness` and compares the
 result figure by figure; all five are pure functions of the code and a fixed seed, and none
 of them records a timestamp or a machine detail, so "identical" is a reachable standard
-rather than a hopeful one. It leaves the working tree exactly as it found it, drift or no
-drift, because a gate that edits what it is checking is not a gate. `latency.json` is
-excluded by name: it is the one report that is a property of the machine, which is also why
-no latency figure is quoted anywhere here. The gate is proved the way the others are — a
+rather than a hopeful one. `latency.json` is excluded by name: it is the one report that is a
+property of the machine, which is also why no latency figure is quoted anywhere here.
+
+**It does not write to this repository at all**, and the first version did. Each harness used
+to hardcode its output directory, so the only way to re-derive a report was to let the harness
+overwrite the tracked file and put the original back in a `finally`. That is correct exactly
+until something goes wrong: a `finally` does not run on a signal, this gate sits in the middle
+of `pnpm verify` — the command people cancel — and Ctrl-C reaches the whole process group, so
+a harness could die inside its own `writeFileSync` and leave a tracked report truncated with
+nothing left to restore it. CI cancels superseded pushes by default, so that was the ordinary
+path rather than an exotic one. The harnesses now take `OWED_EVAL_RESULTS` and the gate points
+them at a temp directory; `eval/results/` is only ever read, including on a failing run. The
+hole closed by removing the code that could fall into it rather than by catching the signal,
+which is the same argument `draw-architecture.mjs --check` already makes here. The gate is proved the way the others are — a
 detector tolerance moved from half an hour to two hours reddens `breach.json` alone, the
 three-round cap cut to two reddens the three negotiation reports and not the other two, and
 an extractor pattern narrowed to nothing reddens `extraction.json`. Two gentler extractor

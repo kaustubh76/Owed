@@ -1,10 +1,9 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import type { Extraction, ExtractionInput } from "@owed/extractor";
 import { bedrockInvoke, createBedrockExtractor, DEFAULT_MODEL_ID } from "@owed/extractor-bedrock";
 import { generateExtractionCorpus, type LabelledMessage } from "../extraction/corpus.js";
 import { heldOutMessages } from "../extraction/heldout.js";
 import { measureExtraction, scoreExtractions } from "../extraction/measure.js";
+import { writeReport } from "../results.js";
 
 /**
  * H1, again, with a model — the measurement `packages/extractor/README.md` promises and
@@ -157,21 +156,12 @@ process.stdout.write(
     `  extractions discarded for any reason: ${dropped.flatMap((d) => d.reasons).length}\n`,
 );
 
-const dir = fileURLToPath(new URL("../../results/", import.meta.url));
-mkdirSync(dir, { recursive: true });
-writeFileSync(
-  `${dir}extraction-bedrock.json`,
-  `${JSON.stringify(
-    {
-      model: MODEL_ID,
-      run_at: new Date().toISOString(),
-      rules: { tuned: rulesTuned, held_out: rulesHeld },
-      model_backed: { tuned: bedrockTuned, held_out: bedrockHeld },
-      dropped,
-    },
-    null,
-    2,
-  )}\n`,
-);
+const written = writeReport("extraction-bedrock", {
+  model: MODEL_ID,
+  run_at: new Date().toISOString(),
+  rules: { tuned: rulesTuned, held_out: rulesHeld },
+  model_backed: { tuned: bedrockTuned, held_out: bedrockHeld },
+  dropped,
+});
 
-process.stdout.write(`\n  written to eval/results/extraction-bedrock.json\n`);
+process.stdout.write(`\n  written to ${written}\n`);

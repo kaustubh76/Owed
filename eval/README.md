@@ -36,7 +36,7 @@ and a model behind that assertion would fail CI whenever it misread one. That is
 flaky test — it is a correct test of a non-deterministic thing, which is a worse problem to
 have.
 
-Results are written to `eval/results/`, one file per evaluation.
+Results are written to `eval/results/` — or to `$OWED_EVAL_RESULTS` when that is set, which is how `pnpm verify:eval` re-derives a report without touching the committed one, one file per evaluation.
 
 ---
 

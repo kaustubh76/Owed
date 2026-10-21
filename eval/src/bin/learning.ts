@@ -1,6 +1,5 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { runLearningMatrix } from "../learning.js";
+import { writeReport } from "../results.js";
 
 const report = await runLearningMatrix();
 const pct = (value: number) => `${(value * 100).toFixed(1)}%`;
@@ -28,7 +27,4 @@ for (const point of report.learning_curve) {
   );
 }
 
-const dir = fileURLToPath(new URL("../../results/", import.meta.url));
-mkdirSync(dir, { recursive: true });
-writeFileSync(`${dir}learning.json`, `${JSON.stringify(report, null, 2)}\n`);
-process.stdout.write("\n  written to eval/results/learning.json\n");
+process.stdout.write(`\n  written to ${writeReport("learning", report)}\n`);

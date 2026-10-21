@@ -14,13 +14,13 @@
  */
 
 import { spawn } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
 import { cpus, loadavg } from "node:os";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { linkAccount } from "@owed/mcp-server";
 import { type LatencyReport, summarise, verdict } from "../latency/measure.js";
+import { writeReport } from "../results.js";
 
 /** Out of the way of `pnpm demo` (3939) and the conformance check (3999). */
 const PORT = process.env.OWED_PORT ?? "3994";
@@ -172,9 +172,6 @@ process.stdout.write(
 await client.close();
 stop();
 
-const dir = fileURLToPath(new URL("../../results/", import.meta.url));
-mkdirSync(dir, { recursive: true });
-writeFileSync(`${dir}latency.json`, `${JSON.stringify(report, null, 2)}\n`);
-process.stdout.write("\n  written to eval/results/latency.json\n");
+process.stdout.write(`\n  written to ${writeReport("latency", report)}\n`);
 
 if (!met) process.exit(1);

@@ -1,8 +1,7 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { generateExtractionCorpus } from "../extraction/corpus.js";
 import { heldOutMessages } from "../extraction/heldout.js";
 import { measureExtraction } from "../extraction/measure.js";
+import { writeReport } from "../results.js";
 
 const report = measureExtraction(generateExtractionCorpus());
 const pct = (value: number | undefined) =>
@@ -84,10 +83,5 @@ if (heldOut.misses.length > 0) {
   }
 }
 
-const dir = fileURLToPath(new URL("../../results/", import.meta.url));
-mkdirSync(dir, { recursive: true });
-writeFileSync(
-  `${dir}extraction.json`,
-  `${JSON.stringify({ tuned: report, held_out: heldOut }, null, 2)}\n`,
-);
-process.stdout.write("\n  written to eval/results/extraction.json\n");
+const written = writeReport("extraction", { tuned: report, held_out: heldOut });
+process.stdout.write(`\n  written to ${written}\n`);

@@ -1,7 +1,6 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { generateBreachCorpus } from "../breach/corpus.js";
 import { measureBreachDetection } from "../breach/measure.js";
+import { writeReport } from "../results.js";
 
 const report = measureBreachDetection(generateBreachCorpus());
 const pct = (value: number | undefined) =>
@@ -70,7 +69,4 @@ if (report.mislabelled.length > 0) {
   }
 }
 
-const dir = fileURLToPath(new URL("../../results/", import.meta.url));
-mkdirSync(dir, { recursive: true });
-writeFileSync(`${dir}breach.json`, `${JSON.stringify(report, null, 2)}\n`);
-process.stdout.write("\n  written to eval/results/breach.json\n");
+process.stdout.write(`\n  written to ${writeReport("breach", report)}\n`);
