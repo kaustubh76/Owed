@@ -1,6 +1,7 @@
 import type { Clock } from "@owed/core";
 import { toEpochMs } from "@owed/domain";
 import express, { type Request, type Response, Router } from "express";
+import { accountLinkingPage } from "./accountLinking.js";
 import { AuthorizationCodeStore, verifyCodeChallenge } from "./codes.js";
 import { type AuthConfig, findClient, isRedirectAllowed } from "./config.js";
 import { authorizationServerMetadata, protectedResourceMetadata } from "./metadata.js";
@@ -192,6 +193,17 @@ export function createAuthRouter(options: AuthRouterOptions): Router {
   });
   router.get("/.well-known/oauth-authorization-server/mcp", (_req, res) => {
     res.json(authorizationServerMetadata(config));
+  });
+
+  /**
+   * Served unauthenticated, necessarily: a public metadata document points at it, so
+   * anything reading that document has to be able to read this. The page itself is
+   * `accountLinking.ts`; `auth.test.ts` walks both discovery documents and asserts every
+   * issuer-local URL they advertise resolves, which is the check that would have caught the
+   * 404 this replaced.
+   */
+  router.get("/docs/account-linking", (_req: Request, res: Response) => {
+    res.type("html").send(accountLinkingPage(config));
   });
 
   // --- authorization -------------------------------------------------------

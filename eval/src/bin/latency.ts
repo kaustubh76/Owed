@@ -1,9 +1,15 @@
 /**
  * Measure every tool's latency against a real server, and commit the result.
  *
- * `readme.md` §10 has pointed at `eval/latency/` since the table was written, and the
+ * `readme.md` §10 pointed at `eval/latency/` from the day the table was written, and the
  * directory did not exist — the figure it quoted came from a vitest benchmark that timed
  * one tool and printed the number to stdout. This is the harness that row describes.
+ *
+ * Writing that down did not fix it. The citation stayed wrong in `readme.md` and in
+ * `alexa/contract.test.ts` for another fortnight, because `verify:docs` resolves markdown
+ * links and a backticked path is not one. Both say `eval/src/latency/` now, and every
+ * backticked repo path in `readme.md` and `docs/` is checked — ninety of them, which is how
+ * this one was finally found.
  *
  * It boots the real MCP server, walks the real OAuth flow, and drives all six tools over
  * Streamable HTTP with a real MCP client — the same shape as `scripts/capture-demo.mjs`,

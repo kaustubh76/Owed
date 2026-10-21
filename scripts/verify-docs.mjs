@@ -215,6 +215,49 @@ for (const file of markdown) {
 }
 want("every relative link resolves", broken === 0, `${links} checked, ${broken} broken`);
 
+/**
+ * And the paths that are cited in backticks rather than linked.
+ *
+ * The check above resolves markdown `[text](path)` links. Most of the paths these documents
+ * cite are not written that way — they are `inline code`, which it never saw. `readme.md`
+ * §10 named `eval/latency/` from the day that table was written and the directory has never
+ * existed; the harness is `eval/src/latency/`, and the two sibling rows in the same table
+ * say `eval/src/extraction/` and `eval/src/breach/` correctly. `eval/src/bin/latency.ts`
+ * even documents the defect in its header — and the citation stayed wrong for another
+ * fortnight after that, in the readme and in a test comment, because writing a thing down is
+ * not the same as checking it.
+ *
+ * Deliberately conservative, and measured before it was written rather than tuned
+ * afterwards: only strings rooted at a real top-level directory, only with a trailing slash
+ * on the root so `evaluationInterval` is not read as a path under `eval`, and nothing
+ * containing `*`. Over `readme.md` and `docs/`, that is ninety paths with exactly one
+ * failure — the one above — and no false positives.
+ *
+ * Scoped to the files this gate already reads. `packages/extractor-bedrock/README.md` cites
+ * `eval/results/extraction-bedrock.json`, which does not exist **because no model has ever
+ * run** — correct, conditional, and the reason not to widen this without an allowance.
+ */
+const PATH_ROOTS = ["packages/", "apps/", "scripts/", "docs/", "deploy/", "eval/", "data/"];
+let cited = 0;
+const danglingPaths = [];
+for (const file of markdown) {
+  for (const match of read(join(REPO_ROOT, file)).matchAll(/`([A-Za-z0-9._/-]+)`/g)) {
+    const target = match[1] ?? "";
+    if (!PATH_ROOTS.some((root) => target.startsWith(root)) || target.includes("*")) continue;
+    cited += 1;
+    if (!exists(join(REPO_ROOT, target))) danglingPaths.push(`${file} cites ${target}`);
+  }
+}
+want(
+  "every backticked repository path exists",
+  cited > 0 && danglingPaths.length === 0,
+  cited === 0
+    ? "no backticked paths were read, so this proves nothing"
+    : danglingPaths.length === 0
+      ? `${cited} checked`
+      : danglingPaths.join("; "),
+);
+
 // ---------------------------------------------------------------------------
 // The repository tree in §11. This is how product-feedback.md went missing from it.
 // ---------------------------------------------------------------------------
@@ -315,6 +358,14 @@ const COUNTS = [
     what: "lines in scripts/verify-graph.mjs",
     measured: lineCount("scripts/verify-graph.mjs"),
     rendered: String(lineCount("scripts/verify-graph.mjs")),
+    document: "docs/friction-log.md",
+  },
+  {
+    // Quoted in the same sentence as the total, and it was wrong for the same reason: the
+    // total was gated and this was prose beside it.
+    what: "lines in auth/router.ts",
+    measured: lineCount("packages/mcp-server/src/auth/router.ts"),
+    rendered: String(lineCount("packages/mcp-server/src/auth/router.ts")),
     document: "docs/friction-log.md",
   },
   {

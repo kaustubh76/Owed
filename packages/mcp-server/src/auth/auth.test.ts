@@ -106,6 +106,60 @@ describe("discovery documents", () => {
   });
 });
 
+/**
+ * Every URL these documents advertise has to resolve.
+ *
+ * `service_documentation` promised `${issuer}/docs/account-linking` from the day it was
+ * written and no route served it — a 404 on the first thing an Alexa+ integrator follows,
+ * since the discovery document is where account linking starts. It is served now.
+ *
+ * This is deliberately the general property rather than a check of that one field. Discovery
+ * is the account-linking surface: anything it names, somebody follows. Two of the five
+ * documented conformance checks read these documents, and neither looks at whether the URLs
+ * in them go anywhere.
+ *
+ * Probed with `OPTIONS`, which took two attempts to get right. A bare `GET` is wrong: the
+ * token endpoint is POST-only and Express answers 404 for a path with no handler for the
+ * method, so the first version of this test reported `/oauth/token` as dead. `OPTIONS`
+ * asks the router what is mounted regardless of method — 200 and `Allow: POST` for the
+ * token endpoint, 200 and `Allow: GET, HEAD, POST` for the authorization endpoint, 401 for
+ * `/mcp` because the bearer gate runs ahead of it, and 404 only for a path nothing serves.
+ *
+ * `issuer` is excluded: RFC 8414 defines it as an identifier, not a page, and the server
+ * mounts nothing at `/`. That is the one value in these documents which is not a URL anyone
+ * is meant to follow.
+ */
+describe("the URLs discovery advertises", () => {
+  it("all resolve", async () => {
+    const documents = await Promise.all([
+      json("/.well-known/oauth-authorization-server"),
+      json("/.well-known/oauth-protected-resource"),
+    ]);
+
+    const issuer = harness.baseUrl.href.replace(/\/$/, "");
+    const advertised = [
+      ...new Set(
+        documents
+          .flatMap((document) => Object.values(document.body))
+          .flat()
+          .filter((value): value is string => typeof value === "string")
+          .filter((value) => value.startsWith(issuer) && value !== issuer),
+      ),
+    ];
+
+    // Without this the test passes on a document that advertises nothing at all.
+    expect(advertised.length, "issuer-local URLs found in discovery").toBeGreaterThan(3);
+
+    const dead: string[] = [];
+    for (const url of advertised) {
+      const response = await fetch(url, { method: "OPTIONS", redirect: "manual" });
+      if (response.status === 404) dead.push(url);
+    }
+
+    expect(dead, "advertised in discovery and serving nothing").toStrictEqual([]);
+  });
+});
+
 describe("account linking", () => {
   it("completes authorization code + PKCE and returns a usable token", async () => {
     const token = await harness.link();

@@ -87,7 +87,7 @@ For a self-hosted add-on that must issue its own tokens — which is exactly wha
 add-on contract describes — there is no supported route. We wrote the authorization server
 ourselves: metadata, authorize, consent, token, PKCE `S256`, refresh.
 
-**Workaround.** A 954-line authorization server using `jose`, in `packages/mcp-server/src/auth` (`router.ts` alone is 363).
+**Workaround.** A 1032-line authorization server using `jose`, in `packages/mcp-server/src/auth` (`router.ts` alone is 370). Sixty-six of those lines are `accountLinking.ts`, the page RFC 8414's `service_documentation` promises — not work the SDK forced on anyone, and kept in its own module so this count measures what it claims to.
 
 **Suggestion.** Either keep a minimal reference authorization server in the SDK for
 self-hosted servers, or publish a short "you now need an AS, here is a worked example"

@@ -376,7 +376,7 @@ Three hypotheses, pre-registered before the code that answers them, and referred
 | **H1** | Can a promise be extracted from what a merchant actually wrote? | 120 labelled messages + 40 held out, 7 promise kinds | `eval/src/extraction/` |
 | **H2** | Can a breach be detected reliably, per promise kind, without crying wolf? | 60 scripted scenarios with evidence timelines, incl. coverage gaps | `eval/src/breach/` |
 | **H3** | Does arguing recover more than accepting the merchant's first offer? | 270-policy pre-registered grid × 6 breach kinds, negotiator vs. "accept first offer" and "do nothing" | `eval/` |
-| — | Does a tool answer fast enough for voice? | all six tools, 50 calls each, driven by a real MCP client over Streamable HTTP against a booted server | `eval/latency/` |
+| — | Does a tool answer fast enough for voice? | all six tools, 50 calls each, driven by a real MCP client over Streamable HTTP against a booted server | `eval/src/latency/` |
 
 H3 was pre-registered with **three** criteria, not two — `product_ideation.md:162`: ≥ 60% of
 owed value, ≥ 1.5× the accept-first-offer baseline, **and a median of ≤ 2 rounds**. The

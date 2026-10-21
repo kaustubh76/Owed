@@ -203,7 +203,7 @@ describe("latency", () => {
    * Twenty samples per tool rather than forty of one: six tools at forty would triple the
    * wall-clock for a quantity whose threshold is two orders of magnitude above the
    * observed value. The gate is here to catch a regression, not to publish a figure —
-   * `eval/latency/` does that, and commits its result.
+   * `eval/src/latency/` does that, and commits its result.
    */
   it("answers well inside the documented target at p95, across the whole tool surface", {
     timeout: 120_000,
