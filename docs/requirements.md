@@ -28,7 +28,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 | Seven promise kinds, six breach kinds | `domain/src/promise.ts`, `domain/src/breach.ts`, `core/src/breach/detectors.ts` | Read out of the schemas (7 and 6), and `kinds.test.ts` asserts a detector covers every one of the seven, with no exemption list | **holds — completed on 2026-10-20.** Two of the seven, `guarantee` and `warranty`, were extractable and had no detector: read out of a merchant's words, written to the ledger, never judged. `derivedBreach` covers both by inheriting the verdict of a promise from the same message, so the six breach kinds stay six |
 | Extractor and breach engine with published precision/recall | `eval/src/extraction/`, `eval/src/breach/` | `pnpm eval:all`; figures in readme §10, including the held-out ones. `breach.json` re-ran byte-identical after the seventh detector landed — the H2 harness passes no siblings, so derivation cannot touch the 60-scenario corpus | **holds** |
 | Six tools | `mcp-server/src/tools/` | `tools/list` over a real client against the booted server returns exactly the six frozen names | **holds** |
-| Three `ui://` views | `mcp-server/src/views.ts` | `verify:docs` compares the contract's table to the registered tools; `verify:ui` reads all three back over the wire | **holds** |
+| Three `ui://` views | `mcp-server/src/views.ts` | `verify:ui` reads all three back over the wire; `schemas.sync.test.ts` holds `VIEW_NAMES` and `VIEW_URIS` together; and `verify:docs` compares both documents' tool tables and view URIs to the `registerAppTool` call sites | **holds — and this row was false until 2026-10-22.** It said `verify:docs` compared the contract's table to the registered tools. That file contained no tool name, no `ui://` URI and no `tools/list`: a claim about a check, where the check did not exist, in the document that exists to check claims. It exists now, and catches a drift in either direction |
 | Elicitation | `tools/claimFile.ts` | `alexa/contract.test.ts` drives both branches — the declared-capability one and the explicit `confirm` | **holds** |
 | OAuth 2.1 + PKCE | `mcp-server/src/auth/` | Live against the booted server: `code_challenge_methods_supported: ["S256"]`, and no `registration_endpoint`. The mechanism itself is driven, not only advertised — see the §10 row below | **holds** |
 | Conformance passing | `scripts/conformance.mjs` | `pnpm conformance`, in `pnpm verify`, against a real booted server | **holds** |
@@ -239,3 +239,29 @@ out of a terminal by hand, so the one accessibility claim that names a measureme
 nothing compared. The gate now asserts that both documents quote the figure it just computed.
 That was only worth asserting once it ran in CI; before, a stale number would have sat in two
 documents until somebody looked.
+
+---
+
+## Explicitly out of scope (§20, the other half)
+
+This document walked **Must include** row by row and never mentioned the six things §20 says
+the MVP would *not* build. An exclusion is a commitment too, and a silently broken one is a
+scope breach — the first thing anyone comparing a submission to its own plan would look for.
+None is broken, and two are now checked rather than asserted.
+
+| Ruled out | How it is held | Verdict |
+|---|---|---|
+| Real merchant integrations or live consumer mailboxes | `verify:docs` reads every non-test `.ts`/`.tsx` under `packages/` and `apps/` — 117 files, comments stripped — and fails on any `http(s)://` literal that is not loopback. The one allowance is named with its reason: Alexa+'s three region-specific account-linking redirect URIs, which the platform requires and which nothing dereferences | **gated.** A fourth Amazon host fails, so the allowance is three URIs and not a domain |
+| Auto-file without confirmation | §10's "No auto-file in v1" row above — elicitation or an explicit `confirm`, and `verify:ui` clicks the household's own "File it" | **gated**, by that row's own tests |
+| Amazon Wallet payment flows | Referenced in prose, implemented nowhere: no occurrence of `wallet` under any `src` | **stated** |
+| Speaker identity / per-person ledgers | `verify:docs` fails on `speaker_id`, `person_id` or `voiceProfile` in product source. One household id, carried on the token and every event — which is also what §10's binding row depends on | **gated** |
+| Fire TV overlay and phone rail | Not built, and recorded as not-built in readme §13's real-vs-simulated map rather than left implied | **stated** |
+| Legal-rights reasoning of any kind | What the product reasons about is a merchant's **own published clause** — `policy-library` resolves it and `claim_file` cites it by title, which is why the demo's counter quotes "Delivery Guarantee 4.1" and never a statute | **stated, deliberately not gated** |
+
+The last row is the one worth being explicit about, because gating it would be theatre. A
+check could only be a word list — statute, regulation, ombudsman, small claims — and a gate
+that fails the day somebody writes "regulation" in a comment is a gate that gets deleted
+rather than heeded. This repository has reported a sentence *about* a thing as the thing three
+times now; a vocabulary gate would be the fourth. The design fact is the evidence: there is no
+statutory input to reason from, because the only authority Owed ever cites is the merchant's
+own policy text.
