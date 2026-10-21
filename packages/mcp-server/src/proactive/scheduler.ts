@@ -1,4 +1,4 @@
-import { type LedgerState, remedyContextFor } from "@owed/core";
+import { derivesFromSiblings, type LedgerState, remedyContextFor } from "@owed/core";
 import type { BreachKind, Instant } from "@owed/domain";
 import { isActionable, speakMoney, toEpochMs } from "@owed/domain";
 import { builtinPolicies, remedyFor } from "@owed/policy-library";
@@ -49,6 +49,27 @@ export function commitmentsDue(
     if (assessment === undefined || !isActionable(assessment)) continue;
     // Already filed: the household knows. Nothing to raise.
     if (view.claim_id !== undefined) continue;
+    /**
+     * One failure, one announcement.
+     *
+     * A `guarantee` or `warranty` inherits its sibling's verdict, its coverage and its
+     * confidence — so when a delivery window breaks, both promises are `Breached` and both
+     * are actionable, `isActionable` being `verdict === "Breached"` and nothing more.
+     * `BREACH_SPOKEN` is keyed on the *inherited* kind too, so the household heard the same
+     * sentence twice, word for word, under two `event_id`s that nothing could dedupe:
+     *
+     *   cme_breach_prm_000001  Northwind Parcel missed the delivery window they promised…
+     *   cme_breach_prm_000002  Northwind Parcel missed the delivery window they promised…
+     *
+     * And the second one never stopped. Filing sets the *window's* `claim_id`, which quiets
+     * its announcement; the guarantee resolves to that same claim without one of its own, by
+     * design, so its announcement outlived the thing it was about.
+     *
+     * Nothing is lost by skipping it: a derived promise is Breached only because a sibling
+     * is, and that sibling is announced. The household can still ask about it — it is in the
+     * ledger and `promise_check` answers for it — it just is not interrupted about it twice.
+     */
+    if (derivesFromSiblings(view.promise)) continue;
 
     const occurredAt = view.assessed_at ?? assessment.detected_at;
     const expiresAt = expiryFor(occurredAt);

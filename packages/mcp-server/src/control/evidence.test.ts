@@ -433,3 +433,141 @@ describe("two messages delivered at the same instant", () => {
     expect(untouched.watched).toBe(false);
   });
 });
+
+/**
+ * One failure, one announcement — the half of the derived-verdict decision I missed.
+ *
+ * `claim_file` was taught to resolve a derived promise to its message's existing claim, so
+ * one failure stayed one claim. The other places the system counts a promise were not
+ * checked, and there were three. Reproduced against the live path before being fixed:
+ *
+ *   LIVE ANNOUNCEMENTS: 2
+ *     cme_breach_prm_000001  Northwind Parcel missed the delivery window they promised…
+ *     cme_breach_prm_000002  Northwind Parcel missed the delivery window they promised…
+ *   AFTER FILING, still announcing: prm_000002
+ *
+ * Identical sentences, because `BREACH_SPOKEN` is keyed on the inherited breach kind, under
+ * two `event_id`s nothing could dedupe — and the second outlived the claim, because filing
+ * sets the *window's* `claim_id` and the guarantee never gets one of its own.
+ *
+ * Every existing live-path test posts one message and reads one promise, which is why this
+ * needed a pair to surface.
+ */
+describe("a breach that two promises describe", () => {
+  const breached = async () => {
+    const { json } = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Delivered between 9 and 11am, guaranteed or your money back.",
+    });
+    await post("/control/evidence", {
+      uptime: [
+        {
+          source_id: "src_doorbell",
+          household_id: harness.deps.householdId,
+          interval: { start: "2026-10-11T08:00:00-07:00", end: "2026-10-11T12:00:00-07:00" },
+        },
+      ],
+    });
+    return json.promises as unknown as Delivered[];
+  };
+
+  const liveBreachAnnouncements = async () => {
+    const res = await fetch(new URL("/control/commitments", harness.baseUrl));
+    const json = (await res.json()) as {
+      events: Array<{ kind: string; spoken: string; subject: { promise_id: string } }>;
+    };
+    // Live ids only. `idGen` pads to six digits (`prm_000001`), the seeded week uses three
+    // (`prm_011`) — and the seeded `prm_011` is also an unfiled Northwind `missed_window`, so
+    // a looser prefix picks up a real announcement about a different failure whose spoken
+    // line is word-for-word the same.
+    return json.events.filter(
+      (event) =>
+        event.kind === "promise_breached" && event.subject.promise_id.startsWith("prm_0000"),
+    );
+  };
+
+  it("announces once, about the promise that broke", async () => {
+    const promises = await breached();
+    const window = promises.find((p) => p.kind === "delivery_window");
+    if (window === undefined) throw new Error("expected a delivery window");
+
+    const announced = await liveBreachAnnouncements();
+
+    expect(announced.map((a) => a.subject.promise_id)).toStrictEqual([window.promise_id]);
+  });
+
+  it("does not say the same sentence twice", async () => {
+    await breached();
+    const spoken = (await liveBreachAnnouncements()).map((a) => a.spoken);
+
+    expect(new Set(spoken).size, spoken.join(" | ")).toBe(spoken.length);
+  });
+
+  /** The one that otherwise never stopped. */
+  it("stops announcing once the claim is filed", async () => {
+    const promises = await breached();
+    const window = promises.find((p) => p.kind === "delivery_window");
+    if (window === undefined) throw new Error("expected a delivery window");
+
+    await client.callTool({
+      name: "claim_file",
+      arguments: { promise_id: window.promise_id, confirm: true },
+    });
+
+    expect(await liveBreachAnnouncements()).toStrictEqual([]);
+  });
+
+  it("counts one promise in the tally, not two", async () => {
+    const before = (await client.callTool({ name: "ledger_summary", arguments: {} }))
+      .structuredContent as { kept: number; declined: number };
+
+    // Kept on both: the parcel arrived inside the window, so the guarantee was honoured too.
+    const { json } = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Delivered between 9 and 11am, guaranteed or your money back.",
+    });
+    const window = (json.promises as unknown as Delivered[]).find(
+      (p) => p.kind === "delivery_window",
+    );
+    if (window === undefined) throw new Error("expected a delivery window");
+
+    await post("/control/evidence", {
+      uptime: [
+        {
+          source_id: "src_doorbell",
+          household_id: harness.deps.householdId,
+          interval: { start: "2026-10-11T08:00:00-07:00", end: "2026-10-11T12:00:00-07:00" },
+        },
+      ],
+      evidence: [
+        {
+          id: "evd_kept_1",
+          household_id: harness.deps.householdId,
+          source_id: "src_doorbell",
+          captured_at: "2026-10-11T10:00:00-07:00",
+          promise_id: window.promise_id,
+          kind: "doorbell_event",
+          event: "package_placed",
+        },
+      ],
+    });
+
+    const after = (await client.callTool({ name: "ledger_summary", arguments: {} }))
+      .structuredContent as { kept: number; declined: number };
+
+    const grew = after.kept - before.kept + (after.declined - before.declined);
+    expect(
+      grew,
+      `kept ${before.kept}->${after.kept}, declined ${before.declined}->${after.declined}`,
+    ).toBeLessThanOrEqual(1);
+  });
+
+  /** And the recorded week is untouched, so none of this was bought by breaking the demo. */
+  it("leaves the seeded week's announcements and tallies alone", async () => {
+    const summary = (await client.callTool({ name: "ledger_summary", arguments: {} }))
+      .structuredContent as { kept: number; declined: number };
+
+    expect(summary.kept).toBe(2);
+    expect(summary.declined).toBe(1);
+  });
+});

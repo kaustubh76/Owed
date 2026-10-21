@@ -254,6 +254,35 @@ Merchants are fictional: **Northwind Parcel**, **Meridian Rides**, **Calder & Co
 | Rounds | **2** |
 | Recovered | Wed 10:05, when the credit is observed |
 
+> **Amended D22 — a derived verdict is not a second event.** D20 gave `guarantee` and
+> `warranty` a detector and D21 gave the state a path through the home. Both described data.
+> This is the behaviour, and it had to be stated because the rest of the system counts
+> promises in three places and two of them were wrong.
+>
+> A derived promise inherits its sibling's verdict, coverage and confidence — so when a
+> delivery window breaks, the guarantee over it is `Breached` too, and `isActionable` is
+> `verdict === "Breached"` and nothing more. The proactive channel therefore raised **two**
+> announcements for one failure, and because `BREACH_SPOKEN` is keyed on the inherited breach
+> kind the two spoken lines were word-for-word identical under two `event_id`s that nothing
+> could dedupe. The second one also never stopped: filing sets the *window's* `claim_id`,
+> which quiets its announcement, while the guarantee resolves to that same claim without one
+> of its own — so it outlived the thing it was about. And `summarize` tallied both, reporting
+> `kept: 2` for one kept promise and `declined: 2` for one declined, the second being the
+> figure the demo's trust beat rests on.
+>
+> The rule, applied from `derivesFromSiblings` so there is no second list of kinds:
+>
+> **A derived promise is a real promise with a real verdict — it appears in the ledger's
+> `items`, it answers `promise_check`, it draws its own card. It is not a separate event: no
+> announcement of its own, no claim of its own, no line of its own in a tally.**
+>
+> Nothing is lost by it. A derived promise is `Breached` only because a sibling is, and that
+> sibling is announced, claimed and counted.
+>
+> All three needed a *live* message to reproduce — the seeded week contains neither kind — which
+> is why a suite that covers the live path well still missed them, and why the tests that hold
+> this now post two promises in one message.
+
 ### The week
 
 | # | Day | Merchant | Kind | Outcome | Amount |

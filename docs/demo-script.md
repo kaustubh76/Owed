@@ -283,6 +283,12 @@ curl -X POST http://127.0.0.1:3939/control/evidence \
        "interval":{"start":"2026-10-11T08:00:00-07:00","end":"2026-10-11T12:00:00-07:00"}}]}'
 ```
 
+**It announces once, not twice.** Both promises go `Breached` and a presenter watching the
+inspector will see two verdicts — but only the window is announced, because the guarantee is
+the same failure described twice and the household should be interrupted about it once.
+`docs/contract-v1.md` D22 has the rule. Filing on the window silences it; before D22 the
+guarantee kept announcing after the claim existed.
+
 Use a **morning** window in the message for this — "Delivered between 9 and 11am" — because
 the scrubber's clock is Sunday evening and a bare "1 to 5pm" resolves to *tomorrow*, which no
 past evidence can cover. Both promises then read `Breached` at `missed_window` with coverage

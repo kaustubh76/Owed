@@ -251,8 +251,18 @@ export function summarize(state: LedgerState, currency: Currency, since?: Instan
   let declined = 0;
 
   for (const view of state.promises.values()) {
-    if (view.status === "Kept" && withinPeriod(view.assessed_at)) kept += 1;
-    if (view.status === "Suspected" && withinPeriod(view.assessed_at)) declined += 1;
+    /**
+     * Tallied once per failure, not once per promise.
+     *
+     * A derived promise takes its verdict from a sibling, so a kept delivery window and the
+     * guarantee over it are one kept promise reported twice — and `declined` is the figure
+     * the demo's trust beat rests on ("there's one I'm not claiming"). It still appears in
+     * `items` below, with its own verdict, because that is a list rather than a count and it
+     * is how the household reaches it to ask.
+     */
+    const counts = !derivesFromSiblings(view.promise);
+    if (counts && view.status === "Kept" && withinPeriod(view.assessed_at)) kept += 1;
+    if (counts && view.status === "Suspected" && withinPeriod(view.assessed_at)) declined += 1;
 
     const claim = view.claim_id === undefined ? undefined : state.claims.get(view.claim_id);
     items.push({
