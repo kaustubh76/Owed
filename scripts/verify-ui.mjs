@@ -712,6 +712,21 @@ try {
    */
   process.stdout.write("\n--- and when the add-on goes away ---\n");
 
+  /**
+   * On its own page, because this beat must not depend on what the ones above left behind.
+   *
+   * The first version reused the main page and passed here while failing from a fresh
+   * clone — the earlier sections scrub the timeline, switch surfaces and toggle controls,
+   * so whether the utterance button was still there at this point was luck. A new page
+   * that waits for `.app__status--on` starts from the same place every time.
+   */
+  const dyingPage = await browser.newPage({
+    viewport: { width: 1440, height: 980 },
+    colorScheme: "dark",
+  });
+  await dyingPage.goto(HOME_URL, { waitUntil: "domcontentloaded" });
+  await dyingPage.waitForSelector(".app__status--on", { timeout: 20_000 });
+
   const server = children.find((entry) => entry.name === "server");
   server?.child.kill("SIGTERM");
 
@@ -729,38 +744,47 @@ try {
    * What this beat proves is the part that was wrong: once the brain *has* told the home,
    * the controls stop pretending.
    */
-  await page.getByRole("button", { name: EXPECTED.utterance }).click();
+  await dyingPage.getByRole("button", { name: EXPECTED.utterance }).click();
 
-  const warned = await page
+  const warned = await dyingPage
     .waitForSelector(".app__status--warn", { timeout: 20_000 })
     .catch(() => null);
 
   if (warned === null) {
     check("the home notices the add-on is gone", "no change within 20s", "the badge warns");
   } else {
+    /**
+     * Either honest answer is accepted, because both are true at different instants and
+     * which one lands is a race with the brain's own backoff: `invalidate` announces
+     * "lost", and `ensure` announces "linking" while it retries. Pinning one of them would
+     * be pinning the timing rather than the property. What both must mean is the same
+     * thing — not live, so nothing may behave as though someone is listening.
+     */
+    const said = (await warned.textContent())?.trim();
     check(
-      "the home says the add-on is unreachable",
-      (await warned.textContent())?.trim(),
-      "add-on unreachable",
+      "the home stops saying the add-on is there",
+      said === "add-on unreachable" || said === "linking…" ? said : `unexpected: ${said}`,
+      said,
     );
-    // Still connected to the brain — otherwise this would be the `--off` case and the
-    // controls would already have been disabled by the old condition.
+    // Still connected to the brain — otherwise this would be the `--off` case, which the
+    // old condition already handled, and the beat would prove nothing.
     check(
       "while the socket to the brain is still open",
-      await page.$eval(".app__status", (node) => node.className.includes("--warn")),
+      await dyingPage.$eval(".app__status", (node) => node.className.includes("--warn")),
       true,
     );
     check(
       "the microphone stops accepting what it cannot serve",
-      await page.$eval(".voice__send", (node) => node.disabled),
+      await dyingPage.$eval(".voice__send", (node) => node.disabled),
       true,
     );
     check(
       "and the scrubber stops too",
-      await page.$eval(".scrub__range", (node) => node.disabled),
+      await dyingPage.$eval(".scrub__range", (node) => node.disabled),
       true,
     );
   }
+  await dyingPage.close();
 } finally {
   await browser.close();
   stopAll();
