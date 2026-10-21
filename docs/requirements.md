@@ -60,6 +60,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 | Snapshots retained 30 days | — | Nothing implements retention | **not built** — persistence is off by default and the seeded week is rebuilt on every boot, so there is nothing to expire. Stated here rather than implied |
 | Evidence shared with merchants only as the pack the user approved | `tools/claimFile.ts` | `attach_evidence` defaults true and is the only path; the claim card shows what went with it | **holds** |
 | No third-party analytics | — | No analytics dependency exists | **holds** |
+| The household is told when Owed cannot act | `apps/home/src/App.tsx`, `apps/brain/src/session.ts` | The status badge distinguishes both hops — the socket to the brain, and the brain's own session with the add-on — and `verify:ui` kills the add-on and asserts the badge warns and the controls disable | **holds differently.** The badge was already honest; the *controls* were not, and read the socket alone, so with the add-on gone the microphone, scrubber and proactive offer all behaved as though someone were listening. Fixed on 2026-10-21. **And the warning is not prompt**: see below |
 | Evidence source down → cannot escalate to `Breached`, and the household is told what was not watched | `core/src/breach/` | The coverage gate: below `BREACH_COVERAGE_MIN` the verdict is `Suspected`, never `Breached`, and the card draws the gaps | **holds differently** — §10 named a `Degraded` regime; the guarantee is delivered by coverage accounting instead, and the word appears nowhere in the code |
 | Merchant agent unreachable → claim falls back to email route with the same pack | `core/src/negotiation/filing.ts` | `fileWithoutAgent` emits `ClaimProposed` + `ClaimFiled` with route `email` where the policy publishes a contact, else `manual`; `claimFileNoAgent.test.ts` drives it against a directory that cannot answer | **holds — and extended on 2026-10-21.** A merchant that *answers unusably* now routes to the same place. §10 named the absent merchant; the reachable-but-lying one discarded the claim entirely, which is the failure this row exists to prevent. `claimFileLyingAgent.test.ts` drives it |
 | Bedrock unavailable → ledger and tools stay readable | `mcp-server/src/app.ts` | Stronger than required: the server imports `@owed/extractor` only. `extractor-bedrock` is not on the request path at all, so Bedrock cannot affect it | **holds** |
@@ -79,12 +80,12 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 ```bash
 pnpm preflight        # a machine that can run it says so
 pnpm verify           # eight gates: graph, docs, build, lint, tests, eval, conformance, deploy
-pnpm verify:ui        # 55 browser assertions and four accessibility audits, needs Chrome
+pnpm verify:ui        # 59 browser assertions and four accessibility audits, needs Chrome
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
 Measured on an 8-core machine on 2026-10-21: `pnpm verify` 35s with every Docker-backed gate
-demanded (~80s on CI's two-core runner), `pnpm verify:ui` 12s (55 browser assertions, zero failures), 562 tests across 49
+demanded (~80s on CI's two-core runner), `pnpm verify:ui` 14s (59 browser assertions, zero failures), 570 tests across 50
 files with DynamoDB Local up — one skipped, a placeholder. The strongest local run is
 `OWED_REQUIRE_DYNAMO=1 OWED_REQUIRE_VALIDATORS=1 OWED_DOCKER_VALIDATORS=1 pnpm verify`, which
 refuses to skip the eight DynamoDB tests and runs `shellcheck`, `systemd-analyze` and
@@ -169,3 +170,29 @@ it loses the claim and speaks the raw exception), and the handshake ceiling (rem
 to the SDK's 60s default). What makes it safe to make this change three days from a deadline is
 `verify:eval`: all five published reports re-derived byte-identically afterwards, which is
 1,620 simulated negotiations confirming no honest merchant was newly refused.
+
+**One limitation is disclosed rather than fixed, and it is worth being precise about.** Killing
+the add-on changes nothing the household can see until somebody speaks. The brain reaches the
+add-on over Streamable HTTP with no long-lived stream, so there is no socket close to observe
+and `client.onclose` never fires; the brain discovers the loss when it next calls a tool, which
+an utterance does, and only then tells the home. Until then the header still reads "brain
+connected".
+
+That is the same *shape* as the defect the badge was built to fix — a header claiming health
+while every utterance fails — and it is not the same defect: the brain recovers correctly on
+that next call, retrying once and re-linking through a full authorization-code walk, and the
+household's next question is answered or honestly refused rather than silently dropped. Making
+the badge prompt means the brain probing the add-on on a timer. The machinery is already there
+— the brain polls `/control/*` once a minute for proactive announcements and logs a failure
+without telling the home — so the fix is to wire that signal to the session status rather than
+to add traffic. It is not being done three days from the deadline, on a path the demo never
+takes, which is a decision rather than an oversight.
+
+What *is* fixed is the part that misled: once the brain has told the home, the controls stop
+pretending. `verify:ui` now ends by killing the add-on, speaking, and asserting that the badge
+reads "add-on unreachable" **while the socket to the brain is still open** — the middle state,
+which is the only one where the old condition was wrong — and that the microphone and the
+scrubber are both disabled. Reverting the controls to read `connected` reddens exactly those
+two checks and leaves the two badge checks green. They are the gate's first four assertions
+that are not the happy path; every one before them waits for `.app__status--on` before
+asserting anything, which is why none of this was visible.

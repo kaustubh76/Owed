@@ -26,6 +26,22 @@ const SURFACES: ReadonlyArray<{ id: Surface; label: string }> = [
 
 export function App() {
   const { connected, session, error, turn, frames, now, range, speak, scrub } = useBrain();
+
+  /**
+   * Both hops good — the same condition the badge below calls `--on`.
+   *
+   * The badge was made honest about the two hops after a brain with an expired token sat
+   * behind a header reading "brain connected" while every utterance failed. The *controls*
+   * were left reading `connected` alone, which is the same bug one layer down: with the
+   * socket open and the add-on unreachable, the header said "add-on unreachable" while the
+   * microphone, the scrubber and the proactive offer all still behaved as though someone
+   * were listening. Speaking into that does nothing — `send` only no-ops when the socket is
+   * shut, and here it is open.
+   *
+   * One derived value, used everywhere liveness is implied, so the indicator and the
+   * controls cannot disagree again.
+   */
+  const live = connected && session === "live";
   const [surface, setSurface] = useState<Surface>("show");
 
   return (
@@ -66,10 +82,10 @@ export function App() {
           "brain connected" means.
         */}
         <span
-          className={`app__status app__status--${connected && session === "live" ? "on" : connected ? "warn" : "off"}`}
+          className={`app__status app__status--${live ? "on" : connected ? "warn" : "off"}`}
           title={error ?? ""}
         >
-          {connected && session === "live"
+          {live
             ? "brain connected"
             : connected && session === "linking"
               ? "linking…"
@@ -103,7 +119,7 @@ export function App() {
                 <button
                   type="button"
                   className="app__proactive-offer"
-                  disabled={!connected}
+                  disabled={!live}
                   title={`${turn.proactive.offer.tool} ${JSON.stringify(turn.proactive.offer.arguments)}`}
                   onClick={() => {
                     const offer = turn.proactive?.offer;
@@ -120,17 +136,17 @@ export function App() {
           {surface === "show" ? (
             <EchoShow view={turn?.view} />
           ) : (
-            <EchoDot reply={turn?.reply ?? null} listening={connected} />
+            <EchoDot reply={turn?.reply ?? null} listening={live} />
           )}
 
           {/* The Dot renders the speech itself; printing it twice says it is decoration. */}
           <VoiceBar
             onSpeak={speak}
-            connected={connected}
+            connected={live}
             reply={surface === "dot" ? null : (turn?.reply ?? null)}
           />
 
-          <Scrubber now={now} range={range} connected={connected} onScrub={scrub} />
+          <Scrubber now={now} range={range} connected={live} onScrub={scrub} />
 
           {turn?.trace.length ? (
             <ul className="app__trace">

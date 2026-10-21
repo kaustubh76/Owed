@@ -696,6 +696,71 @@ try {
 
   check("console clean", consoleErrors.length, 0);
   if (consoleErrors.length > 0) process.stdout.write(`${consoleErrors.join("\n")}\n`);
+
+  /**
+   * The only beat in this gate that is not the happy path, and it goes last because it
+   * takes the server away.
+   *
+   * Everything above waits for `.app__status--on` before asserting — which is the right
+   * thing to wait for and meant no check here had ever seen a failure state. The one that
+   * matters is the middle one: the household's socket to the brain is open, so the page
+   * looks alive, and the brain cannot reach the add-on. The badge has been honest about
+   * that since a brain with an expired token sat behind "brain connected"; the controls
+   * were not, and still read `connected` alone, so the microphone, the scrubber and the
+   * proactive offer all behaved as though someone were listening while every utterance
+   * went nowhere.
+   */
+  process.stdout.write("\n--- and when the add-on goes away ---\n");
+
+  const server = children.find((entry) => entry.name === "server");
+  server?.child.kill("SIGTERM");
+
+  /**
+   * And then somebody speaks, because that is the only way this is discovered.
+   *
+   * Killing the add-on on its own changes nothing the home can see, and that is worth
+   * stating rather than working around: the brain reaches it over Streamable HTTP with no
+   * long-lived stream, so there is no socket close to observe and `client.onclose` never
+   * fires. The brain learns the add-on is gone when it next calls a tool — which it does
+   * on an utterance — and only then tells the home. Until somebody speaks, the header
+   * still reads "brain connected". `docs/requirements.md` records that as a known
+   * limitation rather than leaving it implied here.
+   *
+   * What this beat proves is the part that was wrong: once the brain *has* told the home,
+   * the controls stop pretending.
+   */
+  await page.getByRole("button", { name: EXPECTED.utterance }).click();
+
+  const warned = await page
+    .waitForSelector(".app__status--warn", { timeout: 20_000 })
+    .catch(() => null);
+
+  if (warned === null) {
+    check("the home notices the add-on is gone", "no change within 20s", "the badge warns");
+  } else {
+    check(
+      "the home says the add-on is unreachable",
+      (await warned.textContent())?.trim(),
+      "add-on unreachable",
+    );
+    // Still connected to the brain — otherwise this would be the `--off` case and the
+    // controls would already have been disabled by the old condition.
+    check(
+      "while the socket to the brain is still open",
+      await page.$eval(".app__status", (node) => node.className.includes("--warn")),
+      true,
+    );
+    check(
+      "the microphone stops accepting what it cannot serve",
+      await page.$eval(".voice__send", (node) => node.disabled),
+      true,
+    );
+    check(
+      "and the scrubber stops too",
+      await page.$eval(".scrub__range", (node) => node.disabled),
+      true,
+    );
+  }
 } finally {
   await browser.close();
   stopAll();
