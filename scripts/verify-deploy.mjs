@@ -375,6 +375,92 @@ process.stdout.write("\n--- the IAM policy, in both places it lives ---\n");
   }
 }
 
+/**
+ * The Bedrock policy, which exists and is deliberately not attached.
+ *
+ * `readme.md` §15 says "the Phase 1 IAM user grants no Bedrock action by design, no model has
+ * been invoked from this account, and nothing here claims a Bedrock result". The first clause
+ * of that was an assertion about a file nobody read. The policy a reader would need now exists
+ * — `packages/extractor-bedrock` sends `ConverseCommand`, which needs exactly
+ * `bedrock:InvokeModel` — and the point of having it as a separate, unattached file is that
+ * the sentence stays true while the gap stops being a missing artifact and becomes a choice.
+ *
+ * So both halves are checked: the policy grants the one action the adapter actually sends, and
+ * `create-cli-user.sh` does not attach it. The second is the one that matters, because that is
+ * the script somebody runs in CloudShell.
+ */
+process.stdout.write("\n--- the Bedrock policy, written and deliberately unattached ---\n");
+
+{
+  const file = join(DEPLOY, "iam-policy-bedrock.json");
+  let policy;
+  try {
+    policy = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    policy = undefined;
+    want(
+      "iam-policy-bedrock.json parses",
+      false,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
+
+  if (policy !== undefined) {
+    const actions = (policy.Statement ?? []).flatMap((statement) =>
+      Array.isArray(statement.Action) ? statement.Action : [statement.Action],
+    );
+    // One action, because `ConverseCommand` is not streaming: `InvokeModelWithResponseStream`
+    // would be a permission nothing in this repository asks for.
+    check(
+      "it grants exactly the action the adapter sends",
+      actions.join(", "),
+      "bedrock:InvokeModel",
+    );
+
+    const adapter = readFileSync(
+      join(REPO_ROOT, "packages", "extractor-bedrock", "src", "bedrock.ts"),
+      "utf8",
+    );
+    const model = /DEFAULT_MODEL_ID = "([^"]+)"/.exec(adapter);
+    const resources = (policy.Statement ?? []).flatMap((statement) =>
+      Array.isArray(statement.Resource) ? statement.Resource : [statement.Resource],
+    );
+    want(
+      "and names the model the adapter defaults to",
+      model !== null && resources.some((arn) => String(arn).endsWith(`/${model[1]}`)),
+      model === null
+        ? "could not read DEFAULT_MODEL_ID from bedrock.ts"
+        : `${model[1]} in ${resources.length} resource ARN(s)`,
+    );
+
+    /**
+     * The claim in §15, turned into a check — and the first draft of it was wrong in the
+     * way this repository keeps catching.
+     *
+     * It tested the script for any mention of "bedrock", and failed, because line 33 is a
+     * comment saying the policy covers "no EC2, no Bedrock, no IAM" — the script
+     * documenting the very property being checked. A check that cannot tell a grant from a
+     * sentence about a grant is not checking the grant. Comments go first, then what is
+     * left is tested for the two things that would actually hand out the permission: a
+     * `bedrock:` action inside the inline policy, or attaching a policy named for it.
+     */
+    const script = readFileSync(join(DEPLOY, "create-cli-user.sh"), "utf8");
+    const code = script
+      .split("\n")
+      .filter((line) => !/^\s*#/.test(line))
+      .join("\n");
+    const grants = /"bedrock:/i.test(code);
+    const attaches = /attach-user-policy[^\n]*bedrock/i.test(code);
+    want(
+      "create-cli-user.sh does not attach it, as §15 says",
+      !grants && !attaches,
+      grants || attaches
+        ? "the script hands out a Bedrock permission — §15 claims the Phase 1 user grants none"
+        : "no Bedrock action in its inline policy, and no Bedrock policy attached",
+    );
+  }
+}
+
 process.stdout.write("\n--- real validators, where they exist ---\n");
 for (const name of shells) {
   const result = tool("shellcheck", ["--severity=warning", join(DEPLOY, name)]);

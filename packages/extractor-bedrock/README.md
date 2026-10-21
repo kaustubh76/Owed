@@ -90,7 +90,9 @@ AWS_REGION=us-east-1 pnpm --filter @owed/eval extraction:bedrock
 ```
 
 Needs `bedrock:InvokeModel` on that
-model's ARN — two separate things, and the console request has a wait. Results land in
+model's ARN — two separate things, and the console request has a wait. The policy is written
+out in `deploy/iam-policy-bedrock.json`, minimal and attached to nothing; `deploy/README.md`
+explains why it carries two resource ARNs for one model. Results land in
 `eval/results/extraction-bedrock.json` with both columns from the same run.
 
 ## Numbers

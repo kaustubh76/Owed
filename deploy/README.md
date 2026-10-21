@@ -10,6 +10,7 @@ judge the demo — `pnpm demo` is unchanged and still needs no account and no ke
 | `owed-server.service`, `owed-brain.service`, `owed-merchants.service` | One process each, so a crash is visible and restartable rather than one shell holding three. |
 | `bootstrap.sh` | Amazon Linux 2023 arm64, run once as root. Installs checksum-verified Node and Caddy, builds, writes `/etc/owed/owed.env`, enables the units. |
 | `iam-policy-phase1.json` | Least privilege for the Phase 1 smoke test: the ledger table and nothing else. |
+| `iam-policy-bedrock.json` | `bedrock:InvokeModel` on one model, for `packages/extractor-bedrock`. **Not attached to anything** — see below. |
 | `create-cli-user.sh` | Creates that policy, a user, and an access key — **run it in AWS CloudShell**, which is already authenticated as the console user and so needs no key to create one. Self-contained, because CloudShell has no checkout; its inline policy is the same statement as the JSON above, except that it substitutes the account it discovers via `sts:GetCallerIdentity` where the file carries an `AWS_ACCOUNT_ID` placeholder. Change one, change both. |
 
 ## Checking this directory without a Linux box
@@ -33,7 +34,30 @@ them is.
 Off by default: it pulls a few hundred megabytes of images and the systemd route installs a
 package inside the container, so `pnpm verify` behaves exactly as it did.
 
-## Two things that will look like bugs and are not
+## Three things that will look like bugs and are not
+
+**`iam-policy-bedrock.json` exists and is attached to nothing.** That is the point of it.
+`packages/extractor-bedrock` sends `ConverseCommand`, which needs exactly one action —
+`bedrock:InvokeModel`, on the model's ARN — and readme §15 says the Phase 1 user grants no
+Bedrock action by design, that no model has been invoked from this account, and that nothing
+in the repository claims a Bedrock result. All three remain true. What changed is that the
+permission a reader would have to reconstruct is now written down, minimal and reviewable, so
+the remaining gap is a decision and a call nobody has made rather than a missing artifact.
+
+Two details in it are deliberate. There is no `bedrock:InvokeModelWithResponseStream`, because
+the adapter does not stream, and granting an action nothing sends is how a least-privilege
+policy stops being one. And there are two resource ARNs for one model: a foundation model's
+ARN carries an **empty account field**, while invoking the same model through a cross-region
+inference profile needs an account-qualified `inference-profile/us.…` ARN. Granting only the
+first is the mistake that produces an `AccessDeniedException` naming a model you can plainly
+see you have access to.
+
+`pnpm verify:deploy` checks all of this: that the policy grants exactly the action the adapter
+sends, that it names the model `DEFAULT_MODEL_ID` actually defaults to, and that
+`create-cli-user.sh` hands out no Bedrock permission — which turns §15's claim from an
+assertion into a check.
+
+## Two more things that will look like bugs and are not
 
 **`dynamodb:TransactWriteItems` is absent from the IAM policy on purpose.** DynamoDB's
 transactional APIs have **no IAM action of their own** — the IAM console rejects that string
