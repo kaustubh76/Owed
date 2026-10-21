@@ -183,7 +183,21 @@ refuses, use the chip and say the line above anyway — it is still true, and
 
 **2:10 — the Echo Dot.** *(click "Echo Dot", then the first chip again · 15s)* **[gate]**
 
-No card at all. Same answer.
+No card at all. The same answer you just heard by voice — which is **not** the answer from
+0:12, and the difference is worth knowing before a judge spots it. Filing at 1:28 moved
+`open` from **eight dollars to sixteen**, and dropped the "one more I can file" clause.
+
+That is correct and tested — `claimFile.test.ts`'s "moves the open figure by what it
+settled" pins `open` at $16.00 after filing. A claim that has settled is money the merchant
+has agreed to and the household has not received, so it stays open until the credit lands,
+which is exactly what Owed says it will tell you about. `recovered` holds at $47.00 for the
+same reason.
+
+Say so if asked. An $8 claim turning into $16 looks like double-counting, and it is the one
+place in this demo where correct behaviour resembles a bug the project has already had and
+fixed once — `docs/contract-v1.md` amendment D23, where filing on a derived promise really
+did report an $8 failure as $16. The figures to expect, in order: **$8.00 open before the
+filing beat, $16.00 after it.**
 
 > "Alexa+ requires every feature to work by voice alone. The only honest way to show that
 > is to take the screen away and ask again."

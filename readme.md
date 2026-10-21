@@ -604,9 +604,9 @@ names what it looked for, what it found and what to do about it.
 **Checked from a clean clone**, not asserted: `git clone` → `pnpm install` (3.4s) →
 `pnpm build` (29s, and not optional — the services run from `dist/` and nothing builds on
 install) → `pnpm verify` (the project graph, the documents, build, lint, the whole test
-suite, conformance, the deployment gate — all green) → `pnpm demo` (all
-four services answering in **4 seconds**) → `pnpm verify:ui` (every browser check,
-green) → all four evaluations run and write their results.
+suite, the published numbers re-derived, conformance, the deployment gate — eight gates, all
+green) → `pnpm demo` (all four services answering in **4 seconds**) → `pnpm verify:ui` (every
+browser check, green) → all six evaluations run and write their results.
 
 Open http://127.0.0.1:5173 and ask *"Alexa, what am I owed?"*.
 

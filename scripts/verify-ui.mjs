@@ -11,6 +11,7 @@
  */
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright-core";
 
@@ -196,6 +197,50 @@ async function auditAccessibility(frame, label) {
   return audit;
 }
 
+/**
+ * Refuse to run if anything is already listening, instead of driving it.
+ *
+ * `start` below spawns with `stdio: "ignore"`, so a service that cannot bind fails
+ * invisibly — and `waitFor` then succeeds against whatever *is* on the port. A `pnpm demo`
+ * left running therefore makes this gate silently drive that stack, and a demo stack has
+ * been used: its `prm_011` is already filed, so the proactive beat has no breach to
+ * announce and the run dies 25 checks in, pointing at `.app__proactive-offer`.
+ *
+ * That cost a long detour today. Three things conspired: the failure looked like a product
+ * bug in the demo's signature beat; it reproduced in a pristine clone, because the clone's
+ * gate was driving the same stale stack; and `pkill -f` on a path pattern never matched the
+ * processes, because `pnpm --filter @owed/brain start` runs as `node dist/main.js` — a
+ * command line containing neither the repository path nor the app's name.
+ *
+ * `preflight` has checked these four ports since it was written. This gate never did.
+ */
+async function refuseIfBusy(ports) {
+  const busy = [];
+  for (const [port, what] of ports) {
+    const free = await new Promise((resolve) => {
+      const probe = createServer();
+      probe.once("error", () => resolve(false));
+      probe.once("listening", () => probe.close(() => resolve(true)));
+      probe.listen(Number(port), "127.0.0.1");
+    });
+    if (!free) busy.push(`${port} (${what})`);
+  }
+  if (busy.length > 0) {
+    process.stdout.write(
+      `\nSomething is already listening on ${busy.join(", ")}.\n\n` +
+        "This gate starts its own four services and would otherwise drive yours instead —\n" +
+        "silently, because a service that cannot bind fails with its output discarded. A\n" +
+        "`pnpm demo` stack is the usual cause, and one that has been used has already filed\n" +
+        "`prm_011`, so the proactive beat has nothing to announce and this run would fail\n" +
+        "about twenty-five checks in, blaming the product.\n\n" +
+        "Stop it first. `pkill -f Owed` will not find it: the brain and the server run as\n" +
+        "`node dist/main.js`. Use the ports:\n\n" +
+        "  for p in 3939 3940 3941 5173; do lsof -nP -iTCP:$p -sTCP:LISTEN -t; done | xargs kill -9\n",
+    );
+    process.exit(1);
+  }
+}
+
 const children = [];
 function start(name, command, args, env = {}) {
   const child = spawn(command, args, { env: { ...process.env, ...env }, stdio: "ignore" });
@@ -229,6 +274,16 @@ const reachable = (url) =>
 // Merchant agents first: the server is told where to find them and will not quietly
 // fall back to in-process ones if they are missing.
 const MERCHANTS_PORT = process.env.OWED_MERCHANTS_PORT ?? "3941";
+const BRAIN_PORT = process.env.OWED_BRAIN_PORT ?? "3940";
+const HOME_PORT = new URL(HOME_URL).port || "5173";
+
+await refuseIfBusy([
+  [SERVER_PORT, "MCP server"],
+  [BRAIN_PORT, "brain"],
+  [MERCHANTS_PORT, "merchant agents"],
+  [HOME_PORT, "simulated home"],
+]);
+
 start("merchants", process.execPath, ["packages/merchant-agents/dist/bin/serve.js"], {
   OWED_MERCHANTS_PORT: MERCHANTS_PORT,
 });
@@ -316,6 +371,28 @@ try {
     "kept",
     await cardText(".ledger__stat-value:not(.ledger__stat-value--open)"),
     EXPECTED.kept,
+  );
+
+  /**
+   * The confession, which nothing read.
+   *
+   * `docs/demo-script.md`'s opening beat says of this line "Let that line land. It is the
+   * whole product" — three numbers and the one it is *not* claiming. The card has rendered
+   * it since `LedgerCard.tsx` was written, `declined: 1` is pinned in the storyboard test
+   * and frozen in `docs/contract-v1.md` §6, and no browser check had ever opened it. The
+   * beat the take is built around was the one beat asserted only as a number in a projection.
+   */
+  // Counted before it is read. `cardText` waits for visibility and throws on a missing
+  // element, which would abort the remaining fifty-eight checks with a stack trace instead
+  // of naming the one that broke — proved by removing the note and watching it happen.
+  const hasNote = (await card().locator(".ledger__note").count()) === 1;
+  check("the card volunteers the one it is not claiming", hasNote, true);
+  const confession = hasNote ? await cardText(".ledger__note") : "";
+  check(
+    "and says why, in the words the script promises",
+    /one promise I am not claiming/.test(confession) &&
+      /did not watch enough of the window/.test(confession),
+    true,
   );
 
   const box = await page.locator("iframe.echo__screen").boundingBox();
