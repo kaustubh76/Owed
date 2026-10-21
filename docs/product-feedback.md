@@ -181,7 +181,7 @@ Converse, and retries `ThrottlingException` only — every other failure, includ
 access, a bad model id and malformed credentials, fails identically on every attempt, so
 retrying it only delays the error.
 
-**This has never executed against the service.** We do not have model access on this account.
+**This has never executed against the service.** No model has been invoked from this account.
 We are not claiming a working Bedrock integration, and the README's real-vs-simulated map
 says the same.
 
@@ -198,12 +198,28 @@ any good.
 Converse API is the right abstraction: one request shape across model families means the
 adapter has no vendor branches and a model swap is an environment variable. Having
 `ThrottlingException` exported as a class made "retry this and nothing else" a type-checked
-decision. What needs work is that **model access is a prerequisite with a wait, and nothing
-in the SDK or the quickstart says so early enough**: the code compiles, the client constructs,
-credentials resolve, and the first thing that tells you access was never granted is a runtime
-error on the first call. A check in the console's getting-started path — or a clearer named
-error distinguishing "not enabled for this account" from "model not found" — would have moved
-this discovery to the beginning of the work instead of the end.
+decision. What needed work was that **model access was a prerequisite with a wait, and nothing
+in the SDK or the quickstart said so early enough**: the code compiled, the client
+constructed, credentials resolved, and the first thing that told you access was never granted
+was a runtime error on the first call. A check in the console's getting-started path — or a
+clearer named error distinguishing "not enabled for this account" from "model not found" —
+would have moved that discovery to the beginning of the work instead of the end.
+
+> **Amazon has since fixed this, and it would be dishonest to keep claiming it.** As of
+> 2026-10-21 the Bedrock console's Model access page is retired: serverless foundation models
+> are enabled automatically across commercial regions on first invocation. That is the
+> getting-started-path fix this paragraph asked for, implemented more thoroughly than
+> suggested — the gate is gone rather than better signposted. Two carve-outs remain, and both
+> are documented on the page that replaced it: Anthropic models may ask a first-time user for
+> use-case details, and a Marketplace-served model needs one invocation by someone holding
+> Marketplace permissions to enable it account-wide.
+>
+> The complaint is kept rather than deleted because it was true when the work was done and
+> the retirement is the more interesting fact. What it leaves for Owed is **IAM and an
+> invocation** — our Phase 1 policy grants DynamoDB and `sts:GetCallerIdentity` and
+> deliberately no Bedrock (`deploy/create-cli-user.sh`: "no EC2, no Bedrock, no IAM. Those
+> get their own policies when the phases that need them arrive"). So the remaining dependency
+> is one we control, which is a better place to be than waiting on an entitlement.
 
 *The client speaks HTTP/2, and nothing says so where it would help.* Pointing it at a local
 `node:http` server to test the adapter offline fails with `ERR_HTTP2_ERROR: Protocol error`
@@ -221,8 +237,11 @@ friction-log §17. This is a different complaint from the knob-discoverability o
 knob was findable, its composition was not.
 
 **Would we build with it again.** The design, yes, and we would keep the port so the
-deterministic extractor stays the default. Next time we would request model access on day one,
-because it is the only dependency here with a human in the loop.
+deterministic extractor stays the default. The advice this section used to give — request
+model access on day one, because it is the only dependency with a human in the loop — is
+obsolete now that first invocation enables the model. The version that survives is narrower:
+grant `bedrock:InvokeModel` and make one throwaway call on day one, because the failure that
+costs you an afternoon is the one you discover at the end.
 
 ---
 

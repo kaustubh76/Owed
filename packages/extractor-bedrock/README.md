@@ -89,7 +89,7 @@ message. Not a flaky test; a correct test of a non-deterministic thing, which is
 AWS_REGION=us-east-1 pnpm --filter @owed/eval extraction:bedrock
 ```
 
-Needs model access requested in the Bedrock console and `bedrock:InvokeModel` on that
+Needs `bedrock:InvokeModel` on that
 model's ARN — two separate things, and the console request has a wait. Results land in
 `eval/results/extraction-bedrock.json` with both columns from the same run.
 

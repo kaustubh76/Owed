@@ -306,6 +306,75 @@ want(
       : `port ${merchantsPort}, loopback only`,
 );
 
+/**
+ * The IAM policy, in both places it lives.
+ *
+ * `iam-policy-phase1.json` is the policy; `create-cli-user.sh` carries a second copy inline,
+ * deliberately — CloudShell has no checkout, so the script has to be self-contained. Its own
+ * comment says **"If you change one, change both"**, and nothing checked that anybody had.
+ * This is the one directory in the repository that grants AWS permissions, so the copy that
+ * silently drifts is the one that hands out access nobody reviewed.
+ *
+ * Compared structurally rather than textually: the script interpolates `${REGION}` and
+ * `${ACCOUNT}`, which it discovers at runtime, where the JSON file carries the literals it is
+ * documented with. Those two substitutions are the only difference allowed.
+ */
+process.stdout.write("\n--- the IAM policy, in both places it lives ---\n");
+
+{
+  const file = join(DEPLOY, "iam-policy-phase1.json");
+  const script = readFileSync(join(DEPLOY, "create-cli-user.sh"), "utf8");
+  const heredoc = /<<JSON\n([\s\S]*?)\nJSON/.exec(script);
+
+  want(
+    "create-cli-user.sh still carries the policy inline",
+    heredoc !== null,
+    heredoc === null ? "no <<JSON heredoc found" : "found",
+  );
+
+  if (heredoc !== null) {
+    const normalise = (text) =>
+      text
+        // These are shell interpolations in a heredoc, matched literally. Biome reads
+        // `${...}` in a plain string as a template literal someone forgot to backtick.
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: matching shell syntax, not JS
+        .replaceAll("${REGION}", "us-east-1")
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: matching shell syntax, not JS
+        .replaceAll("${ACCOUNT}", "AWS_ACCOUNT_ID");
+
+    let onDisk;
+    let inline;
+    try {
+      onDisk = JSON.parse(readFileSync(file, "utf8"));
+      inline = JSON.parse(normalise(heredoc[1]));
+    } catch (error) {
+      onDisk = undefined;
+      inline = error instanceof Error ? error.message : String(error);
+    }
+
+    want(
+      "the two copies of the policy agree",
+      onDisk !== undefined && JSON.stringify(onDisk) === JSON.stringify(inline),
+      onDisk === undefined
+        ? `could not parse one of them: ${inline}`
+        : JSON.stringify(onDisk) === JSON.stringify(inline)
+          ? `${onDisk.Statement.length} statement(s), identical`
+          : "they have diverged — `create-cli-user.sh` hands out different permissions",
+    );
+
+    // Counted, because `readme.md` §15 states it: "IAM at nine actions — eight on DynamoDB
+    // tables named `owed-*`, one `sts:GetCallerIdentity`".
+    const actions = (onDisk?.Statement ?? []).flatMap((statement) =>
+      Array.isArray(statement.Action) ? statement.Action : [statement.Action],
+    );
+    want(
+      "the policy grants the nine actions the readme claims",
+      actions.length === 9,
+      `${actions.length} action(s): ${actions.filter((a) => a.startsWith("dynamodb")).length} dynamodb, ${actions.filter((a) => !a.startsWith("dynamodb")).join(", ")}`,
+    );
+  }
+}
+
 process.stdout.write("\n--- real validators, where they exist ---\n");
 for (const name of shells) {
   const result = tool("shellcheck", ["--severity=warning", join(DEPLOY, name)]);
