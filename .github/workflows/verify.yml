@@ -21,8 +21,8 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    # The whole job takes ~47s. Ten minutes is generous and still far from the 360-minute
-    # default a hung step would otherwise burn.
+    # The whole job takes ~80s, up from ~47s as gates were added. Ten minutes is generous
+    # and still far from the 360-minute default a hung step would otherwise burn.
     timeout-minutes: 10
 
     # DynamoDB Local, so the ledger adapter is actually tested here.

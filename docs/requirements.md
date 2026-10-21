@@ -83,8 +83,8 @@ pnpm verify:ui        # 55 browser assertions and four accessibility audits, nee
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
-Measured on an 8-core machine on 2026-10-21: `pnpm verify` 31s with every Docker-backed gate
-demanded, `pnpm verify:ui` 12s (55 browser assertions, zero failures), 562 tests across 49
+Measured on an 8-core machine on 2026-10-21: `pnpm verify` 35s with every Docker-backed gate
+demanded (~80s on CI's two-core runner), `pnpm verify:ui` 12s (55 browser assertions, zero failures), 562 tests across 49
 files with DynamoDB Local up — one skipped, a placeholder. The strongest local run is
 `OWED_REQUIRE_DYNAMO=1 OWED_REQUIRE_VALIDATORS=1 OWED_DOCKER_VALIDATORS=1 pnpm verify`, which
 refuses to skip the eight DynamoDB tests and runs `shellcheck`, `systemd-analyze` and
