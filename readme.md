@@ -628,8 +628,11 @@ pnpm verify         # the project graph + the documents + build + lint + the who
 pnpm test           # unit, property, storyboard golden, and tool-contract tests
 pnpm verify:deploy  # the four systemd units, the Caddyfile and the two shell scripts
 pnpm verify:docs    # the friction log's structure, its entry count where it is quoted,
-                    # every citation of it by number, every relative link, and that the
-                    # workflow above runs every gate in this chain, in order, and no other
+                    # every citation of it by number, every relative link, the demo
+                    # script's beats, verdicts and quoted figures against the harness,
+                    # the chips a presenter is told to click against the ones the home
+                    # offers, and that the workflow above runs every gate in this chain,
+                    # in order, and no other
 pnpm verify:eval    # re-runs the five deterministic harnesses and insists every figure
                     # in eval/results/ is still the one the code produces
 pnpm verify:capture # boots the stack and re-derives docs/demo-capture.json without

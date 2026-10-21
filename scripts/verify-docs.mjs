@@ -540,6 +540,43 @@ if (extraction === undefined || breach === undefined || recourse === undefined) 
       script.includes(figure) ? figure : `${figure} is nowhere in the script`,
     );
   }
+
+  /**
+   * H2 and H3's own figures, which were prose.
+   *
+   * The verdicts above are recomputed and matched, and the held-out percentages are pinned
+   * — and the numbers the script actually reads out for the other two hypotheses were
+   * checked by nothing. That left H2's row claiming **"100% precision and recall on all six
+   * kinds"** while the verdict predicate only requires each kind ≥ 0.9: the script could
+   * have gone on saying 100% through a regression to 95% and passed every gate. H3's row
+   * quotes 33.9% and 1.10× with the same freedom.
+   *
+   * Each figure is derived here and required to appear, in the rounding the script uses.
+   * `kept_false_positive_rate` is deliberately not among them — the row does not quote it.
+   */
+  const worstBreach = Math.min(
+    ...(breach.by_kind ?? []).flatMap((kind) => [kind.precision ?? 0, kind.recall ?? 0]),
+  );
+  const kinds = (breach.by_kind ?? []).length;
+  want(
+    "the script's H2 row quotes the precision and recall it actually got",
+    script.includes(`${(worstBreach * 100).toFixed(0)}% precision and recall`),
+    `${(worstBreach * 100).toFixed(0)}% is the worst of ${kinds * 2} figures across ${kinds} kinds`,
+  );
+
+  for (const [label, figure] of [
+    [
+      "share of what merchants owe",
+      `${((recourse.totals?.negotiator_share ?? 0) * 100).toFixed(1)}%`,
+    ],
+    ["lift over the baseline", `${(recourse.totals?.lift ?? 0).toFixed(2)}×`],
+  ]) {
+    want(
+      `the script's H3 row quotes the ${label}`,
+      script.includes(figure),
+      script.includes(figure) ? figure : `${figure} is nowhere in the script`,
+    );
+  }
 }
 
 /**
