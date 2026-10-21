@@ -24,7 +24,8 @@ pnpm demo
 **Three commands, not two.** `pnpm demo` starts four processes from `dist/`, and there is no
 `postinstall` hook, so `pnpm build` is not optional. The README used to say two as well.
 
-`pnpm verify:ui` is not in `pnpm verify` because CI has no browser — it is optional to the
+`pnpm verify:ui` is not in `pnpm verify` because it needs Chrome, which a clean clone may not
+have — but it **does** run in CI, as its own step. It is optional to the
 gate and **not optional to you**. It drives this exact sequence and checks the numbers on
 the cards, so if it passes, the beats below work.
 

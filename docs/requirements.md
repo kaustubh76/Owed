@@ -80,12 +80,13 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 ```bash
 pnpm preflight        # a machine that can run it says so
 pnpm verify           # eight gates: graph, docs, build, lint, tests, eval, conformance, deploy
-pnpm verify:ui        # 62 browser assertions and four accessibility audits, needs Chrome
+pnpm verify:ui        # 64 browser assertions and four accessibility audits, needs Chrome
+                      # (also a CI step since 2026-10-21 — it is not in the chain above)
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
 Measured on an 8-core machine on 2026-10-21: `pnpm verify` 35s with every Docker-backed gate
-demanded (~80s on CI's two-core runner), `pnpm verify:ui` 14s (62 browser assertions, zero failures), 570 tests across 50
+demanded (~80s on CI's two-core runner), `pnpm verify:ui` 14s locally and 20s on CI (64 browser assertions, zero failures), 570 tests across 50
 files with DynamoDB Local up — one skipped, a placeholder. The strongest local run is
 `OWED_REQUIRE_DYNAMO=1 OWED_REQUIRE_VALIDATORS=1 OWED_DOCKER_VALIDATORS=1 pnpm verify`, which
 refuses to skip the eight DynamoDB tests and runs `shellcheck`, `systemd-analyze` and
@@ -215,3 +216,26 @@ than requires is in that category, and the three now pinned by name in `auth.tes
 dynamic client registration, no `WWW-Authenticate` on a 401, and no grant but the two a
 household's add-on uses — are pinned because a test was written for each, not because the
 checker asked.
+
+**Ten of the rows above cited a verifier that ran nowhere, and now it runs on every push.**
+`pnpm verify:ui` — the Echo Show canvas, the Echo Dot's voice-only parity, the scrubber, voice
+in and out, the inspector, the proactive badge, the three `ui://` views, the failure path,
+no-auto-file, and the exact wire frames — was in neither `pnpm verify` nor the workflow.
+Three places in the repository said it was excluded "because CI has no browser", and none of
+them was a measurement: `git log -S chrome -- .github/` was empty across every commit. Nobody
+had tried.
+
+It works. All sixty-four checks run on a GitHub runner in twenty seconds, including the
+voice-only parity that is a certification requirement and the computed contrast figure. Those
+ten rows no longer depend on a human remembering, and the three claims have been corrected
+rather than left as folklore. It stays out of `pnpm verify` for the original good reason — a
+clean clone may have no Chrome, and `preflight` reports it as optional — so it is a CI step
+named in `verify-docs.mjs`'s `EXTRA_STEPS`, which now requires a named step to be present.
+
+One figure was reported and never checked. The gate prints the tightest *passing* contrast
+ratio, `readme.md` §15 calls that "the gate's own output" and `docs/contract-v1.md` §7
+tabulates it under Amazon's documented targets — and both numbers got there by being copied
+out of a terminal by hand, so the one accessibility claim that names a measurement was the one
+nothing compared. The gate now asserts that both documents quote the figure it just computed.
+That was only worth asserting once it ran in CI; before, a stale number would have sat in two
+documents until somebody looked.

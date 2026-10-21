@@ -7,7 +7,11 @@
  * screen only exist once a browser has run the page. This boots the whole stack, clicks
  * the storyboard utterance, reaches into the iframe and checks the result.
  *
- * Not wired into CI, which has no browser. Run it before recording anything.
+ * Runs in CI, as its own step after the deployment gate — and did not until 2026-10-21,
+ * when three places in this repository (this header among them) said it was excluded
+ * because "CI has no browser". Nobody had tried: `git log -S chrome -- .github/` was
+ * empty across every commit. The runner has Chrome, `channel: "chrome"` resolves, and all
+ * sixty-two checks complete in twenty seconds. Run it before recording anything anyway.
  */
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -789,9 +793,25 @@ try {
   // The number the README quotes, produced by the gate rather than measured by hand.
   if (contrastSeen.length > 0) {
     const tightest = contrastSeen.reduce((a, b) => (b.ratio < a.ratio ? b : a));
+    const figure = tightest.ratio.toFixed(2);
     process.stdout.write(
-      `  ok  worst passing contrast — ${tightest.ratio.toFixed(2)}:1 (needs ${tightest.required}:1) on "${tightest.text}" (${tightest.surface})\n`,
+      `  ok  worst passing contrast — ${figure}:1 (needs ${tightest.required}:1) on "${tightest.text}" (${tightest.surface})\n`,
     );
+
+    /**
+     * And the documents have to quote the figure this just computed.
+     *
+     * It was printed and nothing read it. `readme.md` §15 calls it "the gate's own output"
+     * and `docs/contract-v1.md` §7 tabulates it under Amazon's documented targets, and both
+     * numbers got there by being copied out of a terminal by hand — so the one claim about
+     * accessibility that names a measurement was the one thing no check compared. Worth
+     * asserting only now: until this gate ran in CI, a stale figure would have sat in two
+     * documents until somebody remembered to look.
+     */
+    for (const doc of ["readme.md", "docs/contract-v1.md"]) {
+      const prose = readFileSync(new URL(`../${doc}`, import.meta.url), "utf8");
+      check(`${doc} quotes the contrast this gate measured`, prose.includes(`${figure}:1`), true);
+    }
   }
 
   check("console clean", consoleErrors.length, 0);
