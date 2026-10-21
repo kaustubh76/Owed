@@ -618,7 +618,8 @@ pnpm verify         # the project graph + the documents + build + lint + the who
 pnpm test           # unit, property, storyboard golden, and tool-contract tests
 pnpm verify:deploy  # the four systemd units, the Caddyfile and the two shell scripts
 pnpm verify:docs    # the friction log's structure, its entry count where it is quoted,
-                    # every citation of it by number, and every relative link
+                    # every citation of it by number, every relative link, and that the
+                    # workflow above really does run every gate in this chain, in order
 pnpm verify:eval    # re-runs the five deterministic harnesses and insists every figure
                     # in eval/results/ is still the one the code produces
 ```
@@ -642,6 +643,19 @@ an extractor pattern narrowed to nothing reddens `extraction.json`. Two gentler 
 mutations moved nothing at all, which is a fact about the corpus rather than about the gate:
 every refund message in it says "refund", and the confidence a promise carries is not part
 of what precision and recall score.
+
+**And that gate was immediately caught by the hole it exposed.** The line above says this
+workflow runs the same sequence — and CI lists the gates as individual steps rather than
+calling `pnpm verify`, deliberately, so a failure names the gate that failed and the second
+timezone pass can sit between two of them. So `verify:eval` went into the script and nowhere
+near a push: written, mutation-proved, documented in two files, committed, and protecting
+exactly one machine. A full run went green without executing it. `verify:docs` now reads both
+lists and fails if the workflow omits a gate in the chain or runs one out of order, which is
+the sentence above checking itself; the first of those is today's gap, replayed, and the
+second is `verify:graph` moved after the build it exists to protect. Re-running it on Linux
+also turned out to be worth more than the gate: the five reports are generated on macOS
+arm64 and re-derived identically on x64, which is the real evidence that they are a function
+of the code and a fixed seed and nothing else.
 
 **The deployment is checked like the code is.** `deploy/` was the one directory with
 nothing automated pointed at it, and that is a bad place for a blind spot: its failures

@@ -585,6 +585,67 @@ want(
 );
 
 // ---------------------------------------------------------------------------
+// readme §11: "the same sequence .github/workflows/verify.yml runs on every push"
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the gate chain, against the workflow that claims to run it ---\n");
+
+/**
+ * The readme says the workflow runs the same sequence as `pnpm verify`. It did, until a
+ * gate was added to one of them.
+ *
+ * `verify:eval` went into the `verify` script and nowhere near CI, because this job has
+ * always listed the gates as individual steps rather than calling `pnpm verify` — which it
+ * does deliberately, so a failure names the gate that failed and the second timezone pass
+ * can sit between two of them. The gate was written, mutation-proved, documented and
+ * committed, and protected nothing on any machine but the author's. A full run went green
+ * without executing it.
+ *
+ * So: read both lists and insist the workflow runs every gate in the chain, in the chain's
+ * order. Extra steps are fine — `pnpm install`, the repeated `pnpm test` under
+ * `TZ=Pacific/Kiritimati` — since the claim is that nothing in the chain is *missing*,
+ * not that the job does nothing else.
+ */
+const rootPackage = JSON.parse(read(join(REPO_ROOT, "package.json")));
+const chain = (rootPackage.scripts?.verify ?? "")
+  .split("&&")
+  .map((part) => part.trim().replace(/^pnpm\s+/, ""))
+  .filter((part) => part.length > 0);
+
+const workflowPath = join(REPO_ROOT, ".github", "workflows", "verify.yml");
+const workflow = exists(workflowPath) ? read(workflowPath) : "";
+// `- run: pnpm x` and the `- name:`/`run: |` form both reduce to the commands invoked.
+const steps = [...workflow.matchAll(/^\s*(?:- )?run: +pnpm +([\w:]+)/gm)].map((match) => match[1]);
+
+want(
+  "the workflow exists and runs pnpm steps",
+  chain.length > 0 && steps.length > 0,
+  `${chain.length} gate(s) in the chain, ${steps.length} pnpm step(s) in the workflow`,
+);
+
+const missing = chain.filter((gate) => !steps.includes(gate));
+want(
+  "every gate in `pnpm verify` is a step in the workflow",
+  missing.length === 0,
+  missing.length === 0 ? chain.join(" -> ") : `not run on push: ${missing.join(", ")}`,
+);
+
+// Order, by first appearance: a gate that runs after the build in one and before it in the
+// other is not the same sequence, and `verify:graph` running late would defeat its purpose.
+const positions = chain.map((gate) => steps.indexOf(gate));
+const ordered = positions.every(
+  (position, index) => index === 0 || position < 0 || positions[index - 1] < position,
+);
+want(
+  "and in the same order",
+  ordered,
+  // A gate the workflow does not run has no position to be out of, and the check above
+  // already names it; this one is about the gates that are there.
+  ordered
+    ? `${chain.length - missing.length} gate(s) present, first appearance in order`
+    : "the orders disagree",
+);
+
+// ---------------------------------------------------------------------------
 if (failures.length > 0) {
   process.stdout.write(`\n${failures.length} problem(s):\n`);
   for (const line of failures) process.stdout.write(`  ${line}\n`);
