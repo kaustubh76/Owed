@@ -121,6 +121,20 @@ jobs:
       # it out of CI entirely, which is how this step came to be written.
       - run: pnpm verify:eval
 
+      # The recorded storyboard, re-derived rather than trusted.
+      #
+      # `docs/demo-capture.json` is what `verify:ui` reads the storyboard's figures out of,
+      # and what readme §5 invites a judge to re-derive the sequence diagram from. Nothing
+      # ran the script that produces it, so it went 41 commits without being re-derived —
+      # long enough for its recorded `ledger_summary` schema to lose a field the code had
+      # gained. `--check` boots the server and the merchant agents, walks OAuth, drives the
+      # same tools and compares in memory without writing.
+      #
+      # Here rather than in `pnpm verify`: it boots four processes and runs a negotiation,
+      # and the local chain is meant to stay fast. `verify-docs.mjs` requires this step to
+      # exist by name for that reason — see EXTRA_STEPS.
+      - run: pnpm verify:capture
+
       # The external Alexa+ conformance checker, run against a real booted server.
       - run: pnpm conformance
 

@@ -632,6 +632,8 @@ pnpm verify:docs    # the friction log's structure, its entry count where it is 
                     # workflow above runs every gate in this chain, in order, and no other
 pnpm verify:eval    # re-runs the five deterministic harnesses and insists every figure
                     # in eval/results/ is still the one the code produces
+pnpm verify:capture # boots the stack and re-derives docs/demo-capture.json without
+                    # writing it — in CI rather than in the chain, which costs 40s already
 ```
 
 **The numbers are checked against the code, not only against the prose.** `verify:docs`
@@ -691,7 +693,10 @@ over the whole file meant a step in any second job satisfied "every gate is a st
 Both sides now go through one resolver — which skips an env prefix, skips flags, unwraps
 `run`/`exec`, and keeps a `--filter` as part of a command's identity — and the workflow is read
 as the named job's steps rather than as text, so a step behind an `if:` or a
-`continue-on-error: true` is reported rather than counted. Order is taken from a gate's *last*
+`continue-on-error: true` is reported rather than counted. A step named extra by design is
+also **required to be there**: that list started as permission to be in CI without being in
+the chain, and permission alone reopened the hole it existed for, since deleting one line
+would have left `verify:capture` run by nothing. Order is taken from a gate's *last*
 appearance, because `pnpm test` runs twice and reading the first meant moving the other one
 after a later gate went unnoticed. Six forms are proved against the old version: a `run: |`
 block and a `pnpm run` step, both of which it falsely reported missing; a flag on the chain

@@ -22,6 +22,7 @@
     "conformance": "node scripts/conformance.mjs",
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "verify:docs": "node scripts/verify-docs.mjs",
+    "verify:capture": "node scripts/capture-demo.mjs --check",
     "verify:eval": "node scripts/verify-eval.mjs",
     "verify:graph": "node scripts/verify-graph.mjs",
     "verify:ui": "node scripts/verify-ui.mjs",

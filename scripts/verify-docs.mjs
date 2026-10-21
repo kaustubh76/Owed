@@ -585,6 +585,106 @@ want(
 );
 
 // ---------------------------------------------------------------------------
+// The utterances, which exist in three independent copies
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the words a presenter says, in the three places they live ---\n");
+
+/**
+ * The same strings are written out three times and nothing tied them together.
+ *
+ * `apps/home/src/VoiceBar.tsx` holds the chips a household can click.
+ * `docs/demo-script.md` tells a presenter which chip to click, by ordinal and by quoting
+ * the words. `scripts/verify-ui.mjs` hardcodes those words again as Playwright button
+ * names. Change the chip and the browser gate fails, which is fine. Change the *script*
+ * and nothing fails at all — the recording guide would simply be wrong, on camera.
+ *
+ * `**[gate]**` has the same problem one level up: the script declares which beats
+ * `verify:ui` asserts, and that mapping was maintained entirely by hand. A beat could
+ * claim browser coverage it never had.
+ *
+ * So: the chips are the single source, and both documents are checked against them.
+ */
+const voiceBar = read(join(REPO_ROOT, "apps", "home", "src", "VoiceBar.tsx"));
+const chipBlock = /const SCRIPT = \[([\s\S]*?)\] as const;/.exec(voiceBar);
+const chips = chipBlock === null ? [] : [...chipBlock[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+
+want(
+  "the home still declares its chips where this can read them",
+  chips.length > 0,
+  chips.length === 0
+    ? "no `const SCRIPT = [...] as const` in VoiceBar.tsx"
+    : `${chips.length} chip(s)`,
+);
+
+const uiGate = read(join(REPO_ROOT, "scripts", "verify-ui.mjs"));
+const demoScript = read(join(DOCS, "demo-script.md"));
+
+/**
+ * Every chip is driven by the browser gate.
+ *
+ * A chip nothing clicks is a path a household can take that no check has ever taken.
+ */
+const undriven = chips.filter((chip) => !uiGate.includes(chip));
+want(
+  "every chip the home offers is driven by verify:ui",
+  // `chips.length > 0` is load-bearing: renaming the array makes `chips` empty, and
+  // "every one of nothing is driven" is true. Proved by renaming it and watching this
+  // report ok on an empty list before the condition was added.
+  chips.length > 0 && undriven.length === 0,
+  chips.length === 0
+    ? "no chips were read, so this proves nothing"
+    : undriven.length === 0
+      ? chips.join(" · ")
+      : `never clicked by the gate: ${undriven.join(", ")}`,
+);
+
+/**
+ * The ordinals the script navigates by.
+ *
+ * "the first chip" has to mean the first one, or a presenter clicks the wrong button.
+ */
+const ORDINALS = ["first", "second", "third", "fourth"];
+const misordered = [];
+for (const [index, word] of ORDINALS.entries()) {
+  if (!new RegExp(`\\b${word} chip\\b`).test(demoScript)) continue;
+  const chip = chips[index];
+  if (chip !== undefined && !demoScript.includes(chip)) {
+    misordered.push(`"${word} chip" is referenced but ${JSON.stringify(chip)} is never quoted`);
+  }
+}
+want(
+  "and the script's chip ordinals name chips that exist",
+  misordered.length === 0,
+  misordered.length === 0
+    ? `${ORDINALS.filter((w) => new RegExp(`\\b${w} chip\\b`).test(demoScript)).length} ordinal(s) checked`
+    : misordered.join("; "),
+);
+
+/**
+ * And a beat that claims the gate asserts it must at least say words the gate sends.
+ *
+ * Only the quoted part of the heading is read: `**0:12 — "Alexa, what am I owed?"**` names
+ * an utterance, `**1:28 — answer it.**` does not, and a beat that quotes nothing is making
+ * no claim this can check.
+ */
+const gated = [
+  ...demoScript.matchAll(/^\*\*(\d+:\d\d) — (.*?)\*\*\s*\*\([^)]*\)\*\s*\*\*\[gate\]\*\*/gm),
+];
+const unasserted = [];
+for (const [, at, heading] of gated) {
+  for (const [, quoted] of heading.matchAll(/"([^"]+)"/g)) {
+    if (!uiGate.includes(quoted)) unasserted.push(`${at} quotes ${JSON.stringify(quoted)}`);
+  }
+}
+want(
+  "every [gate] beat quoting an utterance is one verify:ui drives",
+  unasserted.length === 0,
+  unasserted.length === 0
+    ? `${gated.length} gated beat(s)`
+    : `claims gate coverage the gate does not give: ${unasserted.join(", ")}`,
+);
+
+// ---------------------------------------------------------------------------
 // readme §11: "the same sequence .github/workflows/verify.yml runs on every push"
 // ---------------------------------------------------------------------------
 process.stdout.write("\n--- the gate chain, against the workflow that claims to run it ---\n");
@@ -764,6 +864,9 @@ want(
  */
 const EXTRA_STEPS = {
   install: "dependencies, which the chain assumes are already there",
+  "verify:capture":
+    "re-derives docs/demo-capture.json by booting four processes and negotiating; CI is" +
+    " where an artifact's freshness matters, and the local chain is meant to stay fast",
 };
 const unexplained = [...new Set(steps)].filter(
   (step) => !chain.includes(step) && !(step in EXTRA_STEPS),
@@ -774,6 +877,23 @@ want(
   unexplained.length === 0
     ? `extra by design: ${Object.keys(EXTRA_STEPS).join(", ")}`
     : `in CI only, so \`pnpm verify\` does not run it: ${unexplained.join(", ")}`,
+);
+
+/**
+ * And an entry here is a promise that CI runs it, so it has to.
+ *
+ * `EXTRA_STEPS` began as permission — a step allowed to be in the workflow without being in
+ * the chain. Permission alone reopens the hole it was built for: `verify:capture` is in CI
+ * and nowhere else, so deleting that one line would leave the script unrun by anything,
+ * which is exactly the state it was added to escape. Listing it here now requires it.
+ */
+const promised = Object.keys(EXTRA_STEPS).filter((step) => !steps.includes(step));
+want(
+  "and every step named extra by design is actually there",
+  promised.length === 0,
+  promised.length === 0
+    ? `${Object.keys(EXTRA_STEPS).length} named, ${Object.keys(EXTRA_STEPS).length} present`
+    : `named extra by design but not in the workflow: ${promised.join(", ")}`,
 );
 
 /**
