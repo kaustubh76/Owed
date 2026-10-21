@@ -20,7 +20,19 @@ import {
  * So the capability is here for anyone who wants to talk to it, and off by default for
  * anyone who wants a deterministic take.
  */
-const SCRIPT = ["Alexa, what am I owed?", "Why aren't you claiming that?", "File it"] as const;
+/**
+ * The scripted utterances, in the order the demo says them.
+ *
+ * "Why aren't you watching that?" is last because it is the one that needs a live promise:
+ * nothing in the seeded week is unwatched, so it answers "nothing in mind" until a message
+ * arrives that Owed cannot police. That is the point of having it — a household can ask.
+ */
+const SCRIPT = [
+  "Alexa, what am I owed?",
+  "Why aren't you claiming that?",
+  "File it",
+  "Why aren't you watching that?",
+] as const;
 
 export interface VoiceBarProps {
   onSpeak: (text: string) => void;

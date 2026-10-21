@@ -22,6 +22,15 @@ export const LedgerSummaryItemSchema = z.object({
   amount: MoneySchema.optional(),
   claim_id: z.string().optional(),
   coverage: CoverageSchema.optional(),
+  /**
+   * `false` when nothing will ever reach a verdict on this promise.
+   *
+   * Carried on the item, not just on `EvidenceView`, because the brain decides what the
+   * household can ask about from the ledger it was just read — and before this the item said
+   * only `status`, which for an unwatched promise is `Captured` and indistinguishable from
+   * one whose moment of judgement simply has not come.
+   */
+  watched: z.boolean().optional(),
 });
 export type LedgerSummaryItem = z.infer<typeof LedgerSummaryItemSchema>;
 

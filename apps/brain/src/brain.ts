@@ -26,6 +26,15 @@ export class OwedBrain {
   #focus: string | undefined;
   /** The promise Owed decided not to claim, which is a different question. */
   #declined: string | undefined;
+  /**
+   * The promise Owed is not watching at all, which is a third question.
+   *
+   * Without this slot the state was unreachable. `promise_check` is only ever called through
+   * `needsFocus`, and the two slots above are set from `Breached` and `Suspected` — an
+   * unwatched promise is `Captured`, so no utterance and no chip could open it. The card
+   * state and the spoken line existed, were tested, and could not be got to from the home.
+   */
+  #unwatched: string | undefined;
 
   constructor(session: SessionHandle) {
     this.#session = session;
@@ -43,7 +52,12 @@ export class OwedBrain {
 
     const args = { ...intent.args };
     if (intent.needsFocus !== undefined) {
-      const subject = intent.needsFocus === "declined" ? this.#declined : this.#focus;
+      const subject =
+        intent.needsFocus === "declined"
+          ? this.#declined
+          : intent.needsFocus === "unwatched"
+            ? this.#unwatched
+            : this.#focus;
       if (subject === undefined) {
         return { type: "turn", utterance, reply: NOTHING_IN_MIND, trace: [] };
       }
@@ -142,7 +156,11 @@ export class OwedBrain {
     // A card about one promise says which slot it belongs in. Explaining why something
     // was *not* claimed must never make it the thing "file it" then tries to file.
     if (typeof data.promise_id === "string" && typeof data.status === "string") {
-      if (data.status === "Breached") this.#focus = data.promise_id;
+      // `watched === false` outranks the status, because an unwatched promise's status is
+      // `Captured` — which says only that the read was confident, not that anything is
+      // looking at it.
+      if (data.watched === false) this.#unwatched = data.promise_id;
+      else if (data.status === "Breached") this.#focus = data.promise_id;
       else if (data.status === "Suspected") this.#declined = data.promise_id;
       return;
     }
@@ -162,6 +180,18 @@ export class OwedBrain {
     if (waiting !== undefined) this.#focus = waiting.promise_id;
     const declined = withStatus("Suspected");
     if (declined !== undefined) this.#declined = declined.promise_id;
+
+    // Picked off the ledger by the field rather than by status, which is why
+    // `LedgerSummaryItem` carries it: asking "what am I owed?" is what puts an unwatched
+    // promise in mind, and the item is the only place the household's own summary says so.
+    const unwatched = items.find(
+      (item): item is { promise_id: string } =>
+        typeof item === "object" &&
+        item !== null &&
+        (item as { watched?: unknown }).watched === false &&
+        typeof (item as { promise_id?: unknown }).promise_id === "string",
+    );
+    if (unwatched !== undefined) this.#unwatched = unwatched.promise_id;
   }
 }
 

@@ -717,10 +717,11 @@ curl -X POST http://127.0.0.1:3939/control/messages \
   -d '{"merchant":"Northwind Parcel","text":"Covered for 24 months under our manufacturer warranty."}'
 ```
 
-That reads as a **tracked** `warranty` at 0.95 — not a `Candidate` — and Owed answers *"I've
-written the Northwind Parcel warranty down, but nothing the home sees would tell me whether
-they keep it, so I'm not claiming to watch it."* The evidence card says `not watched` and
-gives the same reason. A warranty is broken by a product failing in month fourteen, and no
+That reads as a **tracked** `warranty` at 0.95 — not a `Candidate` — and asking **"why aren't
+you watching that?"** answers *"I've written the Northwind Parcel warranty down, but nothing
+the home sees would tell me whether they keep it, so I'm not claiming to watch it."* The
+evidence card says `not watched` and gives the same reason, and `pnpm verify:ui` clicks that
+chip and reads both out of a real browser. A warranty is broken by a product failing in month fourteen, and no
 doorbell event settles that; a `guarantee` in the same sentence as a delivery window *is*
 judged, because it inherits that window's verdict. The two cases differ by whether anything
 in the message can be judged on its own terms, and that is read off the ledger rather than off

@@ -304,8 +304,13 @@ whether they keep it, so I'm not claiming to watch it."* The card says `not watc
 the same reason. A warranty is broken by a product failing in month fourteen and no doorbell
 event settles that, so there is nothing to inherit and nothing to observe.
 
+Ask **"why aren't you watching that?"** after it — there is a chip for it — and the card comes
+up reading `not watched`, with the reason where a coverage bar would be. Before D21 that state
+existed and nothing in the home could reach it, because the brain only kept track of promises
+it had judged.
+
 So there are three different refusals available here, which is worth knowing if a judge pushes
 on whether Owed overclaims: declining to **track** a weak read, declining to **claim** a
 breach it could not see enough of, and declining to **watch** a promise a household cannot
-evidence at all. None of this fits in three minutes alongside everything above; all of it is a
+evidence at all — and all three are on screen, not just on the wire. None of this fits in three minutes alongside everything above; all of it is a
 good answer to a question.

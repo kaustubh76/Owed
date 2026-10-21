@@ -16,6 +16,8 @@ import {
   toEpochMs,
   zeroMoney,
 } from "@owed/domain";
+import { derivesFromSiblings } from "../breach/detectors.js";
+import { watchable } from "../breach/engine.js";
 
 export interface PromiseView {
   promise: OwedPromise;
@@ -200,6 +202,35 @@ const OPEN_CLAIM_STATES = new Set(["Filed", "Negotiating", "Escalated", "Settled
  * `since` bounds what counts as *recovered this week* and *kept this week*. Open money
  * is deliberately not bounded: it is a statement about the present, not the period.
  */
+/**
+ * Whether anything in this ledger will ever reach a verdict on this promise.
+ *
+ * Not the same question as `watchable`, which asks each detector's `appliesTo` and so sees
+ * only the promise. `derivedBreach` matches `guarantee` and `warranty` on kind alone and then
+ * abstains forever when there is no sibling to inherit from — so a warranty read out of
+ * "Covered for 24 months under our manufacturer warranty." is structurally watchable and
+ * will never be judged.
+ *
+ * One level, and it cannot recurse: the sibling it looks for must not itself be derived, so
+ * two warranties in one message are correctly both unwatched.
+ *
+ * Lives here rather than in `mcp-server/src/tools/projections.ts`, where it started, because
+ * both the evidence view and the ledger summary need it and the second copy would have been
+ * the one that drifted.
+ */
+export function anythingIsWatching(state: LedgerState, promise: OwedPromise): boolean {
+  if (!watchable(promise)) return false;
+  if (!derivesFromSiblings(promise)) return true;
+
+  return [...state.promises.values()].some(
+    (other) =>
+      other.promise.id !== promise.id &&
+      other.promise.source_ref === promise.source_ref &&
+      !derivesFromSiblings(other.promise) &&
+      watchable(other.promise),
+  );
+}
+
 export function summarize(state: LedgerState, currency: Currency, since?: Instant): LedgerTotals {
   const withinPeriod = (instant: Instant | undefined): boolean =>
     since === undefined || (instant !== undefined && toEpochMs(instant) >= toEpochMs(since));
@@ -236,6 +267,12 @@ export function summarize(state: LedgerState, currency: Currency, since?: Instan
           }
         : {}),
       ...(view.assessment ? { coverage: view.assessment.coverage } : {}),
+      // Only when it is bad news, matching `EvidenceView.watched`: an assessed promise is
+      // self-evidently watched, and one under a detector's care needs no announcement. The
+      // brain reads this to know there is something here it can be asked about.
+      ...(view.assessment === undefined && !anythingIsWatching(state, view.promise)
+        ? { watched: false }
+        : {}),
     });
   }
 

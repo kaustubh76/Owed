@@ -57,6 +57,19 @@
 > only when its own message holds a promise that can be judged on its own terms. Two
 > warranties in one message are correctly both unwatched.
 
+> **Amended D21 — the state had no path to it.** `LedgerSummaryItem` gains the same optional
+> `watched`. The card state and the spoken line above were correct and **unreachable from the
+> simulated home**: `promise_check` is only ever called through the brain's focus, and focus
+> was set from `Breached` and `Suspected` only. An unwatched promise is `Captured`, so no
+> utterance and no chip could open it — a view state built, tested, and impossible to get to.
+>
+> The item carries the field because `status` alone cannot distinguish "nothing is watching
+> this" from "its moment of judgement has not come"; the brain reads it off the ledger the
+> household just asked for, keeps it in a third focus slot beside the two that existed, and
+> answers "why aren't you watching that?" with it. `scripts/verify-ui.mjs` now drives that
+> path in a browser — the first time that gate has touched `/control/*`, because the seeded
+> week contains no promise it can reach the state with.
+
 **Promise status**
 `Candidate → Captured → Watching → {Kept | Suspected | Breached} → Filed → Negotiating → {Settled | Escalated} → {Recovered | WrittenOff}`
 

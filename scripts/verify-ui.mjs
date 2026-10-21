@@ -591,6 +591,43 @@ try {
   check("ledger card accessibility", ledgerAudit.problems.join(" | ") || "clean", "clean");
   if (ledgerAudit.worst) contrastSeen.push(ledgerAudit.worst);
 
+  // --- the promise Owed will not pretend to watch --------------------------
+  //
+  // The one card state with no browser coverage until now, for a reason worth recording:
+  // this gate drives the seeded week, every promise in it is assessed, and the `Unwatched`
+  // state needs one that cannot be. So the beat has to make its own subject, which is also
+  // the first time this gate has touched `/control/*` at all.
+  //
+  // A tracked warranty — 0.95, `Captured`, not a `Candidate` the household was warned about
+  // — with no sibling to inherit a verdict from and no evidence a home could ever produce
+  // for it. Before `LedgerSummaryItem.watched` and the brain's `#unwatched` slot, no
+  // utterance or chip could open this card at all.
+  await fetch(`http://127.0.0.1:${SERVER_PORT}/control/messages`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      merchant: "Northwind Parcel",
+      text: "Covered for 24 months under our manufacturer warranty.",
+    }),
+  });
+
+  // Asking what is owed is what puts it in mind: the brain reads the slot off the ledger
+  // item, which is the household's own summary rather than a side channel.
+  await page.getByRole("button", { name: EXPECTED.utterance }).click();
+  await page.getByRole("button", { name: "Why aren't you watching that?" }).click();
+
+  check("the card says it is not watching", await cardText(".evidence__verdict"), "not watched");
+  check(
+    "and says why, where a coverage bar would be",
+    (await cardText(".evidence__unwatched")).startsWith("Recorded, but nothing the home sees"),
+    true,
+  );
+  check(
+    "it is the warranty, quoted back",
+    (await cardText(".evidence__quote")).includes("24 months"),
+    true,
+  );
+
   // --- the surface with no screen -----------------------------------------
   // Voice-only parity is a certification requirement and the easiest thing to fake.
   // The only honest test is to take the card away and see whether the answer survives.
