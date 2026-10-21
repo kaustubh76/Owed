@@ -357,3 +357,79 @@ describe("a warranty with nothing to derive from", () => {
     expect(view.watched).not.toBe(false);
   });
 });
+
+/**
+ * Two messages are two messages, even when the clock has not moved.
+ *
+ * The demo runs on a fixed clock, and a live message's id used to be `msg_${receivedAt}` —
+ * so every message delivered while the scrubber sat at one instant got the **same** id, and
+ * every promise read out of them shared one `source_ref`. Harmless while `source_ref` was
+ * only provenance; not harmless once `derivedBreach` reads it to find siblings.
+ *
+ * The symptom, caught by hand against a booted stack rather than by any test: post a
+ * delivery window, then post an unrelated warranty, then record uptime across the window —
+ * and the **warranty** reported itself `Breached` at `missed_window` on evidence that had
+ * nothing to do with it. Overclaiming, by the mechanism built to prevent it.
+ */
+describe("two messages delivered at the same instant", () => {
+  it("do not become each other's siblings", async () => {
+    const first = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Delivered between 9 and 11am, guaranteed or your money back.",
+    });
+    const second = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Covered for 24 months under our manufacturer warranty.",
+    });
+
+    expect(first.json.message_id, "a message needs its own id").not.toBe(second.json.message_id);
+
+    const warranty = (second.json.promises as unknown as Delivered[]).find(
+      (p) => p.kind === "warranty",
+    );
+    if (warranty === undefined) throw new Error("expected a warranty");
+
+    // Nothing in its own message can judge it, so nothing may.
+    const view = EvidenceViewSchema.parse((await check(warranty.promise_id)).structuredContent);
+    expect(view.watched, "the warranty has no sibling of its own").toBe(false);
+    expect(view.verdict, "and therefore no verdict").toBeUndefined();
+  });
+
+  it("does not let one message's evidence reach another's promise", async () => {
+    const first = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Delivered between 9 and 11am, guaranteed or your money back.",
+    });
+    const second = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Covered for 24 months under our manufacturer warranty.",
+    });
+
+    await post("/control/evidence", {
+      uptime: [
+        {
+          source_id: "src_doorbell",
+          household_id: harness.deps.householdId,
+          interval: { start: "2026-10-11T08:00:00-07:00", end: "2026-10-11T12:00:00-07:00" },
+        },
+      ],
+    });
+
+    const window = (first.json.promises as unknown as Delivered[]).find(
+      (p) => p.kind === "delivery_window",
+    );
+    const warranty = (second.json.promises as unknown as Delivered[]).find(
+      (p) => p.kind === "warranty",
+    );
+    if (window === undefined || warranty === undefined) throw new Error("expected both");
+
+    const judged = EvidenceViewSchema.parse((await check(window.promise_id)).structuredContent);
+    const untouched = EvidenceViewSchema.parse(
+      (await check(warranty.promise_id)).structuredContent,
+    );
+
+    expect(judged.verdict, "the window the camera watched is judged").toBeDefined();
+    expect(untouched.verdict, "the warranty in another message is not").toBeUndefined();
+    expect(untouched.watched).toBe(false);
+  });
+});

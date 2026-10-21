@@ -288,7 +288,23 @@ export function createOwedApp({
     }
 
     const receivedAt = deps.clock.now();
-    const messageId = typeof body.id === "string" && body.id !== "" ? body.id : `msg_${receivedAt}`;
+    /**
+     * From the id generator, not from the clock.
+     *
+     * This was `msg_${receivedAt}`, and the demo's clock is **fixed** — so every message
+     * delivered while the scrubber sits at one instant got the *same* id, and every promise
+     * read out of them shared one `source_ref`. That was harmless while `source_ref` was
+     * only provenance. It stopped being harmless when `derivedBreach` started reading it:
+     * two unrelated messages became each other's siblings, so a `warranty` posted second
+     * inherited the verdict of a `delivery_window` posted first and reported itself
+     * **Breached** on evidence that had nothing to do with it. Overclaiming, by exactly the
+     * mechanism built to prevent it.
+     *
+     * `deps.idGen` is shared with the seed and counter-based, so ids stay unique, readable
+     * in the inspector, and deterministic on replay.
+     */
+    const messageId =
+      typeof body.id === "string" && body.id !== "" ? body.id : deps.idGen.next("msg");
     const reads = extractPromises({
       id: messageId,
       merchant,
