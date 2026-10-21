@@ -163,3 +163,19 @@ jobs:
       - run: pnpm verify:deploy
         env:
           OWED_REQUIRE_VALIDATORS: "1"
+
+      # The browser gate, which until now ran nowhere.
+      #
+      # Three places in this repository said it was excluded "because CI has no browser",
+      # and nothing had ever tested that: `git log -S chrome -- .github/` is empty across
+      # every commit. It is an assertion, not a measurement, and ten rows in
+      # `docs/requirements.md` marked **holds** cite this gate as their verifier —
+      # including voice-only parity on the Echo Dot, which is a certification requirement.
+      #
+      # `scripts/verify-ui.mjs` launches `chromium` with `channel: "chrome"`, so it needs a
+      # real Google Chrome rather than a downloaded one; `playwright-core` is installed but
+      # no browser is, deliberately — there is no `postinstall` in this repo.
+      #
+      # Last in the job on purpose: it boots four processes and drives a browser, so if it
+      # is flaky it must not mask a real failure in anything above it.
+      - run: pnpm verify:ui

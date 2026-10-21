@@ -1015,6 +1015,9 @@ const EXTRA_STEPS = {
   "verify:capture":
     "re-derives docs/demo-capture.json by booting four processes and negotiating; CI is" +
     " where an artifact's freshness matters, and the local chain is meant to stay fast",
+  "verify:ui":
+    "drives a real browser, so it cannot be in the chain for anyone without Chrome; ten" +
+    " rows in docs/requirements.md cite it as their verifier, including voice-only parity",
 };
 const unexplained = [...new Set(steps)].filter(
   (step) => !chain.includes(step) && !(step in EXTRA_STEPS),
