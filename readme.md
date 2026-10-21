@@ -214,7 +214,7 @@ has the negotiator.
 
 ## 6. MCP surface (the real add-on contract)
 
-Server: TypeScript, `@modelcontextprotocol/server` 2.x, **Streamable HTTP**, protocol **2025-11-25**, stateless request handling with ledger-backed state. Target tool latency < 500 ms (breach detection runs async; tools read state).
+Server: TypeScript, `@modelcontextprotocol/server` 2.x, **Streamable HTTP**, protocol **2025-11-25 or later**, stateless request handling with ledger-backed state. A client that asks for nothing — the brain, and Alexa+ — negotiates 2025-11-25, which `alexa/contract.test.ts` reads off the transport; one that asks for auto negotiation gets 2026-07-28, which is what `docs/demo-capture.json` records, and §6.2 explains why the demo stays on the earlier revision. Target tool latency < 500 ms (breach detection runs async; tools read state).
 
 ### 6.1 Account linking
 OAuth 2.1 + PKCE (S256), discovery via RFC 9728 (protected resource metadata) and RFC 8414 (AS metadata), audience binding via RFC 8707, loopback redirects per RFC 8252. Owed runs **its own authorization server** — the MCP SDK ships none — and the brain walks the real authorization-code flow rather than being handed a token out of band.

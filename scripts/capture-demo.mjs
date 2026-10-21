@@ -541,6 +541,19 @@ capture.mcpFrames = mcpFrames;
 capture.server.negotiation = {
   firstFrameMethod: mcpFrames[0]?.message?.method ?? null,
   era: mcpFrames.some((f) => f.message?.method === "server/discover") ? "modern" : "legacy",
+  /**
+   * The revision this connection actually spoke, which this used to leave out.
+   *
+   * The comment above said no `initialize` carrying a `protocolVersion` is sent under
+   * `versionNegotiation: { mode: "auto" }`, and inferred from that that the negotiated
+   * revision was unobservable. It is observable: `transport.protocolVersion` is a public
+   * getter, and recording it is what turns readme §6.1's "protocol 2025-11-25" from a
+   * sentence into a line in an artifact a judge can read.
+   *
+   * Not to be confused with `_meta["io.modelcontextprotocol/protocolVersion"]` on the frames
+   * below, which is the client library's request metadata and reads 2026-07-28.
+   */
+  protocolVersion: transport.protocolVersion ?? null,
 };
 
 // ── write ────────────────────────────────────────────────────────────────────────────
@@ -671,6 +684,27 @@ if (!capture.oauth.protectedResource.document?.authorization_servers?.length) {
 }
 // The submission requires spec 2025-11-25 or later, so this is the one version claim the
 // page makes and it has to come from the SDK rather than from a README.
+/**
+ * A floor, not an equality — and the first version of this check got that wrong.
+ *
+ * It demanded exactly 2025-11-25 and failed with 2026-07-28, which is correct behaviour from
+ * a client built four lines up with `versionNegotiation: { mode: "auto" }`: it asks for the
+ * newest both sides support and gets it. The brain asks for nothing and gets 2025-11-25,
+ * which `alexa/contract.test.ts` pins by reading `transport.protocolVersion` off a client
+ * built the same way the brain builds its own.
+ *
+ * So two clients in this repository negotiate two different revisions, both correctly, and
+ * the claim worth holding here is the one the comment below already states: 2025-11-25 **or
+ * later**. ISO dates compare correctly as strings.
+ */
+if (
+  typeof capture.server.negotiation.protocolVersion !== "string" ||
+  capture.server.negotiation.protocolVersion < "2025-11-25"
+) {
+  problems.push(
+    `the connection negotiated ${JSON.stringify(capture.server.negotiation.protocolVersion)}, below the 2025-11-25 floor`,
+  );
+}
 if (!capture.server.sdk.supportedSpecVersions?.includes("2025-11-25")) {
   problems.push(
     `the SDK does not list 2025-11-25 among its supported revisions (${JSON.stringify(capture.server.sdk.supportedSpecVersions)})`,

@@ -50,6 +50,43 @@ async function connect(
   return connected;
 }
 
+/**
+ * The protocol revision the submission names, read off the connection instead of asserted.
+ *
+ * `readme.md` §6.1 says "protocol **2025-11-25**" and §6.2 says "the brain connects on
+ * **2025-11-25**, the revision Amazon's Alexa+ documentation names". Until now the only
+ * check anywhere read `SUPPORTED_PROTOCOL_VERSIONS` out of the installed
+ * `@modelcontextprotocol/server` — which establishes what the *package* can speak, not what
+ * this connection did. `transport.protocolVersion` is a public getter on
+ * `StreamableHTTPClientTransport` and nothing in the repository had ever read it.
+ *
+ * Worth being careful here, because a committed artifact looks like it disagrees:
+ * `docs/demo-capture.json`'s Owed frames carry
+ * `_meta["io.modelcontextprotocol/protocolVersion"]: "2026-07-28"`. That is the client
+ * library's own request metadata, not the negotiated session revision, and reading it as the
+ * latter is how you end up "fixing" a claim that was right. Measured before this was
+ * written: the negotiated value is 2025-11-25.
+ *
+ * The transport is built here rather than through `connect()` above, which discards it, and
+ * with no version options at all — exactly how `apps/brain/src/session.ts` builds its own, so
+ * what this asserts is what the brain gets.
+ */
+describe("the protocol revision", () => {
+  it("negotiates the one the submission claims", async () => {
+    const transport = new StreamableHTTPClientTransport(harness.mcpUrl, {
+      requestInit: { headers: { authorization: `Bearer ${token}` } },
+    });
+    const probe = new Client({ name: "owed-brain", version: "0.1.0" });
+    await probe.connect(transport);
+
+    try {
+      expect(transport.protocolVersion).toBe("2025-11-25");
+    } finally {
+      await probe.close();
+    }
+  });
+});
+
 beforeAll(async () => {
   harness = await startHarness();
   token = await harness.link();
