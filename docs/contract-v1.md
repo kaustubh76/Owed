@@ -198,14 +198,20 @@ the request rides in the result, or a client that has declared the capability. P
 serving of the 2025 revision cannot make server-to-client requests at all, so there the tool
 proposes in words and waits for `confirm`. Both paths are tested; see docs/friction-log.md §10.
 
-### Measured against Amazon's documented targets
+### Measured against the targets this submission holds itself to
 
-| Target | Documented | Measured |
-|---|---|---|
-| Tool round trip | under 500 ms | **all six tools**, 50 calls each over Streamable HTTP; distribution and the machine it was measured on in `eval/results/latency.json` |
-| Text contrast | 4.5:1 (3:1 for large or bold) | gate fails on any violation and reports the tightest pass, in both themes; **worst passing 5.33:1**, on the recovered total on the light ledger card |
-| Touch targets | 48×48 px | all controls pass |
-| Spoken answer | self-sufficient, no digits, ≤ 240 chars | enforced on every result |
+This table used to be headed "Amazon's documented targets", and that overstated its
+provenance. **There is not one `developer.amazon.com` citation in any file in this
+repository** — every Amazon requirement here is uncited prose or an uncited code comment, and
+three of the four thresholds below are figures the project chose. The *source* column says
+where each number actually comes from, so a reader can discount the ones that are ours.
+
+| Target | Threshold | Where the threshold comes from | Measured |
+|---|---|---|---|
+| Tool round trip | under 500 ms | **attributed to Amazon** — `alexa/contract.test.ts` says "Amazon documents a round-trip target under 500 ms", with no link; the constant is `TARGET_MS` in `eval/src/bin/latency.ts` | **all six tools**, 50 calls each over Streamable HTTP; distribution and the machine it was measured on in `eval/results/latency.json` |
+| Text contrast | 4.5:1 (3:1 for large or bold) | **WCAG 2.x AA**, not Amazon — these are the web accessibility thresholds, in `scripts/verify-ui.mjs` | gate fails on any violation and reports the tightest pass, in both themes; **worst passing 5.33:1**, on the recovered total on the light ledger card, and `verify:ui` asserts this document quotes the figure it computed |
+| Touch targets | 48×48 px | **ours** — a bare threshold in `scripts/verify-ui.mjs`, consistent with common platform guidance and cited to nothing | all controls pass |
+| Spoken answer | self-sufficient, no digits, ≤ 240 chars | **ours** — `MAX_SPOKEN_CHARS` and the forbidden-pattern list in `packages/mcp-server/src/voice.ts`. What Amazon is quoted as requiring is narrower and unnumbered: "surface no API codes, tool names, JSON or internal IDs in any customer-facing response" | enforced on every result including refusals, and `verify:docs` holds the 240 above against the constant |
 
 **What this does not establish.** Alexa+ for Builders is partner-gated, so none of it runs
 against the real client. These assert the *documented* contract. "Contract suite green" is not

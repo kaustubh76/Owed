@@ -65,7 +65,22 @@ function localClient(): DynamoDBClient {
 let client: DynamoDBClient;
 let table: string;
 
-describe.skipIf(!available)("the ledger in DynamoDB", () => {
+/**
+ * Longer than vitest's five seconds, because these do real I/O against a container.
+ *
+ * Every test here creates its own table, writes the eighty-one-event storyboard and reads it
+ * back, over HTTP to DynamoDB Local. On an idle machine that is comfortably under a second;
+ * sharing half the cores with forty-nine other test files it is not, and
+ * "survives the process that wrote it" timed out at 5000 ms about one run in four. It passed
+ * alone every time, which is the signature — and the failure moved between tests run to run,
+ * which is what sent me looking at the container rather than at any one assertion.
+ *
+ * A budget, not a fix for slowness: nothing here waits on a poll or a retry, so a test that
+ * needs thirty seconds is a broken container and will still say so.
+ */
+const CONTAINER_IO_TIMEOUT_MS = 30_000;
+
+describe.skipIf(!available)("the ledger in DynamoDB", { timeout: CONTAINER_IO_TIMEOUT_MS }, () => {
   beforeEach(async () => {
     client = localClient();
     // A table per test, so one test's events can never explain another's pass.

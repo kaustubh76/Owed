@@ -378,6 +378,36 @@ const COUNTS = [
     document: "docs/friction-log.md",
   },
   {
+    /**
+     * The spoken-line ceiling, which `docs/contract-v1.md` states twice in prose.
+     *
+     * It is `MAX_SPOKEN_CHARS` in `voice.ts` and nothing compared the document to it — while
+     * the table around it was headed "Amazon's documented targets", which this number is
+     * not: it is a figure the project chose, and the §7 table now says so. A chosen number
+     * is exactly the kind that drifts, because nobody external will contradict it.
+     */
+    what: "the spoken-line character ceiling",
+    measured: Number(
+      /MAX_SPOKEN_CHARS = (\d+)/.exec(
+        read(join(REPO_ROOT, "packages/mcp-server/src/voice.ts")),
+      )?.[1],
+    ),
+    /**
+     * With its unit, because the bare number is not distinctive enough.
+     *
+     * The other entries here match a bare figure and get away with it — `1032` and `370` do
+     * not occur by accident. `240` nearly does and `200` certainly does: mutating
+     * `MAX_SPOKEN_CHARS` to 200 left this check green, because 200 appears elsewhere in the
+     * document. Matching `240 char` is what makes the mutation visible.
+     */
+    rendered: `${
+      /MAX_SPOKEN_CHARS = (\d+)/.exec(
+        read(join(REPO_ROOT, "packages/mcp-server/src/voice.ts")),
+      )?.[1]
+    } char`,
+    document: "docs/contract-v1.md",
+  },
+  {
     // Quoted in the same sentence as the total, and it was wrong for the same reason: the
     // total was gated and this was prose beside it.
     what: "lines in auth/router.ts",
