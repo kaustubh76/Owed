@@ -635,6 +635,30 @@ const positions = chain.map((gate) => steps.indexOf(gate));
 const ordered = positions.every(
   (position, index) => index === 0 || position < 0 || positions[index - 1] < position,
 );
+/**
+ * And the other direction, because `verify:graph` taught this repository to check both.
+ *
+ * A gate added to the workflow alone is the milder failure — it runs on every push, so it
+ * cannot be silently absent — but it means `pnpm verify` is no longer what a contributor
+ * can run before pushing, which is the only reason that script exists. The two steps that
+ * are legitimately extra are named here with their reasons rather than tolerated by
+ * pattern, so a third one has to be argued for.
+ */
+const EXTRA_STEPS = {
+  install: "dependencies, which the chain assumes are already there",
+  test: "run a second time under TZ=Pacific/Kiritimati; the chain runs it once",
+};
+const unexplained = [...new Set(steps)].filter(
+  (step) => !chain.includes(step) && !(step in EXTRA_STEPS),
+);
+want(
+  "and the workflow runs no gate the chain does not",
+  unexplained.length === 0,
+  unexplained.length === 0
+    ? `${Object.keys(EXTRA_STEPS).length} step(s) extra by design: ${Object.keys(EXTRA_STEPS).join(", ")}`
+    : `in CI only, so \`pnpm verify\` does not run it: ${unexplained.join(", ")}`,
+);
+
 want(
   "and in the same order",
   ordered,
