@@ -20,7 +20,12 @@ export function authorizationServerMetadata(config: AuthConfig): Record<string, 
     token_endpoint: `${issuer}/oauth/token`,
     response_types_supported: ["code"],
     response_modes_supported: ["query"],
-    grant_types_supported: ["authorization_code", "refresh_token", "client_credentials"],
+    // Only the two a household's add-on uses. Amazon's account-linking documentation says
+    // Alexa+ add-ons support **only** the Authorization Code Grant, and `client_credentials`
+    // was advertised here and implemented below until 2026-10-21 — see contract amendment
+    // D25. It issued a token for no household, which the tool gate then served the
+    // *configured* household's ledger. Nothing in this repository ever called it.
+    grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["none", "client_secret_basic"],
     scopes_supported: config.scopesSupported,

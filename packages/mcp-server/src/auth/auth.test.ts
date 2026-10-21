@@ -392,6 +392,99 @@ describe("access token claims, at the gate", () => {
   });
 });
 
+/**
+ * The grant Alexa+ does not have, and what it could read.
+ *
+ * Amazon's account-linking documentation says Alexa+ add-ons support **only** the
+ * Authorization Code Grant. This server advertised `client_credentials` in its discovery
+ * document and implemented it, taking a bare `client_id` — no secret, no consent, and both
+ * registered clients are public PKCE clients whose ids are *in* that document.
+ *
+ * It was not cosmetic. The token carried `household_id: ""` on the reasoning that a
+ * machine-to-machine token acts for no household; `/mcp` was mounted with no required
+ * scopes so it passed the gate; and the tool's dependencies were built as
+ * `householdFromAuth(...) ?? deps.householdId`, so "no household" resolved to *the*
+ * household. One `curl` read the recorded week — $47.00 recovered, $8.00 open, every
+ * promise, merchant, claim id and amount. Verified by hand before it was removed.
+ *
+ * Three defences now, one per test below, because the conformance checker cannot see any of
+ * this: it only requires that `authorization_code` is *present*, so every extra grant is
+ * invisible to it. Contract amendment D25.
+ */
+describe("the grant Alexa+ does not support", () => {
+  it("is not advertised", async () => {
+    const { body } = await json("/.well-known/oauth-authorization-server");
+
+    expect(body.grant_types_supported).toStrictEqual(["authorization_code", "refresh_token"]);
+  });
+
+  it("is refused by the token endpoint", async () => {
+    const response = await fetch(new URL("/oauth/token", harness.baseUrl), {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "client_credentials", client_id: CLIENT_ID }),
+    });
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error?: unknown; access_token?: unknown };
+    expect(body.error).toBe("unsupported_grant_type");
+    expect(body.access_token).toBeUndefined();
+  });
+
+  /**
+   * And the scope gate, which `requireOwedAuth` has implemented since it was written while
+   * nothing ever passed `requiredScopes` — so its `403 insufficient_scope` branch was dead
+   * code and a token bearing any other scope walked through. Minted by hand, because the
+   * grant that used to issue one is gone.
+   */
+  it("would not pass the scope gate even if something minted its token", async () => {
+    const service = await issueToken(
+      harness.authConfig,
+      "access",
+      { household_id: "", client_id: CLIENT_ID, scopes: ["mcp:service"] },
+      Math.floor(Date.now() / 1000),
+    );
+
+    const response = await fetch(harness.mcpUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        authorization: `Bearer ${service.token}`,
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  /**
+   * And if it got past the gate, it would still read nothing.
+   *
+   * The last defence is the one that holds without the other two: a token naming no
+   * household is entitled to no household's ledger, rather than to the configured one. The
+   * scopes here are the household's own, so this isolates the empty `household_id` — it is
+   * the `??` that is being tested, not the gate above.
+   */
+  it("reads an empty ledger rather than the configured household's", async () => {
+    const householdless = await issueToken(
+      harness.authConfig,
+      "access",
+      { household_id: "", client_id: CLIENT_ID, scopes: DEFAULT_SCOPES },
+      Math.floor(Date.now() / 1000),
+    );
+
+    const theirs = await callSummary(householdless.token);
+    const mine = await callSummary(await harness.link());
+
+    expect(theirs.recovered).toEqual(usd(0));
+    expect(theirs.items).toHaveLength(0);
+    // The pair is the point: without this the test passes against a server that reads
+    // nothing for anyone.
+    expect(mine.recovered).toEqual(usd(47));
+  });
+});
+
 const CLIENT_ID = "owed-simulated-home";
 
 /**

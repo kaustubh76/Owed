@@ -272,6 +272,46 @@ A `DECLINE` must carry a human escalation route.
 > why the guard is tested through an injected directory in
 > `tools/claimFileLyingAgent.test.ts`.
 
+> **Amended D25 — the grant Alexa+ does not support was a way into the ledger.** The
+> authorization server advertised `grant_types_supported: ["authorization_code",
+> "refresh_token", "client_credentials"]` and implemented all three. Amazon's account-linking
+> documentation says Alexa+ add-ons support **only** the Authorization Code Grant, and the
+> published conformance checker only requires that `authorization_code` is *present* — so
+> every extra grant was invisible to it, and `pnpm conformance` passed throughout.
+>
+> **What it could read.** `client_credentials` took a bare `client_id`, with no secret and no
+> consent, and both registered clients are public PKCE clients whose ids are in the discovery
+> document itself. It issued a token carrying `household_id: ""` and scope `mcp:service`, on
+> the reasoning that a machine-to-machine token acts for no household. Then three things
+> lined up: `/mcp` was mounted without `requiredScopes`, so the scope check was empty and
+> `mcp:service` passed; the tool's dependencies were built as `householdFromAuth(...) ??
+> deps.householdId`, so "no household" resolved to **the** household; and no test had ever
+> driven a `client_credentials` token against a tool. One `curl` returned the recorded week —
+> $47.00 recovered, $8.00 open, and every promise, merchant, claim id, amount and coverage.
+> Confirmed by hand before anything was changed.
+>
+> **Removed, not wired**, which is the opposite of this repository's rule for orphans. The
+> reasons are specific: the platform documents only the Authorization Code Grant, so this is
+> alignment and not a lost feature; nothing here ever requested the grant; and an unused
+> grant that hands out household-reading tokens is not an orphan waiting for a caller.
+> `refresh_token` stays — implemented, tested, and what a client with a person at a consent
+> screen would use.
+>
+> **Three defences now, because one was what failed.** The grant is gone from the metadata and
+> the token endpoint. `/mcp` demands `owed.read`, which wires `requireOwedAuth`'s
+> `403 insufficient_scope` branch — implemented since it was written and never once passed a
+> `requiredScopes`, so it was dead code. And the household fallback distinguishes "auth is
+> off, so there is no token" from "auth is on and the token named no household": the first
+> keeps the configured household, because `startHarness({ auth: false })` and a local
+> `pnpm demo` with auth off have no token at all and must still work; the second reads an
+> empty ledger. Each is pinned by its own test in `auth/auth.test.ts` and each mutation
+> reddens only that one.
+>
+> **What this says about the §10 row.** "Every tool call bound to a household id from the
+> token" was marked as holding because the id is read from the token's claims and never from
+> the request. That was true and incomplete: when the claim was empty it was read from
+> *configuration*. `docs/requirements.md` now says so.
+
 ---
 
 ## 5. Money

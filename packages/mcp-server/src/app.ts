@@ -22,7 +22,7 @@ import {
 } from "@owed/domain";
 import { extractPromises } from "@owed/extractor";
 import type { Express, NextFunction, Request, Response } from "express";
-import type { AuthConfig } from "./auth/config.js";
+import { type AuthConfig, SCOPES } from "./auth/config.js";
 import { householdFromAuth, requireOwedAuth, stripWwwAuthenticate } from "./auth/middleware.js";
 import { createAuthRouter } from "./auth/router.js";
 import { requireControlToken } from "./control/auth.js";
@@ -216,12 +216,30 @@ export function createOwedApp({
     app.use(stripWwwAuthenticate());
   }
 
+  /**
+   * The household a request acts for, and the one place that decides it.
+   *
+   * This used to read `householdFromAuth(ctx.authInfo) ?? deps.householdId`, and the
+   * fallback was the second half of a way into the ledger. `client_credentials` issued a
+   * token with `household_id: ""` — "acts for no household" — the gate was mounted with no
+   * required scopes so it passed, and `??` then resolved "no household" to *the* configured
+   * household. The grant is gone (see `auth/router.ts`) and the gate now demands a scope,
+   * which are the first two defences; this is the third, and the only one that still holds
+   * if someone mints a token by hand.
+   *
+   * The fallback itself is not a mistake and has to survive: with `auth` unset there is no
+   * token at all — `startHarness({ auth: false })` and a local `pnpm demo` with auth off —
+   * and the tools must still answer for the configured household. What must not survive is
+   * using it when auth *is* mounted, where a token naming no household is a token entitled
+   * to nothing. An empty household id reads an empty ledger rather than throwing, which is
+   * the same answer `auth.test.ts` already pins for a token naming a different household.
+   */
+  const householdFor = (authInfo: unknown): string =>
+    auth === undefined ? deps.householdId : (householdFromAuth(authInfo) ?? "");
+
   const node = toNodeHandler(
     createMcpHandler((ctx: { authInfo?: unknown; era?: "legacy" | "modern" }) =>
-      createOwedServer(
-        { ...deps, householdId: householdFromAuth(ctx.authInfo) ?? deps.householdId },
-        ctx.era ?? "legacy",
-      ),
+      createOwedServer({ ...deps, householdId: householdFor(ctx.authInfo) }, ctx.era ?? "legacy"),
     ),
   );
 
@@ -231,7 +249,17 @@ export function createOwedApp({
     // Auth runs ahead of the MCP handler: the conformance probe sends no `Accept`
     // header, and a server that validated `Accept` first would answer 406 where the
     // check demands exactly 401.
-    app.all("/mcp", requireOwedAuth({ config: auth.config }), forward(node));
+    // `owed.read` is demanded, not assumed. `requireOwedAuth` has implemented
+    // `requiredScopes` since it was written and nothing had ever passed it, so its
+    // `403 insufficient_scope` branch was dead code — and a token carrying some other
+    // scope entirely, as `client_credentials` did, walked straight through. Both
+    // registered clients grant `["owed.read", "owed.claim"]` by default, so this refuses
+    // nothing a household's add-on holds.
+    app.all(
+      "/mcp",
+      requireOwedAuth({ config: auth.config, requiredScopes: [SCOPES.read] }),
+      forward(node),
+    );
   } else {
     app.all("/mcp", forward(node));
   }

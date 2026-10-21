@@ -55,7 +55,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 |---|---|---|---|
 | OAuth 2.1 + PKCE (S256) for account linking | `auth/router.ts`, `auth/codes.ts` | Live discovery, and the brain walks a real authorization-code + PKCE link at boot. Then the guarantee rather than the flow: `auth/codes.test.ts` pins the verifier comparison, the RFC 7636 43–128 bounds at both ends and the `timingSafeEqual` length guard a malformed challenge hits; `auth.test.ts` drives the two attacks the mechanism exists for — a replayed code, and a valid code with the wrong `code_verifier` — through `/oauth/token` over real HTTP | **holds — tested on 2026-10-21.** The implementation was already correct; `codes.ts` had no test file, and nothing in the suite mentioned `code_verifier`, a replay or expiry. Advertising S256 and performing it are different claims |
 | Owed's own AS issues scoped tokens | `auth/`, `auth/tokens.ts` | `scopes_supported` on the protected-resource document, and three ways a token can be the wrong token, each refused on a real `tools/list`: expired, minted for another resource with this server's own signing key (the RFC 8707 binding), and a refresh token presented as an access token | **holds — tested on 2026-10-21.** The expiry test asserts an unexpired token with the same claims is accepted, so it cannot pass against a gate that refuses everything |
-| Every tool call bound to a household id **from the token** | `auth/middleware.ts` | The id is read from the verified token's claims, never from the request; `auth.test.ts` covers a token for another household | **holds** |
+| Every tool call bound to a household id **from the token** | `auth/middleware.ts`, `app.ts` | The id is read from the verified token's claims, never from the request. `auth.test.ts` covers a token for another household, a token naming **no** household, and a token whose scopes are not the household's | **holds — and did not, until 2026-10-21.** The id came from the claims *or, when they named none, from configuration*. A `client_credentials` grant this server advertised and implemented issued exactly such a token to anyone with a public client id, and it read the whole week. The grant is gone, `/mcp` demands `owed.read`, and a token naming no household now reads an empty ledger. Contract amendment D25 |
 | Minimum data — promises and evidence pointers, not mailboxes | `domain/src/evidence.ts` | Evidence carries a kind, an instant and a pointer; no message bodies are stored beyond the quoted sentence a promise was read from | **holds** |
 | Snapshots retained 30 days | — | Nothing implements retention | **not built** — persistence is off by default and the seeded week is rebuilt on every boot, so there is nothing to expire. Stated here rather than implied |
 | Evidence shared with merchants only as the pack the user approved | `tools/claimFile.ts` | `attach_evidence` defaults true and is the only path; the claim card shows what went with it | **holds** |
@@ -196,3 +196,22 @@ scrubber are both disabled. Reverting the controls to read `connected` reddens e
 two checks and leaves the two badge checks green. They are the gate's first four assertions
 that are not the happy path; every one before them waits for `.app__status--on` before
 asserting anything, which is why none of this was visible.
+
+**The Alexa+ track, checked against the platform rather than against this document.** Owed
+passes all five documented checks of the published `mcp-voice-simulator` conformance tool plus
+its one advisory check — Streamable HTTP, a bare 401 unauthenticated, no `WWW-Authenticate`,
+`S256` advertised, and `authorization_code` among the grants. That tool is the only
+machine-readable statement of the platform's MCP requirements available here, and it is
+deliberately narrow: it checks that `authorization_code` is **present**, never that it is the
+only grant. So the server advertised and implemented `client_credentials` — which Amazon's
+account-linking documentation excludes — and every gate stayed green while a bare client id
+read the household's ledger. Amendment D25 has the chain and the fix.
+
+The lesson is about the shape of the check rather than this one grant. A conformance tool
+written against published requirements can only test what the requirements say; "only the
+Authorization Code Grant" is prose in Amazon's documentation and an *absence* in the protocol,
+and an absence is what a presence check cannot see. Everything the platform forbids rather
+than requires is in that category, and the three now pinned by name in `auth.test.ts` — no
+dynamic client registration, no `WWW-Authenticate` on a 401, and no grant but the two a
+household's add-on uses — are pinned because a test was written for each, not because the
+checker asked.

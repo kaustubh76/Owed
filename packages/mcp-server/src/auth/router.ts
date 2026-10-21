@@ -309,28 +309,23 @@ export function createAuthRouter(options: AuthRouterOptions): Router {
       return;
     }
 
-    if (grantType === "client_credentials") {
-      const clientId = first(body.client_id);
-      const client = clientId === undefined ? undefined : findClient(config, clientId);
-      if (!client) {
-        oauthError(res, 401, "invalid_client", "Unknown client_id.");
-        return;
-      }
-      // Machine-to-machine tokens act for no household and carry no refresh token.
-      const { token, expiresInSeconds } = await issueToken(
-        config,
-        "access",
-        { household_id: "", client_id: client.client_id, scopes: ["mcp:service"] },
-        nowSeconds(),
-      );
-      res.json({
-        access_token: token,
-        token_type: "Bearer",
-        expires_in: expiresInSeconds,
-        scope: "mcp:service",
-      });
-      return;
-    }
+    /**
+     * `client_credentials` used to be here, and it was a way into the household's ledger.
+     *
+     * It took a bare `client_id` — no secret, no consent, and both registered clients are
+     * public PKCE clients whose ids are in the discovery document — and issued an access
+     * token with `household_id: ""` and scope `mcp:service`, on the reasoning that a
+     * machine-to-machine token acts for no household. `/mcp` was then mounted with no
+     * required scopes, so the token passed the gate, and the tool's dependencies were built
+     * as `householdFromAuth(...) ?? deps.householdId` — so "no household" resolved to *the*
+     * household. One `curl` read the week: $47.00 recovered, $8.00 open, every promise,
+     * merchant, claim id and amount.
+     *
+     * Amazon's account-linking documentation says Alexa+ add-ons support only the
+     * Authorization Code Grant, and nothing in this repository ever requested this grant, so
+     * removing it is the alignment rather than a lost feature. The fall-through below now
+     * answers `unsupported_grant_type`. Contract amendment D25.
+     */
 
     oauthError(
       res,
