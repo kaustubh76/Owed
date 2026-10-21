@@ -63,6 +63,11 @@ const EXPECTED = {
   open: money(opening.open),
   kept: String(opening.kept),
   settled: money(settlement.settled_amount),
+  // Every round's amount, so the line the script reads out — "Asked $10 · They offered $3
+  // · Countered $8 · Settled $8" — is asserted and not just its last figure.
+  steps: (settlement.rounds ?? []).map((round) =>
+    round.amount === undefined ? "" : money(round.amount),
+  ),
   canvas: { width: 768, height: 480 },
   utterance: "Alexa, what am I owed?",
 };
@@ -632,6 +637,22 @@ try {
     "claim shows the exchange",
     steps.map((step) => step.trim()).join(" "),
     "Asked They offered Countered Settled",
+  );
+
+  /**
+   * And what each step is *for*, which was prose.
+   *
+   * `docs/demo-script.md`'s climax reads out "Asked $10 · They offered $3 · Countered $8"
+   * — the whole point of the beat is that Owed opened at the ceiling the merchant's own
+   * policy allows and the merchant moved. Only the final settled figure was asserted, so
+   * the three that make it a negotiation were not. Read from the capture, like the ledger
+   * figures above, so the browser and the recording have to agree.
+   */
+  const stepAmounts = await card().locator(".claim__step-amount").allTextContents();
+  check(
+    "each round shows what was on the table",
+    stepAmounts.map((text) => text.trim()).join(" "),
+    EXPECTED.steps.join(" "),
   );
   check(
     "counter cites the merchant's own clause",

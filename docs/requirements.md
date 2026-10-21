@@ -80,12 +80,12 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 ```bash
 pnpm preflight        # a machine that can run it says so
 pnpm verify           # eight gates: graph, docs, build, lint, tests, eval, conformance, deploy
-pnpm verify:ui        # 61 browser assertions and four accessibility audits, needs Chrome
+pnpm verify:ui        # 62 browser assertions and four accessibility audits, needs Chrome
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
 Measured on an 8-core machine on 2026-10-21: `pnpm verify` 35s with every Docker-backed gate
-demanded (~80s on CI's two-core runner), `pnpm verify:ui` 14s (61 browser assertions, zero failures), 570 tests across 50
+demanded (~80s on CI's two-core runner), `pnpm verify:ui` 14s (62 browser assertions, zero failures), 570 tests across 50
 files with DynamoDB Local up — one skipped, a placeholder. The strongest local run is
 `OWED_REQUIRE_DYNAMO=1 OWED_REQUIRE_VALIDATORS=1 OWED_DOCKER_VALIDATORS=1 pnpm verify`, which
 refuses to skip the eight DynamoDB tests and runs `shellcheck`, `systemd-analyze` and
