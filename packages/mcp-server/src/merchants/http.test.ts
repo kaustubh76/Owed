@@ -1,4 +1,4 @@
-import type { Server } from "node:http";
+import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { SystemClock } from "@owed/core";
 import { createMerchantAgentsApp, STORYBOARD_MERCHANTS } from "@owed/merchant-agents";
@@ -268,5 +268,58 @@ describe("every shipped agent, against the published conformance suite", () => {
     expect(frames.some((frame) => frame.direction === "out")).toBe(true);
     expect(frames.some((frame) => frame.direction === "in")).toBe(true);
     expect(frames.every((frame) => frame.merchant === "Northwind Parcel")).toBe(true);
+  });
+});
+
+/**
+ * A merchant that accepts the connection and never answers.
+ *
+ * `respond` has had an explicit ceiling since it was written; the `connect` before it had
+ * none, so `initialize` fell back to the client SDK's 60s default. A merchant in this
+ * state — listening, accepting, silent — held `claim_file` open for a minute before a
+ * single round of negotiation had happened, and outlasted the brain's own untimed call,
+ * which gave up first and retried the whole tool call underneath it.
+ *
+ * The timeout is injected rather than waited out: proving a 5s ceiling by sleeping 5s in
+ * the suite would be the slowest test in the repository, and proving it by reading the
+ * constant would prove nothing about `connect` being given it.
+ */
+describe("a merchant that accepts the connection and goes quiet", () => {
+  let silent: Server;
+  let silentUrl: URL;
+
+  beforeAll(async () => {
+    silent = await new Promise<Server>((resolve) => {
+      // Never writes a response, never closes. The socket stays open and the request hangs.
+      const server = createServer(() => {});
+      server.listen(0, "127.0.0.1", () => resolve(server));
+    });
+    const { port } = silent.address() as AddressInfo;
+    silentUrl = new URL(`http://127.0.0.1:${port}`);
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve) => silent.close(() => resolve()));
+  });
+
+  it("gives up on the handshake instead of holding the claim", async () => {
+    const directory = httpMerchants({
+      baseUrl: silentUrl,
+      timeouts: { connectMs: 250 },
+    });
+    const respondent = required(
+      directory.respondentFor("Northwind Parcel", {
+        stated: { minor: 1200, currency: "USD" },
+        clause_title: "Delivery Guarantee 4.2",
+      }),
+    );
+
+    const started = Date.now();
+    await expect(respondent.respond([sampleClaim()])).rejects.toThrow();
+    const waited = Date.now() - started;
+
+    // Comfortably inside the SDK's 60s default, which is the behaviour being replaced.
+    expect(waited, `waited ${waited}ms`).toBeLessThan(5_000);
+    await directory.close?.();
   });
 });

@@ -226,6 +226,52 @@ DECLINE  { claim_id, reason, escalation_route }
 Max 3 rounds. Every message carries the claim id. Evidence is referenced, never re-sent.
 A `DECLINE` must carry a human escalation route.
 
+> **Amended D24 — a reply's money has to be money for this claim.** The three rules above are
+> everything the protocol said about an inbound reply, and `MoneySchema` enforces only that an
+> amount is three uppercase letters and an integer. Nothing required the currency to be the
+> one the claim asked for, or the quantity to be positive, and nothing checked.
+>
+> **What that cost.** The negotiator accepts on `standing.amount.minor >= willSettleAt.minor`,
+> comparing integers with no reference to the unit, so `SETTLE { minor: 1200, currency: "EUR" }`
+> cleared a USD 12.00 reservation. The session recorded the merchant's amount verbatim,
+> `fileClaim` wrote it into a `Settled` event, and the household was told "settled at twelve
+> euros". Then `summarize` — which folds settlements into a `zeroMoney(currency)` accumulator
+> whose `addMoney` throws on a mismatch — failed on the next read with `currency mismatch: USD
+> vs EUR`. Both read tools project through `summarize`, and the ledger is **append-only**, so
+> one reply from one merchant took `ledger_summary` and `promises_list` down permanently. A
+> negative amount was accepted the same way and read worse: "settled at minus eight dollars",
+> because `speakMoney` renders the sign.
+>
+> **Where the check went, and where it deliberately did not.** `session.ts` already refuses a
+> message type a merchant may not send and a reply carrying a different claim id; this is the
+> third check of the same kind, beside them, using the `sameCurrency` that has been in
+> `messages.ts` since the protocol was written — whose only caller was
+> `checkMerchantConformance`, which has no runtime caller at all. So the one currency check in
+> the package ran only in tests. `MoneySchema` is **not** narrowed: the protocol is published
+> and lifted out of this repository as it stands, and a receiver refusing what the wire format
+> permits is Owed's policy, which belongs where the claim it is compared against is in scope.
+>
+> **A violation no longer loses the claim.** `store.append` runs after the whole negotiation,
+> so a `ProtocolViolation` discarded everything before it — no `ClaimProposed`, no
+> `ClaimFiled`, nothing in the ledger, and the raw exception message spoken to the household
+> without ever passing `assertSpeakable`. That is the same failure `fileWithoutAgent` exists
+> to prevent for a merchant that cannot be reached, so `claim_file` now routes a misbehaving
+> merchant to the same place: the claim is filed on the `email` or `manual` route and the
+> household is told the agent "answered with something I couldn't use".
+>
+> **And the handshake has a ceiling.** `respond` has always had one; the `connect` before it
+> did not, so `initialize` fell back to the client SDK's 60s default and a merchant that
+> accepted the connection and went quiet held `claim_file` for a minute before a single round.
+> That also outlasted the brain's own untimed call, which gave up first and retried the whole
+> tool call underneath — deduplicated only incidentally, by `claim_file` being idempotent per
+> promise.
+>
+> None of this is reachable with the four reference agents: their MCP server declares
+> `outputSchema: RespondentMessageSchema` and `createMerchantAgent` returns that type, so they
+> are structurally honest. That is why eight conformance runs over real HTTP never saw it, and
+> why the guard is tested through an injected directory in
+> `tools/claimFileLyingAgent.test.ts`.
+
 ---
 
 ## 5. Money

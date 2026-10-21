@@ -27,6 +27,7 @@ import {
   type PromiseStatus,
 } from "@owed/domain";
 import { builtinPolicies, remedyFor } from "@owed/policy-library";
+import { ProtocolViolation } from "@owed/recourse-protocol";
 import * as z from "zod/v4";
 import type { OwedDeps } from "../deps.js";
 import type { ProtocolEra } from "../server.js";
@@ -363,7 +364,16 @@ async function handleClaimFile(
    * `claims_contact` there is somewhere to send it, and without one all Owed can honestly
    * do is record what is owed under the clause it found.
    */
-  if (respondent === undefined) {
+  /**
+   * Why the agent is not being used, which decides only the first clause of what is said.
+   *
+   * `unreachable` is the original case: nothing answered. `unusable` is a merchant that
+   * answered and broke the protocol — a reply in another currency, a negative amount, a
+   * different claim id. Both end the same way, because from the household's side they are
+   * the same situation: this merchant's agent cannot settle the claim, and the claim must
+   * still be recorded and still be pursuable by hand.
+   */
+  const recordWithoutAgent = async (why: "unreachable" | "unusable"): Promise<ClaimFileOutcome> => {
     const route = routeWithoutAgent(policy);
     const events = fileWithoutAgent({
       householdId: deps.householdId,
@@ -381,18 +391,24 @@ async function handleClaimFile(
 
     const after = await loadContext(deps);
     const filedWithoutAgent = after.state.claims.get(proposed.claim_id);
+    const because =
+      why === "unreachable"
+        ? `I can't reach ${view.promise.merchant}'s agent`
+        : `${view.promise.merchant}'s agent answered with something I couldn't use`;
     return {
       kind: "result",
       result: claimResult(
         filedWithoutAgent === undefined ? proposed : claimViewFor(filedWithoutAgent),
         assertSpeakable(
           route === "email"
-            ? `I can't reach ${view.promise.merchant}'s agent, so I've filed it against the address they publish for claims.`
-            : `I can't reach ${view.promise.merchant}'s agent, so I've recorded what they owe you under their own policy, ready for you to send.`,
+            ? `${because}, so I've filed it against the address they publish for claims.`
+            : `${because}, so I've recorded what they owe you under their own policy, ready for you to send.`,
         ),
       ),
     };
-  }
+  };
+
+  if (respondent === undefined) return recordWithoutAgent("unreachable");
 
   /**
    * What the ledger already knows about arguing with this merchant about this.
@@ -411,26 +427,43 @@ async function handleClaimFile(
     priorKey(view.promise.merchant, assessment.kind),
   );
 
-  const filed = await fileClaim({
-    householdId: deps.householdId,
-    claimId: proposed.claim_id,
-    promise: view.promise,
-    detection: assessment,
-    evidence: view.evidence,
-    bounds,
-    respondent,
-    ...(experience === undefined ? {} : { experience }),
-    proposedAt: context.now,
-    filedAt: context.now,
-    confirmedBy: "household",
-    idGen: deps.idGen,
-    // A live exchange happens now, not in the future. The seed spaces replies so a replay
-    // can catch a negotiation mid-flight; here that spacing would push the whole
-    // transcript past the clock and the claim would read as merely filed.
-    replyIntervalMs: 0,
-    ...(attachEvidence ? { attachedEvidenceIds: assessment.evidence_ids } : {}),
-    coverageStatement: coverageStatement(assessment.coverage),
-  });
+  /**
+   * A merchant that breaks the protocol must not take the claim down with it.
+   *
+   * `store.append` is below, after the whole negotiation, so until this `catch` existed a
+   * violation on round two discarded round one's offer as well — no `ClaimProposed`, no
+   * `ClaimFiled`, nothing in the ledger, and the household told by a raw exception message
+   * that had never passed `assertSpeakable`. That is precisely the failure
+   * `fileWithoutAgent` was written to fix for the unreachable case, reproduced for the
+   * misbehaving one, and it is why the fix routes to the same place rather than inventing
+   * a second kind of half-filed claim.
+   */
+  let filed: Awaited<ReturnType<typeof fileClaim>>;
+  try {
+    filed = await fileClaim({
+      householdId: deps.householdId,
+      claimId: proposed.claim_id,
+      promise: view.promise,
+      detection: assessment,
+      evidence: view.evidence,
+      bounds,
+      respondent,
+      ...(experience === undefined ? {} : { experience }),
+      proposedAt: context.now,
+      filedAt: context.now,
+      confirmedBy: "household",
+      idGen: deps.idGen,
+      // A live exchange happens now, not in the future. The seed spaces replies so a replay
+      // can catch a negotiation mid-flight; here that spacing would push the whole
+      // transcript past the clock and the claim would read as merely filed.
+      replyIntervalMs: 0,
+      ...(attachEvidence ? { attachedEvidenceIds: assessment.evidence_ids } : {}),
+      coverageStatement: coverageStatement(assessment.coverage),
+    });
+  } catch (error) {
+    if (error instanceof ProtocolViolation) return recordWithoutAgent("unusable");
+    throw error;
+  }
 
   await deps.store.append(filed.events);
 

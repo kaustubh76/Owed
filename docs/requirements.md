@@ -61,7 +61,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 | Evidence shared with merchants only as the pack the user approved | `tools/claimFile.ts` | `attach_evidence` defaults true and is the only path; the claim card shows what went with it | **holds** |
 | No third-party analytics | — | No analytics dependency exists | **holds** |
 | Evidence source down → cannot escalate to `Breached`, and the household is told what was not watched | `core/src/breach/` | The coverage gate: below `BREACH_COVERAGE_MIN` the verdict is `Suspected`, never `Breached`, and the card draws the gaps | **holds differently** — §10 named a `Degraded` regime; the guarantee is delivered by coverage accounting instead, and the word appears nowhere in the code |
-| Merchant agent unreachable → claim falls back to email route with the same pack | `core/src/negotiation/filing.ts` | `fileWithoutAgent` emits `ClaimProposed` + `ClaimFiled` with route `email` where the policy publishes a contact, else `manual`; `claimFileNoAgent.test.ts` drives it against a directory that cannot answer | **holds** |
+| Merchant agent unreachable → claim falls back to email route with the same pack | `core/src/negotiation/filing.ts` | `fileWithoutAgent` emits `ClaimProposed` + `ClaimFiled` with route `email` where the policy publishes a contact, else `manual`; `claimFileNoAgent.test.ts` drives it against a directory that cannot answer | **holds — and extended on 2026-10-21.** A merchant that *answers unusably* now routes to the same place. §10 named the absent merchant; the reachable-but-lying one discarded the claim entirely, which is the failure this row exists to prevent. `claimFileLyingAgent.test.ts` drives it |
 | Bedrock unavailable → ledger and tools stay readable | `mcp-server/src/app.ts` | Stronger than required: the server imports `@owed/extractor` only. `extractor-bedrock` is not on the request path at all, so Bedrock cannot affect it | **holds** |
 | One negotiation per promise | `tools/claimFile.ts` | `findClaimForPromise` returns the existing claim rather than filing a second; `claim_file` is idempotent per promise | **holds** |
 | Three-round cap | `domain/src/coverage.ts` | `MAX_NEGOTIATION_ROUNDS = 3`, read by the negotiator; the eval's median is 2 rounds | **holds** |
@@ -70,7 +70,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 | Append-only ledger | `core/src/ledger/` | The DynamoDB adapter's whole guarantee is one conditional write plus an atomic counter; "never rewrites an event that is already there" is a test | **holds** |
 | Every claim message carries its claim id | `recourse-protocol/src/messages.ts` | `claim_id` is required on every message in the union | **holds differently** — §10 said "signed with claim id"; the id is carried on every message, not cryptographically signed |
 | The inspector renders the exact wire messages | `apps/home/` | Frames are tapped at the transport, not reconstructed; `verify:ui` reads them off the panel | **holds** |
-| Useful read-only if every external source is offline | `tools/reads.ts`, `tools/ledgerSummary.ts` | Neither reads any merchant or performs any fetch — the read tools project the ledger and nothing else | **holds** |
+| Useful read-only if every external source is offline | `tools/reads.ts`, `tools/ledgerSummary.ts` | Neither reads any merchant or performs any fetch — the read tools project the ledger and nothing else | **holds — and was false for a different reason until 2026-10-21.** Offline was never the threat to this row. A merchant that *answered*, with a settlement in another currency, wrote an event `summarize` cannot fold; both read tools project through it, and the ledger is append-only, so `ledger_summary` and `promises_list` failed permanently from the next call. Not reading an external source is not the same as being unbreakable by one. See contract amendment D24 |
 
 ---
 
@@ -144,3 +144,28 @@ the right ones go red — five mutations, restored from backup copies rather tha
 
 The last three going red one at a time is the useful part: it says each test discriminates the
 claim in its own row rather than the general fact that the gate works.
+
+One more row was true in the way that matters least. "Useful read-only if every external
+source is offline" was written about *absence* — no merchant reachable, no fetch performed —
+and the read tools genuinely perform none. The threat was never absence. A merchant agent that
+answered, in a currency nobody asked for, got its amount accepted by a negotiator comparing
+`minor` integers without reference to the unit, written to an append-only ledger as a `Settled`
+event, and from the next read onward `summarize` threw `currency mismatch: USD vs EUR` — taking
+both read tools out for good, from one reply, unrecoverably.
+
+Three things about how that survived are worth more than the fix. The **four reference agents
+cannot produce such a reply**: their MCP server declares `outputSchema:
+RespondentMessageSchema`, so eight conformance runs over real HTTP were eight runs against
+agents that are structurally honest. The package **ships a conformance checker that includes
+the one currency check in the repository** — `sameCurrency`, in `messages.ts` since the
+protocol was written — and `checkMerchantConformance` has **no runtime caller at all**, so that
+check only ever ran in tests. And `session.ts` already refused a reply carrying someone else's
+claim id, two lines from where the currency was not checked: the shape of the guard was there,
+with one of its three cases missing.
+
+The fix is in all three places that were wrong, each mutation-proved separately — the check
+itself (removing it reddens the three currency tests and nothing else), the recovery (removing
+it loses the claim and speaks the raw exception), and the handshake ceiling (removing it runs
+to the SDK's 60s default). What makes it safe to make this change three days from a deadline is
+`verify:eval`: all five published reports re-derived byte-identically afterwards, which is
+1,620 simulated negotiations confirming no honest merchant was newly refused.

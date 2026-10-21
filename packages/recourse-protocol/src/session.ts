@@ -9,6 +9,7 @@ import {
   type RecourseMessage,
   RecourseMessageSchema,
   type RespondentMessage,
+  sameCurrency,
 } from "./messages.js";
 
 /**
@@ -76,6 +77,51 @@ function expectValid(message: unknown, from: string): RecourseMessage {
  * say is rejected rather than tolerated. That is what lets the same code drive both
  * the in-process evaluation and the real agents over HTTP.
  */
+/**
+ * A reply's money has to be money for *this* claim.
+ *
+ * The two checks above it refuse a message type a merchant may not send and a reply
+ * carrying someone else's claim id. This is the third of the same kind and it was missing,
+ * which mattered more than it looks: `MoneySchema` validates the shape of an amount — three
+ * uppercase letters, an integer — and says nothing about whether it is the currency anyone
+ * asked for or a quantity that makes sense.
+ *
+ * What that cost, before this existed. The negotiator accepts on `standing.amount.minor >=
+ * willSettleAt.minor`, comparing integers with no reference to the unit, so a 1200-minor
+ * offer in any currency cleared a 1200-minor reservation in USD. The session recorded the
+ * merchant's `amount` verbatim, `fileClaim` wrote it into a `Settled` event, and the
+ * household was told "settled at twelve euros". Then it got worse: `summarize` folds
+ * settlements into a `zeroMoney(currency)` accumulator and `addMoney` throws on a mismatch,
+ * so from the next read onward `ledger_summary` and `promises_list` both failed with
+ * `currency mismatch: USD vs EUR`. The ledger is append-only, so there was no way back —
+ * one reply from one merchant took two of the six tools down permanently.
+ *
+ * A negative amount went the same way and read worse: accepted, recorded, and spoken as
+ * "settled at minus eight dollars", because `speakMoney` renders the sign.
+ *
+ * `sameCurrency` is used here rather than reimplemented — it has existed in `messages.ts`
+ * since the protocol was written, with `checkMerchantConformance` as its only caller, and
+ * that suite has no runtime caller at all. So the one currency check in the package ran
+ * only in tests.
+ *
+ * This is deliberately *not* a narrowing of `MoneySchema`. The protocol is published and
+ * lifted out of this repository as it stands; a receiver refusing what the wire format
+ * permits is Owed's policy, and policy belongs at the session boundary where the claim it
+ * is being compared against is in scope.
+ */
+function assertAnswersTheClaim(reply: RespondentMessage, claim: ClaimMessage): void {
+  if (!("amount" in reply)) return;
+
+  if (!sameCurrency(reply.amount, claim.ask)) {
+    throw new ProtocolViolation(
+      `reply is in ${reply.amount.currency} and the claim is in ${claim.ask.currency}`,
+    );
+  }
+  if (reply.amount.minor < 0) {
+    throw new ProtocolViolation(`reply names a negative amount in ${reply.amount.currency}`);
+  }
+}
+
 export async function runSession(
   claimant: Claimant,
   respondent: Respondent,
@@ -116,6 +162,7 @@ export async function runSession(
     if (reply.claim_id !== claim.claim_id) {
       throw new ProtocolViolation("reply carries a different claim id");
     }
+    assertAnswersTheClaim(reply, claim);
     transcript.push(reply);
 
     if (reply.type === "SETTLE") return finish("settled", "the merchant settled", reply.amount);

@@ -14,6 +14,12 @@ export interface HttpMerchantsOptions {
   baseUrl: URL;
   /** Where the exchange is recorded so the inspector can show it. */
   log?: RecourseLog;
+  /**
+   * Ceilings, overridable so a test can prove them without waiting them out.
+   *
+   * Defaults are the two constants below, which are what the server runs with.
+   */
+  timeouts?: { connectMs?: number; respondMs?: number };
 }
 
 /**
@@ -34,7 +40,24 @@ export interface HttpMerchantsOptions {
  */
 const RESPOND_TIMEOUT_MS = 10_000;
 
-export function httpMerchants({ baseUrl, log }: HttpMerchantsOptions): MerchantDirectory {
+/**
+ * How long the handshake before the first round may take.
+ *
+ * The same argument as `RESPOND_TIMEOUT_MS`, which had an explicit ceiling while the
+ * `connect` that precedes it had none — so the SDK's 60s default applied to `initialize`,
+ * and a merchant that accepted the TCP connection and never answered held `claim_file`
+ * open for a minute before a single round had happened.
+ *
+ * Sixty seconds is also longer than the brain's own untimed `callTool`, which falls back to
+ * the same default: the brain gave up first, invalidated its session and retried the whole
+ * tool call while the server was still waiting on the handshake. Nothing deduplicated that;
+ * `claim_file` being idempotent per promise is the only reason it was not a second claim.
+ */
+const CONNECT_TIMEOUT_MS = 5_000;
+
+export function httpMerchants({ baseUrl, log, timeouts }: HttpMerchantsOptions): MerchantDirectory {
+  const connectMs = timeouts?.connectMs ?? CONNECT_TIMEOUT_MS;
+  const respondMs = timeouts?.respondMs ?? RESPOND_TIMEOUT_MS;
   const clients = new Map<string, Promise<Client>>();
 
   async function connect(merchant: string): Promise<Client> {
@@ -48,7 +71,7 @@ export function httpMerchants({ baseUrl, log }: HttpMerchantsOptions): MerchantD
     };
 
     const client = new Client({ name: "owed-recourse", version: "0.1.0" });
-    await client.connect(transport);
+    await client.connect(transport, { timeout: connectMs });
 
     const installed = transport.onmessage?.bind(transport);
     transport.onmessage = (message) => {
@@ -148,7 +171,7 @@ export function httpMerchants({ baseUrl, log }: HttpMerchantsOptions): MerchantD
               // An explicit ceiling. Without one the client SDK's 60s default applies per
               // request, and a negotiation runs up to three rounds — so one unresponsive
               // merchant could hold a claim open for minutes while the household waited.
-              { timeout: RESPOND_TIMEOUT_MS },
+              { timeout: respondMs },
             );
           } catch (error) {
             // A failed call means this session is suspect, not just this request. Dropping
