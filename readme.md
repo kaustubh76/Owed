@@ -635,6 +635,33 @@ measured to do rather than what they are assumed to do: a missing interpreter ex
 every machine that is not the target box, while a directive systemd cannot parse exits **0**
 and only says so on stderr.
 
+**With Docker, a Mac can run all three too.** `systemd-analyze` cannot meaningfully exist on
+macOS, so the one directory the deployment is actually edited from had nothing local checking
+it:
+
+```bash
+OWED_DOCKER_VALIDATORS=1 pnpm verify:deploy   # shellcheck, systemd-analyze, caddy validate
+```
+
+It reports which validators ran in a container rather than natively, because "ok shellcheck —
+clean" on a machine with no shellcheck is a true statement about the script and a misleading
+one about the environment. Off by default: pulling a few hundred megabytes of images is not
+something `pnpm verify` should do to someone who ran it to look at the tests. Each route is
+proved by a mutation — an invalid `RestartSec`, an unclosed Caddy block, a shell syntax error
+— and all three fail as they should.
+
+**And the DynamoDB suite, which is the AWS Builder evidence, runs locally the same way:**
+
+```bash
+docker run -d --name owed-ddb -p 8000:8000 amazon/dynamodb-local
+OWED_REQUIRE_DYNAMO=1 pnpm test
+```
+
+Eight tests that otherwise only ever ran in CI: the conditional write that makes the log
+append-only, the atomic counter that numbers events across calls, concurrent appends taking
+disjoint sequence numbers, and a replay that matches the memory store event for event.
+`OWED_REQUIRE_DYNAMO=1` turns an unreachable endpoint into a failure instead of a silent skip.
+
 The demo runs on **scenario time**, not wall time: the server holds a fixed clock parked
 in the seeded week and answers truthfully for wherever that clock is moved to.
 

@@ -31,7 +31,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { readdir } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -39,6 +39,8 @@ const DEPLOY = join(REPO_ROOT, "deploy");
 
 const failures = [];
 const skipped = [];
+/** Validators that ran in a container rather than natively, so the report can say so. */
+const viaDocker = new Set();
 
 /** Set in CI, where all three validators are supposed to be on the box. */
 const REQUIRED = process.env.OWED_REQUIRE_VALIDATORS === "1";
@@ -57,9 +59,89 @@ function want(label, ok, detail) {
 }
 
 /** A tool that may not be installed. Absent is reported, not failed. */
+/**
+ * The three validators in Linux containers, for a machine that has none of them.
+ *
+ * All three are absent on macOS — `systemd-analyze` cannot meaningfully exist there — so this
+ * gate has always reported them as "not run here" and pointed at CI. That left the four unit
+ * files and the Caddyfile checked by nothing local, on the one machine the deployment is
+ * actually edited from.
+ *
+ * Verified by hand before being wired in: `shellcheck --severity=warning` clean on both
+ * scripts, `caddy validate` reporting "Valid configuration", and `systemd-analyze verify`
+ * (systemd 257) exiting 0 with no findings on all four units.
+ *
+ * **Opt-in, via `OWED_DOCKER_VALIDATORS=1`.** Pulling a few hundred megabytes of images is
+ * not something `pnpm verify` should do to a judge who ran it to look at the tests, and the
+ * systemd route installs a package inside the container, which needs a network. So the
+ * default behaviour of this gate is exactly what it was.
+ *
+ * It can only ever upgrade a skip into a real check: if Docker is missing or a container
+ * fails to start, the validator is recorded as absent precisely as before.
+ */
+const DOCKER = process.env.OWED_DOCKER_VALIDATORS === "1";
+
+const CONTAINERS = {
+  shellcheck: (args) => [
+    "run",
+    "--rm",
+    "-v",
+    `${REPO_ROOT}:/w:ro`,
+    "-w",
+    "/w",
+    "koalaman/shellcheck:stable",
+    ...args.map((arg) => relative(REPO_ROOT, arg) || arg),
+  ],
+  caddy: (args) => [
+    "run",
+    "--rm",
+    "-v",
+    `${DEPLOY}:/d:ro`,
+    "caddy:latest",
+    "caddy",
+    ...args.map((arg) => (arg.startsWith(DEPLOY) ? `/d/${relative(DEPLOY, arg)}` : arg)),
+  ],
+  // The one that needs a package installed, and the stubs its units reference: a unit whose
+  // ExecStart interpreter is missing is reported, and in a bare container every one of them
+  // is. Stubbing them leaves real findings as the only output.
+  "systemd-analyze": (args) => [
+    "run",
+    "--rm",
+    "-v",
+    `${DEPLOY}:/d:ro`,
+    "debian:stable-slim",
+    "sh",
+    "-c",
+    "export DEBIAN_FRONTEND=noninteractive; " +
+      "apt-get -qq update >/dev/null 2>&1 && apt-get -qq install -y systemd >/dev/null 2>&1; " +
+      'mkdir -p /usr/local/bin; for b in node caddy; do printf "#!/bin/sh\n" > /usr/local/bin/$b; ' +
+      "chmod +x /usr/local/bin/$b; done; " +
+      "id -u owed >/dev/null 2>&1 || useradd -r -s /usr/sbin/nologin owed 2>/dev/null; " +
+      `systemd-analyze ${args
+        .map((arg) => (arg.startsWith(DEPLOY) ? `/d/${relative(DEPLOY, arg)}` : arg))
+        .join(" ")}`,
+  ],
+};
+
+function inDocker(name, args) {
+  const build = CONTAINERS[name];
+  if (build === undefined) return undefined;
+  const probe = spawnSync("docker", ["version", "--format", "{{.Server.Version}}"], {
+    stdio: "ignore",
+  });
+  if (probe.error !== undefined || probe.status !== 0) return undefined;
+
+  const result = spawnSync("docker", build(args), { encoding: "utf8" });
+  if (result.error !== undefined) return undefined;
+  viaDocker.add(name);
+  return result;
+}
+
 function tool(name, args) {
   const probe = spawnSync(name, ["--version"], { stdio: "ignore" });
   if (probe.error !== undefined || probe.status !== 0) {
+    const containerised = DOCKER ? inDocker(name, args) : undefined;
+    if (containerised !== undefined) return containerised;
     skipped.push(name);
     return undefined;
   }
@@ -289,7 +371,22 @@ if (skipped.length > 0) {
     `\n  ${REQUIRED ? "FAIL" : "not run here"} (binary absent): ${absent}\n` +
       "  The structural checks above do not depend on them. CI runs all three: its runners\n" +
       "  carry shellcheck and systemd-analyze, and the workflow lifts caddy out of the\n" +
-      "  official image before this step.\n",
+      "  official image before this step.\n" +
+      (DOCKER ? "" : "  `OWED_DOCKER_VALIDATORS=1` runs all three in Linux containers instead.\n"),
+  );
+}
+
+/**
+ * Which validators ran in a container, said out loud.
+ *
+ * Without this the lines above read "ok shellcheck bootstrap.sh — clean" on a machine with no
+ * shellcheck on it, which is a true statement about the script and a misleading one about the
+ * environment. The point of this gate is that the deployment is checked by something; the
+ * point of this line is that a reader knows by what.
+ */
+if (viaDocker.size > 0) {
+  process.stdout.write(
+    `\n  ran in Linux containers, not natively: ${[...viaDocker].sort().join(", ")}\n`,
   );
 }
 

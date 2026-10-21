@@ -12,6 +12,27 @@ judge the demo — `pnpm demo` is unchanged and still needs no account and no ke
 | `iam-policy-phase1.json` | Least privilege for the Phase 1 smoke test: the ledger table and nothing else. |
 | `create-cli-user.sh` | Creates that policy, a user, and an access key — **run it in AWS CloudShell**, which is already authenticated as the console user and so needs no key to create one. Self-contained, because CloudShell has no checkout; its inline policy is the same statement as the JSON above, except that it substitutes the account it discovers via `sts:GetCallerIdentity` where the file carries an `AWS_ACCOUNT_ID` placeholder. Change one, change both. |
 
+## Checking this directory without a Linux box
+
+`pnpm verify:deploy` runs 34 structural checks on the four units and the Caddyfile on any
+machine. The three real validators need Linux — `systemd-analyze` cannot meaningfully exist on
+macOS — so on a Mac they report as skipped and only CI ever ran them, which left this
+directory the one place edited locally and checked remotely.
+
+```bash
+OWED_DOCKER_VALIDATORS=1 pnpm verify:deploy
+```
+
+That runs `shellcheck --severity=warning` on both scripts, `systemd-analyze verify` on all four
+units, and `caddy validate` on the Caddyfile, each in a Linux container, and says which ran in
+a container rather than natively. Measured on systemd 257: clean, exit 0, no findings — once
+`node`, `caddy` and the `owed` user exist in the container, which the gate stubs, because a
+unit whose `ExecStart` interpreter is missing is reported and in a bare container every one of
+them is.
+
+Off by default: it pulls a few hundred megabytes of images and the systemd route installs a
+package inside the container, so `pnpm verify` behaves exactly as it did.
+
 ## Two things that will look like bugs and are not
 
 **`dynamodb:TransactWriteItems` is absent from the IAM policy on purpose.** DynamoDB's
