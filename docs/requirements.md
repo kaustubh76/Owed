@@ -30,7 +30,7 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 | Six tools | `mcp-server/src/tools/` | `tools/list` over a real client against the booted server returns exactly the six frozen names | **holds** |
 | Three `ui://` views | `mcp-server/src/views.ts` | `verify:docs` compares the contract's table to the registered tools; `verify:ui` reads all three back over the wire | **holds** |
 | Elicitation | `tools/claimFile.ts` | `alexa/contract.test.ts` drives both branches — the declared-capability one and the explicit `confirm` | **holds** |
-| OAuth 2.1 + PKCE | `mcp-server/src/auth/` | Live against the booted server: `code_challenge_methods_supported: ["S256"]`, and no `registration_endpoint` | **holds** |
+| OAuth 2.1 + PKCE | `mcp-server/src/auth/` | Live against the booted server: `code_challenge_methods_supported: ["S256"]`, and no `registration_endpoint`. The mechanism itself is driven, not only advertised — see the §10 row below | **holds** |
 | Conformance passing | `scripts/conformance.mjs` | `pnpm conformance`, in `pnpm verify`, against a real booted server | **holds** |
 | Recourse protocol v1 and negotiator | `packages/recourse-protocol/`, `core/src/negotiation/` | Property tests plus the recorded wire transcript the inspector renders | **holds** |
 | **Three** merchant agents | `packages/merchant-agents/` | Live: `GET /merchants` on 3941 returns **four** — Northwind Parcel, Meridian Rides, Alder Home Services, Calder & Co. | **exceeded** — four, not three |
@@ -53,8 +53,8 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 
 | Property | Where | Checked by | Verdict |
 |---|---|---|---|
-| OAuth 2.1 + PKCE (S256) for account linking | `auth/router.ts` | Live discovery, and the brain walks a real authorization-code + PKCE link at boot | **holds** |
-| Owed's own AS issues scoped tokens | `auth/` | `scopes_supported` on the protected-resource document; `auth.test.ts` | **holds** |
+| OAuth 2.1 + PKCE (S256) for account linking | `auth/router.ts`, `auth/codes.ts` | Live discovery, and the brain walks a real authorization-code + PKCE link at boot. Then the guarantee rather than the flow: `auth/codes.test.ts` pins the verifier comparison, the RFC 7636 43–128 bounds at both ends and the `timingSafeEqual` length guard a malformed challenge hits; `auth.test.ts` drives the two attacks the mechanism exists for — a replayed code, and a valid code with the wrong `code_verifier` — through `/oauth/token` over real HTTP | **holds — tested on 2026-10-21.** The implementation was already correct; `codes.ts` had no test file, and nothing in the suite mentioned `code_verifier`, a replay or expiry. Advertising S256 and performing it are different claims |
+| Owed's own AS issues scoped tokens | `auth/`, `auth/tokens.ts` | `scopes_supported` on the protected-resource document, and three ways a token can be the wrong token, each refused on a real `tools/list`: expired, minted for another resource with this server's own signing key (the RFC 8707 binding), and a refresh token presented as an access token | **holds — tested on 2026-10-21.** The expiry test asserts an unexpired token with the same claims is accepted, so it cannot pass against a gate that refuses everything |
 | Every tool call bound to a household id **from the token** | `auth/middleware.ts` | The id is read from the verified token's claims, never from the request; `auth.test.ts` covers a token for another household | **holds** |
 | Minimum data — promises and evidence pointers, not mailboxes | `domain/src/evidence.ts` | Evidence carries a kind, an instant and a pointer; no message bodies are stored beyond the quoted sentence a promise was read from | **holds** |
 | Snapshots retained 30 days | — | Nothing implements retention | **not built** — persistence is off by default and the seeded week is rebuilt on every boot, so there is nothing to expire. Stated here rather than implied |
@@ -79,12 +79,16 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 ```bash
 pnpm preflight        # a machine that can run it says so
 pnpm verify           # five gates: graph, docs, build, lint, tests, conformance, deploy
-pnpm verify:ui        # 52 browser assertions and four accessibility audits, needs Chrome
+pnpm verify:ui        # 55 browser assertions and four accessibility audits, needs Chrome
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
-Measured on an 8-core machine: `pnpm verify` 12s, `pnpm verify:ui` 10–18s (52 browser
-assertions, zero failures), 483 tests across 46 files.
+Measured on an 8-core machine on 2026-10-21: `pnpm verify` 31s with every Docker-backed gate
+demanded, `pnpm verify:ui` 12s (55 browser assertions, zero failures), 562 tests across 49
+files with DynamoDB Local up — one skipped, a placeholder. The strongest local run is
+`OWED_REQUIRE_DYNAMO=1 OWED_REQUIRE_VALIDATORS=1 OWED_DOCKER_VALIDATORS=1 pnpm verify`, which
+refuses to skip the eight DynamoDB tests and runs `shellcheck`, `systemd-analyze` and
+`caddy validate` in Linux containers rather than reporting them as unavailable.
 
 The two rows marked **exceeded** are expansions of a pre-registered quantity, which is
 recorded as such in readme §10 rather than treated as a free upgrade. The two marked **holds
@@ -114,3 +118,29 @@ information, and it is also the one way a live request could move the figures th
 on. Three tests hold that line: `messages.test.ts` and `evidence.test.ts` each assert
 `recovered`, `open` and `kept` across a live post, and `verify:ui` reads three of them out of a
 browser.
+
+One more row turned out to be a different kind of gap, and it is the kind this walk is worse
+at finding. The two OAuth rows above were **true and untested**. `auth.test.ts` was thorough
+about the shape of the authorization server — S256 advertised, no dynamic registration,
+metadata at both RFC 9728 locations, unknown clients and unregistered redirect URIs refused, a
+full authorization-code flow walked, refresh exchange, household scoping — and none of it
+touched what PKCE is *for*. `packages/mcp-server/src/auth/codes.ts`, which holds all three
+guarantees (the verifier comparison, single-use redemption, five-minute expiry), had no test
+file at all, and the string `code_verifier` appeared in exactly two places in the repository —
+the helper that sends it and the endpoint that reads it — and in no test. Reading the implementation first found no bug, which is the only reason
+this is a coverage note and not a security fix.
+
+Seventeen new tests close it, and each was proved by breaking the code it guards and watching
+the right ones go red — five mutations, restored from backup copies rather than
+`git checkout`:
+
+| mutation | what went red |
+|---|---|
+| `verifyCodeChallenge` returns `true` unconditionally | 6 — four unit, and both attack tests at the endpoint |
+| `redeem` stops deleting the code | 4 — the replay test at both levels, the expired-code-is-spent test, and the failed exchange that must burn the code anyway |
+| `verifyToken` stops checking `audience` | the RFC 8707 row's test, alone |
+| `verifyToken` forgives an expiry a century old | the expiry test, alone |
+| `verifyToken` stops distinguishing `kind` | the refresh-as-access test, alone |
+
+The last three going red one at a time is the useful part: it says each test discriminates the
+claim in its own row rather than the general fact that the gate works.
