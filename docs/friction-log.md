@@ -430,9 +430,16 @@ the fourth failed on a clean checkout with `TS2307: Cannot find module '@owed/ui
 from a tree that built fine on two other machines, with no change to any file involved.
 Nothing in the output suggests a missing reference; `TS2307` reads as a typo or a bad path.
 
-**Workaround.** Add the reference, then assert the whole graph: a 147-line script checks that
+**Workaround.** Add the reference, then assert the whole graph: a 352-line script checks that
 every `@owed/*` import is both declared in `dependencies` and present in `references`, and
 runs before the build it protects.
+
+It grew because one direction was not enough. A dependency *declared* and never imported was
+invisible to it, and two were sitting in the tree — each adding a `references` entry, which is
+a build-order edge, which is the one thing this script exists to get right. It now also
+refuses a cycle, pins which packages `readme.md` §15 claims can be lifted out and which are
+blocked by the private domain package, and checks that every publishable package still has a
+licence, a `files` list, `exports` and a README.
 
 **Suggestion.** When a resolved module belongs to a composite project that is not in the
 importer's `references`, say so. The compiler knows both facts at that moment, and the

@@ -1,3 +1,4 @@
+import { MoneySchema as ProtocolMoneySchema } from "@owed/recourse-protocol";
 import * as z from "zod/v4";
 
 /**
@@ -11,9 +12,25 @@ import * as z from "zod/v4";
  * own — the breach kinds are redeclared here and interoperate structurally.
  */
 
-export const MoneySchema = z.object({
+/**
+ * The protocol's money, with the one constraint a published remedy adds.
+ *
+ * This package declared `@owed/recourse-protocol` as a dependency and then defined its own
+ * `MoneySchema` anyway, which made `Money` a third definition in a workspace that needs two:
+ * `@owed/domain` has one for internal use and is `private`, and the protocol has one because
+ * it is published with no dependencies of its own. A third copy in a package that already
+ * depends on the protocol was the one that could not be justified.
+ *
+ * Extended rather than re-exported, because the two were **not** the same shape and the
+ * difference is worth keeping: the protocol permits a negative `minor` — a counter-offer or
+ * an adjustment can legitimately be negative on the wire — while a figure a merchant
+ * *publishes* as a remedy cannot be. Swapping in the protocol's schema unchanged would have
+ * quietly widened this package's validation, so the stricter rule is stated here instead of
+ * being lost. Verified by comparing the two schemas against the same inputs rather than by
+ * reading them: `{ minor: -1 }` parses as protocol money and is refused as a published remedy.
+ */
+export const MoneySchema = ProtocolMoneySchema.extend({
   minor: z.number().int().nonnegative(),
-  currency: z.string().regex(/^[A-Z]{3}$/),
 });
 export type Money = z.infer<typeof MoneySchema>;
 

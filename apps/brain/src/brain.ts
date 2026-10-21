@@ -1,3 +1,4 @@
+import type { PromiseStatus } from "@owed/domain";
 import type { CommitmentEvent } from "@owed/mcp-server";
 import { routeUtterance } from "./intents.js";
 import type { ProactiveMessage, ToolTrace, TurnMessage } from "./protocol.js";
@@ -6,6 +7,20 @@ import type { SessionHandle } from "./session.js";
 /** What Owed says when it has no tool for what was asked. */
 const FALLBACK =
   "I can tell you what you're owed, what's still open, and why I did or didn't file a claim.";
+
+/**
+ * The two statuses the brain routes on, typed by the schema that declares them.
+ *
+ * These were bare string literals compared against an untyped `data.status`, which is the
+ * same failure as a label map keyed by `string`: `"Breeched"` compiled, the branch never
+ * fired, and nothing said so. `@owed/domain` was already a declared dependency of this app
+ * and imported nowhere, so the type that fixes it was one import away the whole time.
+ *
+ * `satisfies PromiseStatus` rather than a plain annotation, so the constant keeps its literal
+ * type and the comparisons below still narrow.
+ */
+const BREACHED = "Breached" satisfies PromiseStatus;
+const SUSPECTED = "Suspected" satisfies PromiseStatus;
 
 export class OwedBrain {
   /**
@@ -160,15 +175,15 @@ export class OwedBrain {
       // `Captured` — which says only that the read was confident, not that anything is
       // looking at it.
       if (data.watched === false) this.#unwatched = data.promise_id;
-      else if (data.status === "Breached") this.#focus = data.promise_id;
-      else if (data.status === "Suspected") this.#declined = data.promise_id;
+      else if (data.status === BREACHED) this.#focus = data.promise_id;
+      else if (data.status === SUSPECTED) this.#declined = data.promise_id;
       return;
     }
     if (typeof data.promise_id === "string") return;
 
     const items = data.items;
     if (!Array.isArray(items)) return;
-    const withStatus = (status: string) =>
+    const withStatus = (status: PromiseStatus) =>
       items.find(
         (item): item is { promise_id: string } =>
           typeof item === "object" &&
@@ -176,9 +191,9 @@ export class OwedBrain {
           (item as { status?: unknown }).status === status,
       );
 
-    const waiting = withStatus("Breached");
+    const waiting = withStatus(BREACHED);
     if (waiting !== undefined) this.#focus = waiting.promise_id;
-    const declined = withStatus("Suspected");
+    const declined = withStatus(SUSPECTED);
     if (declined !== undefined) this.#declined = declined.promise_id;
 
     // Picked off the ledger by the field rather than by status, which is why
