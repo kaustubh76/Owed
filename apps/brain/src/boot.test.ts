@@ -35,8 +35,22 @@ const MAIN = fileURLToPath(new URL("../dist/main.js", import.meta.url));
 /** Nothing listens here, so every attempt fails the way a cold `pnpm demo` fails. */
 const NOWHERE = "http://127.0.0.1:59999/mcp";
 
-/** Long enough for the 500 ms sleep and the 500 ms backoff that follow the first failure. */
-const WATCH_MS = 3_000;
+/**
+ * Waited for rather than slept through, and the difference is a flake this shipped with.
+ *
+ * It used to sleep a flat 3 s and then count attempts. That budget looks generous — the
+ * brain's first attempt is immediate and its backoff is 500 ms — but it was measured from
+ * `spawn`, so it also had to cover Node starting and `dist/main.js` loading the MCP SDK and
+ * Express. On an idle machine that is a few hundred milliseconds; under the full 583-test
+ * suite it is not, and a fresh clone produced exactly one attempt inside the window and a
+ * red test. The same suite passed on the next run, which is the signature.
+ *
+ * So the deadline is long and the wait is short: stop as soon as the thing being asserted is
+ * true, and give a slow machine room before calling it a failure. Nothing about what is
+ * asserted changes — the brain must not exit, and it must try more than once.
+ */
+const DEADLINE_MS = 20_000;
+const SETTLED_ATTEMPTS = 2;
 
 async function bootAgainstNothing(): Promise<{ output: string; exitCode: number | null }> {
   if (!existsSync(MAIN)) {
@@ -63,7 +77,13 @@ async function bootAgainstNothing(): Promise<{ output: string; exitCode: number 
     state.exitCode = code;
   });
 
-  await new Promise((resolve) => setTimeout(resolve, WATCH_MS));
+  const attempts = () =>
+    state.output.split("\n").filter((line) => line.includes("waiting for")).length;
+  const deadline = Date.now() + DEADLINE_MS;
+  while (Date.now() < deadline && state.exitCode === null && attempts() < SETTLED_ATTEMPTS) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
   if (state.exitCode === null) child.kill("SIGTERM");
   return state;
 }
