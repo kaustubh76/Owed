@@ -10,6 +10,7 @@ import {
   type Interval,
   interval,
   isCarrierScan,
+  isDerivedKind,
   isDoorbellEvent,
   isPriceObserved,
   isRefundObserved,
@@ -26,6 +27,7 @@ import {
   type DetectorInput,
   hasPassed,
   SEVERITY,
+  type SiblingVerdict,
 } from "./types.js";
 
 /** How far either side of a claimed moment counts as "around" it. */
@@ -464,6 +466,35 @@ export const priceDrop: Detector = {
 };
 
 /**
+ * Which promise a derived one is about.
+ *
+ * The worst news in the message decides, and among equals the best-evidenced one: a guarantee
+ * over two windows, one missed, is a guarantee that was not honoured.
+ *
+ * Shared rather than inlined because two things need the same answer and they must not
+ * disagree. `derivedBreach` uses it to inherit a verdict; `claim_file` uses it to decide which
+ * promise a claim is filed **against**, so that filing on a guarantee and filing on the window
+ * it covers produce one claim rather than two — in either order. They used to disagree: the
+ * filing path only recognised a derived promise when a claim already existed, so filing on the
+ * guarantee first created one against the guarantee and the window then filed its own, and the
+ * household was told it was owed twice what it was owed.
+ */
+export function sourceVerdictFor(
+  promise: OwedPromise,
+  siblings: readonly SiblingVerdict[],
+): SiblingVerdict | undefined {
+  const kin = siblings.filter(
+    (other) => other.promise.source_ref === promise.source_ref && other.promise.id !== promise.id,
+  );
+
+  return [...kin].sort(
+    (a, b) =>
+      SEVERITY[b.detection.verdict] - SEVERITY[a.detection.verdict] ||
+      b.detection.coverage - a.detection.coverage,
+  )[0];
+}
+
+/**
  * A promise whose only evidence is another promise.
  *
  * `guarantee` and `warranty` were extractable from the day the schema froze — the rules
@@ -494,30 +525,19 @@ export const priceDrop: Detector = {
  * apply to it unchanged and a guarantee over a breach Owed could not see enough of is not
  * claimable either.
  *
- * And it deliberately does **not** create a second claim. `claim_file` resolves a derivative
- * promise to the claim already filed for its message, because one failure is one claim — see
- * `findClaimForMessage` in `mcp-server/src/tools/projections.ts`.
+ * And it deliberately does **not** create a second claim. `claim_file` retargets a derived
+ * promise to the one it derives from — the same choice `sourceVerdictFor` makes here — so one
+ * failure is one claim whichever of the pair the household names.
  */
 export const derivedBreach: Detector = {
   // Registry metadata only; the reported kind is inherited. See `Detector.kind`.
   kind: "missed_window",
-  appliesTo: (promise) => promise.kind === "guarantee" || promise.kind === "warranty",
+  // The schema declares which kinds derive; this honours the declaration.
+  appliesTo: (promise) => isDerivedKind(promise.kind),
   detect({ promise, siblings }: DetectorInput): Detection | undefined {
-    const kin = (siblings ?? []).filter(
-      (other) => other.promise.source_ref === promise.source_ref && other.promise.id !== promise.id,
-    );
-    // Nothing to derive from is not a verdict. The promise stays unassessed and
-    // `watchableNow` is what tells the household so, rather than a guessed "Kept".
-    if (kin.length === 0) return undefined;
-
-    // The worst news in the message decides, and among equals the best-evidenced one:
-    // a guarantee over two windows, one missed, is a guarantee that was not honoured.
-    const ranked = [...kin].sort(
-      (a, b) =>
-        SEVERITY[b.detection.verdict] - SEVERITY[a.detection.verdict] ||
-        b.detection.coverage - a.detection.coverage,
-    );
-    const source = ranked[0];
+    // Nothing to derive from is not a verdict. The promise stays unassessed and `watched`
+    // is what tells the household so, rather than a guessed "Kept".
+    const source = sourceVerdictFor(promise, siblings ?? []);
     if (source === undefined) return undefined;
 
     const what = promise.kind === "warranty" ? "warranty" : "guarantee";

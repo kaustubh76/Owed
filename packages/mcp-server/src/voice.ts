@@ -4,6 +4,7 @@ import {
   coveragePercent,
   type EvidenceView,
   evidenceStance,
+  isDerivedKind,
   isZeroMoney,
   type LedgerSummaryView,
   numberToWords,
@@ -87,8 +88,28 @@ export function speakLedgerSummary(view: LedgerSummaryView): string {
  *
  * Said last, because it is the only part of the summary that asks for anything.
  */
+/**
+ * What Owed could actually file, if asked.
+ *
+ * Three conditions, and only the first was being checked. `Breached` is necessary; a promise
+ * that **already has a claim** cannot be filed again — `claim_file` is idempotent and hands
+ * back the existing one — and a derived kind is the same failure as its sibling, so offering
+ * both is offering one thing twice.
+ *
+ * The missing claim check was the older bug of the two. It does not show in the recorded week,
+ * where the one `Breached` promise is unclaimed, but any promise re-judged while a claim is
+ * under way read as filable again: "there are two more I can file" with one of them already
+ * being argued.
+ */
+function filable(view: LedgerSummaryView): number {
+  return view.items.filter(
+    (item) =>
+      item.status === "Breached" && item.claim_id === undefined && !isDerivedKind(item.kind),
+  ).length;
+}
+
 function speakReadyToFile(view: LedgerSummaryView): string {
-  const ready = view.items.filter((item) => item.status === "Breached").length;
+  const ready = filable(view);
   if (ready === 0) return "";
   return ready === 1
     ? "There's one more I can file"
@@ -147,7 +168,14 @@ export interface PromisesListFilter {
 }
 
 export function speakPromisesList(view: LedgerSummaryView, filter: PromisesListFilter): string {
-  const count = view.items.length;
+  /**
+   * Only the ones it is actually watching.
+   *
+   * `items` includes a promise Owed cannot police — a warranty with `watched: false` — and
+   * counting it here had the ledger say "I'm watching twelve promises" while `promise_check`
+   * on one of them said "I'm not claiming to watch it". The same system, two answers.
+   */
+  const count = view.items.filter((item) => item.watched !== false).length;
   if (count === 0) {
     return assertSpeakable(
       filter.merchant === undefined
@@ -159,7 +187,7 @@ export function speakPromisesList(view: LedgerSummaryView, filter: PromisesListF
   const from = filter.merchant === undefined ? "" : ` from ${filter.merchant}`;
   const head = `I'm watching ${numberToWords(count)} ${plural(count, "promise", "promises")}${from}`;
 
-  const ready = view.items.filter((item) => item.status === "Breached").length;
+  const ready = filable(view);
   const tail =
     ready === 0
       ? ""

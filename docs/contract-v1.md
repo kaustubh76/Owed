@@ -283,6 +283,41 @@ Merchants are fictional: **Northwind Parcel**, **Meridian Rides**, **Calder & Co
 > is why a suite that covers the live path well still missed them, and why the tests that hold
 > this now post two promises in one message.
 
+> **Amended D23 — and not a second claim, in either order.** D22 said a derived promise is
+> not a separate event and fixed the three sites I had found. Looking for the rest turned up
+> four more, one of which moved money, so the sites are enumerated here rather than left for
+> the next reader to rediscover.
+>
+> **Filing could be defeated by order.** The dedup only recognised a derived promise when a
+> claim *already existed*, so filing on the guarantee first created a claim against the
+> guarantee, and the window — not being derived — then filed its own. `open` is summed over
+> claims, so an $8 failure was reported as **$16**, reachable by asking about the guarantee
+> and saying "file it", since the brain focuses any `Breached` promise. `claim_file` now
+> **retargets** to the promise a derived one is about, before the idempotency check, the
+> frequency cap and the remedy lookup — so there is one claim whichever of the pair is named,
+> and the per-promise idempotency does the deduplication by itself.
+>
+> **The spoken counts offered to file it twice.** `speakReadyToFile` — the headline line — and
+> `speakPromisesList` both counted every `Breached` item. They now skip derived kinds, and
+> also skip promises that already have a claim: that second condition was missing all along,
+> independent of derived verdicts, and meant any promise re-judged mid-negotiation read as
+> filable again.
+>
+> **"I'm watching twelve promises" included one it says it is not watching.** The list count
+> excludes `watched === false`, so the ledger and `promise_check` stop contradicting each
+> other about the same promise.
+>
+> **And a claimed promise is no longer re-judged.** Promise status comes from the latest
+> assessment, so new evidence overlapping a promise under negotiation rewound it to
+> `Breached` — seen on the seeded `prm_007`, which the recorded week has mid-negotiation.
+> Once a claim exists, the verdict that justified it is settled history and what happens next
+> belongs to the claim's lifecycle.
+>
+> The rule is declared in one place now — `isDerivedKind` in `domain/src/promise.ts`, which
+> `derivedBreach.appliesTo`, `derivesFromSiblings` and the voice all consult — and the places
+> that count or act on a promise are: the proactive announcement loop, `summarize`'s `kept`
+> and `declined`, `claim_file`, and the two spoken counts. That is the whole list.
+
 ### The week
 
 | # | Day | Merchant | Kind | Outcome | Amount |

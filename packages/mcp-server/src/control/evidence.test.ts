@@ -571,3 +571,171 @@ describe("a breach that two promises describe", () => {
     expect(summary.declined).toBe(1);
   });
 });
+
+/**
+ * One failure, one claim — in either order, which is the half order defeated.
+ *
+ * The first dedup only recognised a derived promise when a claim **already existed**, so
+ * filing on the guarantee first created a claim against the guarantee, and the window — not
+ * being derived — then filed its own. Measured before the fix, with `open` summed over claims:
+ *
+ *   claim from guarantee: clm_prm_000002   claim from window: clm_prm_000001   same? false
+ *   OPEN 800 -> 2400  (delta 1600)
+ *   "…and twenty-four dollars is still open… There are two more I can file."
+ *
+ * $16 reported for an $8 failure, reachable by asking about the guarantee and then saying
+ * "file it" — `brain.ts` focuses any `Breached` promise. `claim_file` retargets to the source
+ * promise now, before the idempotency check, so order cannot matter.
+ */
+describe("filing on the guarantee rather than the window", () => {
+  const breachedPair = async () => {
+    const { json } = await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Delivered between 9 and 11am, guaranteed or your money back.",
+    });
+    await post("/control/evidence", {
+      uptime: [
+        {
+          source_id: "src_doorbell",
+          household_id: harness.deps.householdId,
+          interval: { start: "2026-10-11T08:00:00-07:00", end: "2026-10-11T12:00:00-07:00" },
+        },
+      ],
+    });
+    const promises = json.promises as unknown as Delivered[];
+    const window = promises.find((p) => p.kind === "delivery_window");
+    const guarantee = promises.find((p) => p.kind === "guarantee");
+    if (window === undefined || guarantee === undefined) throw new Error("expected a pair");
+    return { window, guarantee };
+  };
+
+  const openMinor = async () =>
+    (
+      (await client.callTool({ name: "ledger_summary", arguments: {} })).structuredContent as {
+        open: { minor: number };
+      }
+    ).open.minor;
+
+  it("files one claim, about the promise that broke", async () => {
+    const { window, guarantee } = await breachedPair();
+
+    const viaGuarantee = await client.callTool({
+      name: "claim_file",
+      arguments: { promise_id: guarantee.promise_id, confirm: true },
+    });
+    const claim = viaGuarantee.structuredContent as { claim_id?: string; promise_id?: string };
+
+    expect(claim.promise_id, "the claim is about the window, not the guarantee").toBe(
+      window.promise_id,
+    );
+
+    const viaWindow = await client.callTool({
+      name: "claim_file",
+      arguments: { promise_id: window.promise_id, confirm: true },
+    });
+    expect((viaWindow.structuredContent as { claim_id?: string }).claim_id).toBe(claim.claim_id);
+  });
+
+  it("counts the money once, whichever of the pair is named first", async () => {
+    const before = await openMinor();
+    const { window, guarantee } = await breachedPair();
+
+    await client.callTool({
+      name: "claim_file",
+      arguments: { promise_id: guarantee.promise_id, confirm: true },
+    });
+    await client.callTool({
+      name: "claim_file",
+      arguments: { promise_id: window.promise_id, confirm: true },
+    });
+
+    // One $8 failure. Two claims would read as $16.
+    expect(await openMinor()).toBe(before + 800);
+  });
+});
+
+/**
+ * What the ledger offers to file, spoken.
+ *
+ * `speakReadyToFile` counted every `Breached` item, which over-counted in two independent
+ * ways: a derived promise is the same failure as its sibling, and a promise that already has
+ * a claim cannot be filed again at all.
+ */
+describe("the spoken count of what is filable", () => {
+  it("offers one for a pair, not two", async () => {
+    await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Delivered between 9 and 11am, guaranteed or your money back.",
+    });
+    await post("/control/evidence", {
+      uptime: [
+        {
+          source_id: "src_doorbell",
+          household_id: harness.deps.householdId,
+          interval: { start: "2026-10-11T08:00:00-07:00", end: "2026-10-11T12:00:00-07:00" },
+        },
+      ],
+    });
+
+    const spoken = spokenOf(await client.callTool({ name: "ledger_summary", arguments: {} }));
+    // The seed contributes one filable promise, the live pair one more.
+    expect(spoken, spoken).toMatch(/There are two more I can file/);
+    expect(spoken).not.toMatch(/three more I can file/);
+  });
+
+  /**
+   * A promise under negotiation keeps the status its claim earned.
+   *
+   * `prm_007` is mid-negotiation in the recorded week. Posting uptime that overlapped its
+   * window re-judged it, and because the projection takes promise status from the latest
+   * assessment it went back to **`Breached`** — reading as unfiled on the card, becoming the
+   * brain's `#focus`, and being offered to file again.
+   *
+   * Asserted on the status rather than on the spoken count, because `filable` now excludes
+   * claimed promises too and would hide this.
+   */
+  it("leaves a promise that is already being argued alone", async () => {
+    const statusOf = async (promiseId: string) => {
+      const items = (
+        (await client.callTool({ name: "ledger_summary", arguments: {} })).structuredContent as {
+          items: Array<{ promise_id: string; status: string }>;
+        }
+      ).items;
+      return items.find((item) => item.promise_id === promiseId)?.status;
+    };
+
+    const before = await statusOf("prm_007");
+    expect(before, "the seeded claim is under way").not.toBe("Breached");
+
+    await post("/control/evidence", {
+      uptime: [
+        {
+          source_id: "src_doorbell",
+          household_id: harness.deps.householdId,
+          interval: { start: "2026-10-11T08:00:00-07:00", end: "2026-10-11T12:00:00-07:00" },
+        },
+      ],
+    });
+
+    expect(await statusOf("prm_007"), "re-judged a claim that was already filed").toBe(before);
+  });
+
+  it("does not count a promise it says it is not watching", async () => {
+    await post("/control/messages", {
+      merchant: "Northwind Parcel",
+      text: "Covered for 24 months under our manufacturer warranty.",
+    });
+
+    const spoken = spokenOf(await client.callTool({ name: "promises_list", arguments: {} }));
+
+    /**
+     * Eleven, not twelve.
+     *
+     * The seeded week holds eleven promises and the warranty just posted makes twelve items —
+     * but it is the one Owed says it is **not** watching, so counting it here had the ledger
+     * and `promise_check` contradicting each other about the same promise.
+     */
+    expect(spoken, spoken).toMatch(/I'm watching eleven promises/);
+    expect(spoken).not.toMatch(/twelve promises/);
+  });
+});

@@ -5,9 +5,12 @@ import {
   fileClaim,
   fileWithoutAgent,
   merchantPriors,
+  type PromiseView,
   priorKey,
   type RemedyBounds,
   remedyContextFor,
+  type SiblingVerdict,
+  sourceVerdictFor,
 } from "@owed/core";
 import {
   addMs,
@@ -29,13 +32,8 @@ import type { OwedDeps } from "../deps.js";
 import type { ProtocolEra } from "../server.js";
 import { VIEW_URIS } from "../views.js";
 import { assertSpeakable, joinSpoken, speakClaim } from "../voice.js";
-import { loadContext, NotFoundError, spokenError } from "./context.js";
-import {
-  claimsAgainstMerchantSince,
-  claimViewFor,
-  findClaimForMessage,
-  findClaimForPromise,
-} from "./projections.js";
+import { loadContext, NotFoundError, spokenError, type ToolContext } from "./context.js";
+import { claimsAgainstMerchantSince, claimViewFor, findClaimForPromise } from "./projections.js";
 
 /**
  * Which of the two agentless routes a merchant's own policy implies.
@@ -196,6 +194,28 @@ type ClaimFileOutcome =
   | { kind: "result"; result: ReturnType<typeof claimResult> | ReturnType<typeof spokenError> }
   | { kind: "needs-confirmation"; question: string; fallback: ReturnType<typeof claimResult> };
 
+/**
+ * The promise a claim is really about.
+ *
+ * Returns the asked-for promise unchanged unless it takes its verdict from a sibling, in
+ * which case it returns that sibling. Falls back to the asked-for promise when there is no
+ * sibling to point at — a lone guarantee has no verdict either, so the refusals downstream
+ * are the right answer rather than a redirect to nothing.
+ */
+function retargetToSource(context: ToolContext, asked: PromiseView): PromiseView {
+  if (!derivesFromSiblings(asked.promise)) return asked;
+
+  const siblings: SiblingVerdict[] = [...context.state.promises.values()].flatMap((other) =>
+    other.assessment === undefined || derivesFromSiblings(other.promise)
+      ? []
+      : [{ promise: other.promise, detection: other.assessment }],
+  );
+
+  const source = sourceVerdictFor(asked.promise, siblings);
+  if (source === undefined) return asked;
+  return context.state.promises.get(source.promise.id) ?? asked;
+}
+
 async function handleClaimFile(
   deps: OwedDeps,
   promiseId: string,
@@ -203,37 +223,40 @@ async function handleClaimFile(
   attachEvidence: boolean,
 ): Promise<ClaimFileOutcome> {
   const context = await loadContext(deps);
-  const view = context.state.promises.get(promiseId);
-  if (view === undefined) throw new NotFoundError(promiseId);
+  const asked = context.state.promises.get(promiseId);
+  if (asked === undefined) throw new NotFoundError(promiseId);
+
+  /**
+   * One failure, one claim — filed against the promise that actually failed.
+   *
+   * A `guarantee` or `warranty` has no evidence of its own: `derivedBreach` gives it the
+   * verdict of a promise from the same merchant message, because "delivered between one and
+   * five, guaranteed or your money back" is one sentence describing one way to fail. So a
+   * claim about it is a claim about that promise, and the subject is swapped here — before
+   * the idempotency check, the frequency cap and the remedy lookup, all of which then see
+   * the real failure.
+   *
+   * **This replaced a one-directional dedup that order defeated.** The previous version only
+   * recognised a derived promise when a claim already existed, so filing on the guarantee
+   * first created a claim against the guarantee, and the window — not being derived — then
+   * filed its own. Two claims for one failure, and `open` is summed over claims, so the
+   * household was told it was owed twice what it was owed: $8 reported as $16, reachable by
+   * asking about the guarantee and then saying "file it". Retargeting is order-independent,
+   * and it makes the per-promise idempotency below do the deduplication by itself.
+   *
+   * `sourceVerdictFor` is the same selection `derivedBreach` makes when it inherits, so the
+   * two cannot disagree about which promise a guarantee is about.
+   */
+  const view = retargetToSource(context, asked);
+  const subjectId = view.promise.id;
 
   // Already filed: say where it got to rather than filing it twice.
   //
   // `findClaimForPromise` does the promise-then-claim hop in one place; this spelled it
   // out, which is how the named version ended up with no caller.
-  const existing = findClaimForPromise(context.state, promiseId);
+  const existing = findClaimForPromise(context.state, subjectId);
   if (existing !== undefined) {
     return { kind: "result", result: claimResult(claimViewFor(existing)) };
-  }
-
-  /**
-   * One failure, one claim.
-   *
-   * A `guarantee` or `warranty` has no evidence of its own: `derivedBreach` gives it the
-   * verdict of a promise from the same merchant message, because "delivered between one and
-   * five, guaranteed or your money back" is one sentence describing one way to fail. Filing
-   * the guarantee separately would argue the same missed window twice and double what the
-   * household appears to be owed for it — and the guarantee's clause is already what the
-   * negotiator cites when it counters, so nothing is lost by resolving to the claim that
-   * exists.
-   *
-   * `derivesFromSiblings` asks the detector rather than restating its kinds, so this cannot
-   * drift from what actually derives.
-   */
-  if (derivesFromSiblings(view.promise)) {
-    const sibling = findClaimForMessage(context.state, view.promise);
-    if (sibling !== undefined) {
-      return { kind: "result", result: claimResult(claimViewFor(sibling)) };
-    }
   }
 
   const assessment = view.assessment;
@@ -303,8 +326,8 @@ async function handleClaimFile(
   };
 
   const proposed: ClaimView = {
-    claim_id: claimIdFor(promiseId),
-    promise_id: promiseId,
+    claim_id: claimIdFor(subjectId),
+    promise_id: subjectId,
     merchant: view.promise.merchant,
     state: "Proposed",
     ask: bounds.ceiling,

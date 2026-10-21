@@ -104,6 +104,20 @@ async function assessWhatIsPending(
   }
 
   const needsJudging = views.filter((view) => {
+    /**
+     * A promise under negotiation keeps the verdict its claim was filed on.
+     *
+     * Re-judging one that already has a claim rewinds its status to `Breached` — the
+     * projection takes promise status from the latest assessment — so a claim that had
+     * reached `Negotiating` read as unfiled again, and the ledger offered to file it a second
+     * time. Seen for real: posting uptime that overlapped the seeded `prm_007`, which is
+     * mid-negotiation in the recorded week, put it back to `Breached`.
+     *
+     * Once a claim exists the verdict that justified it is settled history, and what happens
+     * next belongs to the claim's own lifecycle rather than to the detector.
+     */
+    if (view.claim_id !== undefined) return false;
+
     const judged = view.assessment;
     const since = assessedAtSeq.get(view.promise.id);
     if (judged === undefined || since === undefined) return true;

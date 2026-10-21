@@ -16,6 +16,26 @@ export const PromiseKindSchema = z.enum([
 ]);
 export type PromiseKind = z.infer<typeof PromiseKindSchema>;
 
+/**
+ * The kinds whose verdict comes from another promise rather than from evidence.
+ *
+ * A `guarantee` or a `warranty` has none of its own — there is no doorbell event for "or your
+ * money back" — so `derivedBreach` gives it the verdict of a promise read from the same
+ * merchant message. Declared here, with the schema, because four different things need to
+ * know and each one got it wrong in turn when the rule lived only inside the detector:
+ * the proactive channel announced the pair twice, `summarize` tallied it twice, `claim_file`
+ * could file it twice, and the spoken summary offered to file it twice.
+ *
+ * Kind-level because that is the whole of the rule — `derivedBreach.appliesTo` tests nothing
+ * else — and because the ledger's own items carry a `kind` and not a promise, so this is the
+ * only form the voice can use.
+ */
+export const DERIVED_PROMISE_KINDS: readonly PromiseKind[] = ["guarantee", "warranty"];
+
+export function isDerivedKind(kind: PromiseKind): boolean {
+  return DERIVED_PROMISE_KINDS.includes(kind);
+}
+
 export const PromiseStatusSchema = z.enum([
   "Candidate",
   "Captured",
