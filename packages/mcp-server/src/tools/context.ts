@@ -1,6 +1,7 @@
 import { type LedgerState, project } from "@owed/core";
 import type { Instant } from "@owed/domain";
 import type { OwedDeps } from "../deps.js";
+import { assertSpeakable } from "../voice.js";
 
 /**
  * Everything the read tools need, loaded once per call.
@@ -32,7 +33,21 @@ export function requireClaim(context: ToolContext, claimId: string) {
   return claim;
 }
 
-/** A tool result that says what went wrong, out loud, without leaking internals. */
+/**
+ * A tool result that says what went wrong, out loud, without leaking internals.
+ *
+ * `assertSpeakable` is applied here, which is what `voice.ts` already claimed: "this runs on
+ * every tool result rather than only in tests". It did not — every `speak*` function on the
+ * success path is guarded and this, the refusal path, was not, so a refusal was the one
+ * spoken line that could carry a digit, a URL, a tool name or JSON to a voice-only device.
+ * Most call sites pass a literal and were always fine; the ones that compose a sentence from
+ * ledger state were a digit away from shipping one. A protocol violation from a merchant
+ * agent did exactly that in October, reaching the household as raw exception text.
+ *
+ * It throws rather than substituting a safe line, which is the same bargain every success
+ * path already takes: an unspeakable line is a bug, and a loud one is cheaper than a demo
+ * that reads an identifier aloud on stage.
+ */
 export function spokenError(text: string) {
-  return { content: [{ type: "text" as const, text }], isError: true };
+  return { content: [{ type: "text" as const, text: assertSpeakable(text) }], isError: true };
 }

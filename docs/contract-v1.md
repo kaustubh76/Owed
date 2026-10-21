@@ -311,6 +311,17 @@ A `DECLINE` must carry a human escalation route.
 > token" was marked as holding because the id is read from the token's claims and never from
 > the request. That was true and incomplete: when the claim was empty it was read from
 > *configuration*. `docs/requirements.md` now says so.
+>
+> **And the same shape, found in the same pass.** `voice.ts` says of `assertSpeakable` that
+> "this runs on every tool result rather than only in tests". Every `speak*` function on the
+> success path was guarded and `spokenError` — the refusal path — was not, so a refusal was
+> the one spoken line that could carry a digit, a URL, a tool name or JSON to a voice-only
+> device, which is the thing `alexa/contract.test.ts` quotes Amazon forbidding verbatim. Most
+> call sites pass a literal and were always safe; the three that compose a sentence from
+> ledger state were a digit away. It had already happened once, in October, when a merchant's
+> protocol violation reached the household as raw exception text. The guard now sits in
+> `spokenError` itself, where the claim said it was, and `tools/context.test.ts` pins each of
+> the four forbidden kinds.
 
 ---
 
