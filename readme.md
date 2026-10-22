@@ -562,7 +562,7 @@ owed/
 ├─ docs/
 │  ├─ contract-v1.md        # the frozen v1 contract, with its amendments recorded
 │  ├─ proactive.md          # the one primitive we found no docs for, written as a schema
-│  ├─ friction-log.md       # per-tool friction, nineteen entries
+│  ├─ friction-log.md       # per-tool friction, twenty entries
 │  ├─ product-feedback.md   # submission requirement (d), per tool and SDK
 │  ├─ architecture.excalidraw # the whole system in one canvas, end to end
 │  ├─ demo-capture.json     # the storyboard recorded off the running server, asserted by verify:ui
@@ -930,7 +930,11 @@ state that is actually current, and §13 has what is still simulated.)*
 
 **What "conformance passes" does and does not mean.** Alexa+ for Builders is partner-gated, so
 **none of this has run against the real Alexa+ client** — not one tool call, not one card. Every
-green check below is against the *documented* contract and the community conformance CLI. The
+green check below is against the *documented* contract, the community conformance CLI, and — as
+of 2026-10-22 — a community Alexa+ **client**, driven through the sequence a real integration
+performs: discover, link, list, call, render. That second reading earned its keep immediately
+(§D26 of the contract: it found six tools a sandboxed view was permitted to call). It is still a
+second reading of the same public documents, not the platform. The
 contract suite asserts what Amazon publishes: every advertised tool invocable, one text block
 per result, nothing internal ever spoken, every `ui://` view readable and self-contained under a
 deny-by-default CSP, elicitation flat and primitive.
@@ -973,6 +977,7 @@ nothing in this submission should be read as claiming otherwise.
 | All three hypotheses measured against pre-registered corpora and reported met or not — H1 extraction, H2 breach detection, H3 recourse | Speaker identity and household roles. Not built |
 | — | A real Echo. The bridge was cut early; nothing here has run on a device |
 | — | Fire TV overlay and phone rail. First on the cut list, never built |
+| **A third party's Alexa+ client**, unaffiliated with Amazon and with this project, linking an account over Owed's own OAuth AS with PKCE, listing the six tools, calling one and reading all three views back under the spec's deny-by-default CSP — `apps/brain/src/alexaPlusClient.test.ts`, no mocks, real HTTP, real consent redirect | Still not Alexa+. An independent implementation of the same published specs is worth much more than one implementation of them and is not the client itself. It models no Amazon behaviour beyond what is written down |
 | DynamoDB, behind the same `EventStore` port as memory and SQLite, verified against DynamoDB Local | Bedrock. A model-backed extractor exists in `packages/extractor-bedrock`, tested either side of the model call and at it — the adapter runs against a local server speaking Converse, over a real SDK client. But **no model has run**, so there are no numbers and every reported figure is still the rules extractor's. The deployment is one instance with Caddy; there is no CDK |
 
 ---
@@ -1012,7 +1017,7 @@ rather than in a drawer.
 - [x] Open Source: **the whole repository is public under Apache-2.0** — `LICENSE`, `NOTICE`, and GitHub detecting the licence. Within it, **three** packages are self-contained enough to lift out as they stand: `recourse-protocol` (no workspace dependencies at all, and its published conformance checker is run against all four reference agents over real HTTP — eight runs, asserted to exercise every check rather than pass by never asking), `policy-library` and `merchant-agents`, each Apache-2.0 with `files`, `exports` and a README. `extractor` and `extractor-bedrock` are Apache-2.0 and `files`-ready too, but both depend on `@owed/domain`, which is `private: true`, so **they cannot be lifted out without extracting the domain types first**. An earlier draft claimed all five, and claimed they were published to a registry; neither was true. **`pnpm verify:graph` now checks this paragraph rather than leaving it asserted**: it walks the workspace graph and fails if one of the three stops being liftable, if one of the two stops being blocked (which would mean this understates what is on offer), if a publishable package loses its licence, `files`, `exports` or README, if a declared dependency is never imported, or if the graph acquires a cycle. The one duplicated type this separation forces — `policy-library` redeclares the six breach kinds because importing `@owed/domain` would cost it its liftability — is held in step by a test, since the duplication cannot be removed.
 - [x] The repo calls MCP in code — server entry point, `_meta.ui` on every tool, elicitation, `ui://` resources — not just in this README
 - [x] **(d) Product feedback** for every tool, API and SDK used — what it was used for, what worked well, what needs work, how onboarding felt, whether we would build with it again, **and the AWS services described in that same answer**: **[docs/product-feedback.md](docs/product-feedback.md)**. Only tools this repo actually imports or invokes appear in it; where something was written but never executed against the service — Bedrock — it says so.
-- [x] **(g) Friction log**, the optional one: **[docs/friction-log.md](docs/friction-log.md)**, nineteen entries, each with the task, what was expected, what happened, severity, the workaround and what would have prevented it. An earlier draft of this README offered this file as the answer to (d) as well. It was not: it is the right shape for (g) and the wrong shape for (d), and it mentioned no AWS service at all.
+- [x] **(g) Friction log**, the optional one: **[docs/friction-log.md](docs/friction-log.md)**, twenty entries, each with the task, what was expected, what happened, severity, the workaround and what would have prevented it. An earlier draft of this README offered this file as the answer to (d) as well. It was not: it is the right shape for (g) and the wrong shape for (d), and it mentioned no AWS service at all.
 - [x] Built entirely inside the submission window — first commit 2026-09-28, nothing pre-existing to declare
 - [x] Feature request, written as a schema rather than a paragraph: **[docs/proactive.md](docs/proactive.md)** — `CommitmentEvent` and the proactive channel we could not find documented for Alexa+ add-ons
 - [x] Real-vs-simulated map (§13), and the statement that **none of this has run against the real Alexa+ client** because it is partner-gated

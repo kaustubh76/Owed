@@ -4,7 +4,7 @@ import { summarize } from "@owed/core";
 import { type LedgerSummaryView, LedgerSummaryViewSchema, PromiseStatusSchema } from "@owed/domain";
 import * as z from "zod/v4";
 import type { OwedDeps } from "../deps.js";
-import { VIEW_URIS } from "../views.js";
+import { MODEL_ONLY, VIEW_URIS } from "../views.js";
 import { speakPromisesList } from "../voice.js";
 import { loadContext } from "./context.js";
 
@@ -25,6 +25,7 @@ export function registerPromisesList(server: McpServer, deps: OwedDeps): void {
       _meta: {
         ui: {
           resourceUri: VIEW_URIS.ledger,
+          visibility: [...MODEL_ONLY],
           invoking: "Looking through your promises",
           invoked: "Here is what I am watching",
         },

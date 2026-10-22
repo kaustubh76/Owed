@@ -31,7 +31,7 @@ import { ProtocolViolation } from "@owed/recourse-protocol";
 import * as z from "zod/v4";
 import type { OwedDeps } from "../deps.js";
 import type { ProtocolEra } from "../server.js";
-import { VIEW_URIS } from "../views.js";
+import { MODEL_ONLY, VIEW_URIS } from "../views.js";
 import { assertSpeakable, joinSpoken, speakClaim } from "../voice.js";
 import { loadContext, NotFoundError, spokenError, type ToolContext } from "./context.js";
 import { claimsAgainstMerchantSince, claimViewFor, findClaimForPromise } from "./projections.js";
@@ -132,6 +132,7 @@ export function registerClaimFile(
       _meta: {
         ui: {
           resourceUri: VIEW_URIS.claim,
+          visibility: [...MODEL_ONLY],
           invoking: "Filing your claim",
           invoked: "Here is how it went",
         },

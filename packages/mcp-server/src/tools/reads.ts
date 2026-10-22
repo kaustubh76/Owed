@@ -3,7 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { ClaimViewSchema, EvidenceViewSchema } from "@owed/domain";
 import * as z from "zod/v4";
 import type { OwedDeps } from "../deps.js";
-import { VIEW_URIS } from "../views.js";
+import { MODEL_ONLY, VIEW_URIS } from "../views.js";
 import { speakClaim, speakEvidence, speakPromiseCheck } from "../voice.js";
 import { loadContext, NotFoundError, requireClaim, spokenError } from "./context.js";
 import { claimViewFor, evidenceViewFor } from "./projections.js";
@@ -23,6 +23,7 @@ export function registerReadTools(server: McpServer, deps: OwedDeps): void {
       _meta: {
         ui: {
           resourceUri: VIEW_URIS.evidence,
+          visibility: [...MODEL_ONLY],
           invoking: "Looking at what I saw",
           invoked: "Here is what I saw",
         },
@@ -55,6 +56,7 @@ export function registerReadTools(server: McpServer, deps: OwedDeps): void {
       _meta: {
         ui: {
           resourceUri: VIEW_URIS.evidence,
+          visibility: [...MODEL_ONLY],
           invoking: "Fetching that evidence",
           invoked: "Here it is",
         },
@@ -88,6 +90,7 @@ export function registerReadTools(server: McpServer, deps: OwedDeps): void {
       _meta: {
         ui: {
           resourceUri: VIEW_URIS.claim,
+          visibility: [...MODEL_ONLY],
           invoking: "Checking that claim",
           invoked: "Here is where it got to",
         },

@@ -197,7 +197,11 @@ describe("a wall-clock test's two budgets", () => {
       "spawns a subprocess but the rule skipped it",
     ).toStrictEqual([]);
 
+    // Spelled out rather than counted, so a new wall-clock test has to be acknowledged here
+    // instead of quietly joining a number. That has already happened once: adding
+    // `alexaPlusClient.test.ts` reddened this line before anything else noticed it waits.
     expect(wallClock.map((one) => one.file).sort(), "the files the rule applies to").toStrictEqual([
+      "apps/brain/src/alexaPlusClient.test.ts",
       "apps/brain/src/boot.test.ts",
       "packages/mcp-server/src/store/dynamo.test.ts",
     ]);

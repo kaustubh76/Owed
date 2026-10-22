@@ -11,7 +11,7 @@ import {
 } from "@owed/domain";
 import * as z from "zod/v4";
 import type { OwedDeps } from "../deps.js";
-import { VIEW_URIS } from "../views.js";
+import { MODEL_ONLY, VIEW_URIS } from "../views.js";
 import { speakLedgerSummary } from "../voice.js";
 
 const PERIOD_DAYS: Readonly<Record<LedgerPeriod, number>> = { week: 7, month: 30 };
@@ -32,6 +32,7 @@ export function registerLedgerSummary(server: McpServer, deps: OwedDeps): void {
       _meta: {
         ui: {
           resourceUri: VIEW_URIS.ledger,
+          visibility: [...MODEL_ONLY],
           invoking: "Checking your ledger",
           invoked: "Here is what you are owed",
         },

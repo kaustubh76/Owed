@@ -18,7 +18,7 @@ integration is written and tested either side of the model call, and the model c
 never executed. That is stated in its own section rather than buried.
 
 The sharper, reproduction-shaped version of the defects below is
-**[friction-log.md](friction-log.md)** — nineteen entries, each with the task, what was
+**[friction-log.md](friction-log.md)** — twenty entries, each with the task, what was
 expected, what happened, severity, the workaround, and what would have prevented it. This
 document is the wider judgement: what each tool was *for*, and whether we would choose it
 again.

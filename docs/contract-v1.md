@@ -186,6 +186,32 @@ document which modes it supports.
 
 **Views:** `ui://owed/ledger` · `ui://owed/claim` · `ui://owed/evidence`
 
+> **Amended D26 — the views could call the tools, because the spec's default says they may.**
+> MCP Apps lets a tool declare `_meta.ui.visibility`, listing who may call it: the model, a
+> view, or both. Owed declared `resourceUri` on all six tools and `visibility` on none. The
+> published default is **`["model", "app"]`** — the schema in `@modelcontextprotocol/ext-apps`
+> says `Default: ["model", "app"]` in those words — so every tool was callable from inside a
+> view, including `claim_file`, the one tool that argues with a merchant over HTTP and appends
+> to the ledger. A view is sandboxed, opaque-origin HTML: the least trusted surface in this
+> system had a path to the only irreversible one.
+>
+> **Why no test could see it.** Owed's own host cannot make that call. `apps/home/src/EchoShow.tsx`
+> constructs its `AppBridge` with a null client, and the SDK only wires `oncalltool` when a
+> client is present — so from inside this repository the permission was unobservable, and
+> `pnpm verify:ui`, which drives all three views in a real browser, could never have tripped
+> on it. It was found by connecting a **third party's** Alexa+ client, whose host implements
+> the rule the spec actually states, and reading back what Owed advertises:
+> `apps/brain/src/alexaPlusClient.test.ts`.
+>
+> **Now declared, narrowly.** All six tools carry `visibility: ["model"]` (`MODEL_ONLY` in
+> `packages/mcp-server/src/views.ts`). Nothing is lost: the three views never call a tool —
+> `ui-views/src/shared/useOwedView.ts` declares `capabilities: {}` and handles exactly
+> `ontoolresult` and `onhostcontextchanged`. They are display surfaces, and the declaration now
+> says so to any host rather than to this one.
+>
+> The general shape is the same as D25's: **what a platform permits by default is not what a
+> server should advertise**, and an absence in a protocol is what a presence check cannot see.
+
 ### Confirmation
 
 `claim_file` asks before it files. Both of the questions the ideation names — *file it?* and

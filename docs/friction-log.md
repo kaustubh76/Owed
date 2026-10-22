@@ -231,9 +231,13 @@ port cannot call it; and the page sets `x-frame-options: DENY`, so it cannot be 
 **Workaround.** Backed the dependency out of the application entirely and wrote the pieces
 ourselves: our own account linking (`packages/mcp-server/src/auth/link.ts`), a session over
 `@modelcontextprotocol/client`, and our own MCP Apps host on
-`@modelcontextprotocol/ext-apps/app-bridge`. Nothing in `packages/`, `apps/`, `eval/` or
-`scripts/` imports `mcp-voice-simulator`; it survives only as a binary the conformance gate
-spawns. This turned out better anyway: the MCP client stays in Node where OAuth and SSE are
+`@modelcontextprotocol/ext-apps/app-bridge`. For most of this build nothing in `packages/`, `apps/`, `eval/` or
+`scripts/` imported `mcp-voice-simulator`; it survived only as a binary the conformance gate
+spawns. That is no longer quite true, and the distinction matters: the package is still not
+embedded in the *application*, but `apps/brain/src/alexaPlusClient.test.ts` now drives its
+**client library** — `discoverProtectedResource`, `linkAccount`, `connectMcp`, `readUiResource`
+— as an independent Alexa+ client against the real server, which is what found the defect in
+§20 below. This turned out better anyway: the MCP client stays in Node where OAuth and SSE are
 debuggable, and the protocol inspector shows frames captured at the transport rather than
 reconstructed.
 
@@ -547,3 +551,39 @@ target box" — `is not executable`, `Unknown user` — and fail on anything lef
 
 **Suggestion.** Separate "this unit is malformed" from "this host is not where it runs",
 with distinct exit codes. A `--offline` mode that skips executable checks would do it.
+
+---
+
+## 20. MCP Apps' tool visibility defaults to the permissive value, and the server helper never says so
+
+**Tool:** `@modelcontextprotocol/ext-apps` · **Severity: high**
+
+**Task.** Decide which of Owed's six tools a `ui://` view is allowed to call, and declare it.
+
+**Expected.** That a tool is reachable from inside a view only if the server opts in. A view is
+sandboxed, opaque-origin HTML rendered from a resource; it is the least trusted surface in an
+MCP Apps system, so the safe default would be "the model only".
+
+**Actual.** The default is the other one. `_meta.ui.visibility` is optional, and the schema's
+own description reads `Default: ["model", "app"]` — both. A server that declares
+`resourceUri` and stops, which is exactly what the `registerAppTool` examples show, has
+published every one of its tools as callable from inside the view. For Owed that included
+`claim_file`, which negotiates with a merchant over HTTP and appends to an append-only ledger.
+
+Three things made it hard to notice. The default is stated in the schema's `describe()` text
+rather than in the `registerAppTool` documentation, so it is not in front of you at the call
+site. The server helper accepts a `_meta.ui` with a `resourceUri` and no `visibility` without
+comment, though it has everything it needs to warn. And a host only has to enforce the rule if
+it wires view-to-tool calls at all: ours does not — `AppBridge` is constructed with a null
+client, and the SDK wires `oncalltool` only when a client is present — so 64 browser
+assertions driving all three views in a real browser could never have tripped on it.
+
+**Workaround.** Declare it explicitly on all six tools: `visibility: ["model"]`, via
+`MODEL_ONLY` in `packages/mcp-server/src/views.ts`, recorded as contract amendment D26. Found
+by connecting a third party's Alexa+ client, whose host implements the published rule, and
+asserting what Owed advertises back — `apps/brain/src/alexaPlusClient.test.ts`.
+
+**Suggestion.** Default to `["model"]`, or require `visibility` whenever `resourceUri` is set.
+Failing either, have `registerAppTool` warn once when a tool declares a view and no
+visibility, naming what it has just made callable. A default that widens authority is worth
+saying out loud at the point where it is chosen.
