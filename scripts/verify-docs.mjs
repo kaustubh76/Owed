@@ -395,6 +395,19 @@ const COUNTS = [
     document: "docs/product-feedback.md",
   },
   {
+    /**
+     * The same number, in the workflow whose comment explains why anything reads that file.
+     * It said 150 for as long as it existed, against a Caddyfile that has been 87, 103 and
+     * 117 lines and never 150 — an ungated count inside the argument for gating things. The
+     * copy in product-feedback.md was gated and caught its own drift on the next edit; this
+     * one had nothing pointed at it.
+     */
+    what: "lines in deploy/Caddyfile, as the workflow comment states them",
+    measured: lineCount("deploy/Caddyfile"),
+    rendered: String(lineCount("deploy/Caddyfile")),
+    document: ".github/workflows/verify.yml",
+  },
+  {
     what: "lines of deployment shell script",
     measured: lineCount("deploy/bootstrap.sh") + lineCount("deploy/create-cli-user.sh"),
     rendered: String(lineCount("deploy/bootstrap.sh") + lineCount("deploy/create-cli-user.sh")),

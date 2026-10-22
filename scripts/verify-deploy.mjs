@@ -86,6 +86,15 @@ function want(label, ok, detail) {
  */
 const DOCKER = process.env.OWED_DOCKER_VALIDATORS === "1";
 
+/**
+ * The caddy the gate reads the Caddyfile with, pinned to the one CI lifts out of the official
+ * image. It used to be `caddy:latest`, which meant a local run and a CI run could parse the
+ * same file with different parsers — and since the route resolution below reads the config
+ * caddy *compiles*, a change in how it compiles is a change in what this gate asserts. The
+ * check beside the route section keeps this string and the workflow's from drifting apart.
+ */
+const CADDY_IMAGE = "caddy:2.11.4-alpine";
+
 const CONTAINERS = {
   shellcheck: (args) => [
     "run",
@@ -102,7 +111,7 @@ const CONTAINERS = {
     "--rm",
     "-v",
     `${DEPLOY}:/d:ro`,
-    "caddy:latest",
+    CADDY_IMAGE,
     "caddy",
     ...args.map((arg) => (arg.startsWith(DEPLOY) ? `/d/${relative(DEPLOY, arg)}` : arg)),
   ],
@@ -341,6 +350,20 @@ want(
  * enters this check by existing, and fails it until it is classified below.
  */
 process.stdout.write("\n--- every registered route, against the compiled Caddy config ---\n");
+
+/**
+ * CI lifts caddy out of a pinned image and this gate runs a pinned image; if those two names
+ * drift, "green locally" and "green in CI" stop meaning the same thing about this file.
+ */
+const workflow = readFileSync(join(REPO_ROOT, ".github", "workflows", "verify.yml"), "utf8");
+const ciCaddy = /docker create --name caddy-bin (\S+)/.exec(workflow);
+want(
+  "the gate and CI read the Caddyfile with the same caddy",
+  ciCaddy?.[1] === CADDY_IMAGE,
+  ciCaddy === null
+    ? "the workflow no longer lifts caddy out of an image — this check cannot see what CI uses"
+    : `gate ${CADDY_IMAGE}, workflow ${ciCaddy[1]}`,
+);
 
 const SERVER_SRC = join(REPO_ROOT, "packages", "mcp-server", "src");
 const ROUTE_CALL = /\b(?:app|router)\.(?:get|post|put|delete|all)\(\s*"(\/[^"]*)"/g;

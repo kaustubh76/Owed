@@ -201,7 +201,8 @@ jobs:
       # it as skipped. Lifted out of the official image at a pinned version instead of
       # added as an apt repository: one file, no third-party source list, and the runner
       # already has Docker. `caddy validate` adapts the Caddyfile and builds the whole
-      # config, which is the only thing that reads those 150 lines at all.
+      # config, and the deployment gate then resolves every route the server registers against
+      # what it compiles — the two things that read those 117 lines at all.
       - name: Provide caddy to the deployment gate
         run: |
           docker create --name caddy-bin caddy:2.11.4-alpine
@@ -217,7 +218,7 @@ jobs:
       # OWED_REQUIRE_VALIDATORS makes a skip here a failure, for the same reason
       # OWED_REQUIRE_DYNAMO exists above: without it, the caddy step breaking or a runner
       # image dropping shellcheck would turn all three validators into no-ops and this gate
-      # would still go green, reporting that 150 lines of Caddyfile and four systemd units
+      # would still go green, reporting that 117 lines of Caddyfile and four systemd units
       # had been read when nothing had read them.
       - run: pnpm verify:deploy
         env:
