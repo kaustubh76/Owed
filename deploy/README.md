@@ -80,6 +80,17 @@ against the compiled config and requires it to be deliberately proxied or delibe
 refused, so publishing one is now an edit to a table of reasons rather than a deletion
 nobody notices.
 
+**Confirmed by serving it, not only by reading it.** The gate resolves routes against the
+config `caddy adapt` compiles, which is a strong reading but still a reading, so the file
+was also run: real Caddy 2.11.4 in a container, this Caddyfile with the hostname swapped
+for a plain-HTTP port and a marker `index.html` at the static root, the MCP server on
+loopback behind it. Through the proxy, `/control/commitments`, `/control/clock` and
+`/health` answered **404**, and `/docs/account-linking` answered **200 with the
+account-linking page**. Deleting the `/docs` block and repeating it returned 200 with the
+marker page instead — the defect, reproduced end to end. Directly on the box, meanwhile,
+`/health` answers `{"status":"ok","events":81}`: the household's event count, which is
+what the 404 above is for.
+
 ## `pnpm verify:ui` needs a fresh ledger
 
 Against the in-memory store this is automatic — every boot reseeds, so every run starts
