@@ -81,13 +81,13 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 ```bash
 pnpm preflight        # a machine that can run it says so
 pnpm verify           # nine gates: graph, docs, build, lint, tests, eval, conformance, pack, deploy
-pnpm verify:ui        # 66 browser assertions and four accessibility audits, needs Chrome
+pnpm verify:ui        # 67 browser assertions and four accessibility audits, needs Chrome
                       # (also a CI step since 2026-10-21 — it is not in the chain above)
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
 Measured on an 8-core machine on 2026-10-22: `pnpm verify` 20s, or 44s with every Docker-backed
-gate demanded — the ninth gate builds five archives (~80s on CI's two-core runner), `pnpm verify:ui` 11s locally and 20s on CI (66
+gate demanded — the ninth gate builds five archives (~80s on CI's two-core runner), `pnpm verify:ui` 11s locally and 20s on CI (67
 browser assertions, zero failures), the whole suite green with DynamoDB Local up — one test
 skipped, a placeholder. **No test count is quoted here, deliberately.** This line read "570 tests
 across 50 files" while the suite had 587 across 52, because a count in prose has nothing holding
@@ -230,7 +230,7 @@ Three places in the repository said it was excluded "because CI has no browser",
 them was a measurement: `git log -S chrome -- .github/` was empty across every commit. Nobody
 had tried.
 
-It works. All sixty-six checks run on a GitHub runner in twenty seconds, including the
+It works. All sixty-seven checks run on a GitHub runner in twenty seconds, including the
 voice-only parity that is a certification requirement and the computed contrast figure. Those
 ten rows no longer depend on a human remembering, and the three claims have been corrected
 rather than left as folklore. It stays out of `pnpm verify` for the original good reason — a

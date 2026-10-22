@@ -575,7 +575,7 @@ rather than in the `registerAppTool` documentation, so it is not in front of you
 site. The server helper accepts a `_meta.ui` with a `resourceUri` and no `visibility` without
 comment, though it has everything it needs to warn. And a host only has to enforce the rule if
 it wires view-to-tool calls at all: ours does not — `AppBridge` is constructed with a null
-client, and the SDK wires `oncalltool` only when a client is present — so 66 browser
+client, and the SDK wires `oncalltool` only when a client is present — so 67 browser
 assertions driving all three views in a real browser could never have tripped on it.
 
 **Workaround.** Declare it explicitly on all six tools: `visibility: ["model"]`, via

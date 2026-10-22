@@ -605,6 +605,9 @@ deployment — both opt-in, neither needed to run or judge anything below.
 #                 the job with it. Until 2026-10-22 every green run was Node 26
 #                 `pnpm verify:ui` additionally needs Google Chrome installed
 #                 (Playwright is run with channel: "chrome", not a bundled browser)
+#                 OWED_UI_SHOTS=<dir> pnpm verify:ui also keeps a PNG of each beat.
+#                 Not committed: demo-capture.json is in the repo because verify:capture
+#                 re-derives it, and an image cannot be held to that
 pnpm install
 pnpm build          # compiles the workspaces and bundles the ui:// views
 pnpm preflight      # checks Node, pnpm, the build and all four ports
@@ -621,7 +624,7 @@ services run from `dist/` and nothing builds on install) → `pnpm verify` (the 
 documents, build, lint, the whole test suite, the published numbers re-derived, conformance, what
 the packages would publish, the deployment gate — nine gates, all green) → `pnpm demo` (all four
 services answering, and the household's "File it" driven over the socket to a settled claim) →
-`pnpm verify:ui` (66 browser checks, green) → `pnpm eval:all` (all six evaluations run and write
+`pnpm verify:ui` (67 browser checks, green) → `pnpm eval:all` (all six evaluations run and write
 their results — and **five of the six come back byte-identical to the committed reports**, from a
 tree that had never built them; `latency.json` is the sixth and records the cores and load it was
 taken under, which is exactly why it cannot).

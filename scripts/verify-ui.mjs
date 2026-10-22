@@ -14,7 +14,7 @@
  * sixty-two checks complete in twenty seconds. Run it before recording anything anyway.
  */
 import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright-core";
@@ -325,6 +325,40 @@ const page = await browser.newPage({
 });
 
 /**
+ * Keep what this gate already looks at — opt in, and off by default.
+ *
+ * Sixty-six assertions drive every beat of the storyboard in a real browser, in both themes,
+ * including the one where the add-on is unreachable. None of it was ever kept. The result is a
+ * repository with no image of its own product: a `grep` for `![`, `.png`, `.gif`, `.jpg` and
+ * `.svg` across every document returns nothing, so a reader who does not run the code sees the
+ * household described and never shown.
+ *
+ * `OWED_UI_SHOTS=<dir> pnpm verify:ui` writes one PNG per beat, named after the beats in
+ * `docs/demo-script.md` rather than after the order the assertions happen to run in, so the set
+ * reads as the take a presenter is about to record.
+ *
+ * Unset, nothing is written and not a line of behaviour changes — the gate and CI are untouched.
+ * Set to somewhere unwritable, `mkdirSync` throws here and the run dies before a single check,
+ * which is the point: a capture mode that quietly produces nothing is the exact failure this
+ * repository keeps finding in its own checks.
+ *
+ * Deliberately not committed. `docs/demo-capture.json` is in the repository *because*
+ * `verify:capture` re-derives it and fails when it drifts; an image cannot be held to that, so a
+ * checked-in screenshot would be an ungated claim of the kind this submission has spent a week
+ * removing. The command is the artifact.
+ */
+const SHOTS = process.env.OWED_UI_SHOTS;
+if (SHOTS !== undefined) mkdirSync(SHOTS, { recursive: true });
+
+let shotCount = 0;
+const shot = async (name, target = page) => {
+  if (SHOTS === undefined) return;
+  shotCount += 1;
+  await target.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
+  process.stdout.write(`  ..  kept ${name}.png\n`);
+};
+
+/**
  * Record what the page asks the browser to say.
  *
  * `speechSynthesis.speak` does not announce itself and headless Chrome has no audio
@@ -430,6 +464,7 @@ try {
   // of naming the one that broke — proved by removing the note and watching it happen.
   const hasNote = (await card().locator(".ledger__note").count()) === 1;
   check("the card volunteers the one it is not claiming", hasNote, true);
+  await shot("01-ledger-what-am-i-owed");
   const confession = hasNote ? await cardText(".ledger__note") : "";
   check(
     "and says why, in the words the script promises",
@@ -506,6 +541,7 @@ try {
 
   // --- the trust beat: what Owed did not see ------------------------------
   await page.getByRole("button", { name: "Why aren't you claiming that?" }).click();
+  await shot("02-evidence-why-not-claiming");
 
   check(
     "evidence card states the coverage",
@@ -559,6 +595,7 @@ try {
 
   await scrubTo(weekStart + 8 * HOUR);
   check("scrubbed back to Monday", (await page.textContent(".app__clock"))?.includes("Mon"), true);
+  await shot("03-scrubbed-to-monday");
 
   /**
    * The proactive beat. Crossing the moment a promise breaks makes Owed speak without
@@ -598,6 +635,28 @@ try {
     .filter({ hasText: "missed the delivery window" })
     .waitFor({ timeout: 10_000 })
     .catch(() => {});
+  /**
+   * And the card the announcement declared actually reaches the screen.
+   *
+   * `docs/proactive.md` calls `resource_uri` "the card to render where there is a screen", and
+   * amendment D28 made the brain render the one the *event* names rather than whichever tool it
+   * happened to call. That is asserted at the brain — `proactiveTurn.test.ts` compares the event
+   * to the tool's own `_meta.ui.resourceUri` — and until now nothing checked the household ever
+   * sees it. Sixty-six assertions passed over a beat that could have been a dark rectangle.
+   *
+   * Found by looking at a screenshot of this beat and seeing an empty frame: the card was simply
+   * still arriving, and waiting for it is both the honest shot and the missing check.
+   */
+  const announcementCard = await card()
+    .locator('[class^="evidence__"]')
+    .first()
+    .waitFor({ state: "visible", timeout: 15_000 })
+    .then(() => true)
+    .catch(() => false);
+  check("the announcement brings its own card to the screen", announcementCard, true);
+
+  await shot("04-owed-speaks-first");
+
   const announced = (await page.textContent(".voice__reply")) ?? "";
   // The offer, which docs/proactive.md calls the field without which an announcement is a
   // dead end. It was produced, tested, carried over the socket and then dropped by the
@@ -675,6 +734,7 @@ try {
   await page.locator(".app__proactive-offer").click();
 
   check("claim settles", await cardText(".claim__amount"), EXPECTED.settled);
+  await shot("05-claim-settled");
 
   /**
    * And Owed does not then announce it back, over the card it just drew.
@@ -808,6 +868,7 @@ try {
   await page.getByRole("button", { name: "Echo Dot" }).click();
   await page.waitForSelector(".dot__speech", { timeout: 20_000 });
   check("the Dot has no screen", await page.locator("iframe.echo__screen").count(), 0);
+  await shot("06-echo-dot-no-screen");
 
   const spokenOnDot = (await page.textContent(".dot__speech")) ?? "";
   check("the Dot still answers", spokenOnDot.length > 0, true);
@@ -846,6 +907,7 @@ try {
       .locator("body")
       .evaluate((body) => body.ownerDocument.documentElement.dataset.theme);
     check("the host passes the viewer's light theme to the card", theme, "light");
+    await shot("07-light-theme", lightPage);
 
     check(
       "the card renders the same figure in light",
@@ -951,6 +1013,10 @@ try {
      * thing — not live, so nothing may behave as though someone is listening.
      */
     const said = (await warned.textContent())?.trim();
+    // Kept here rather than in the branch above: that one runs only when the badge *fails*
+    // to warn, so the first version of this call produced seven files for eight beats and
+    // the missing one was the failure state — the beat hardest to stage by hand.
+    await shot("08-add-on-unreachable", dyingPage);
     check(
       "the home stops saying the add-on is there",
       said === "add-on unreachable" || said === "linking…" ? said : `unexpected: ${said}`,
@@ -985,3 +1051,6 @@ if (failures.length > 0) {
   process.exit(1);
 }
 process.stdout.write("\nThe household renders what the storyboard promises.\n");
+if (SHOTS !== undefined) {
+  process.stdout.write(`${shotCount} image(s) of it are in ${SHOTS}.\n`);
+}
