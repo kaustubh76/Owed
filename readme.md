@@ -612,13 +612,24 @@ pnpm demo           # merchants :3941 · MCP server :3939 · brain :3940 · home
 else's machine is a port already in use, and the failure that causes is confusing. It
 names what it looked for, what it found and what to do about it.
 
-**Checked from a clean clone**, not asserted: `git clone` → `pnpm install` (3.4s) →
-`pnpm build` (29s, and not optional — the services run from `dist/` and nothing builds on
-install) → `pnpm verify` (the project graph, the documents, build, lint, the whole test
-suite, the published numbers re-derived, conformance, what the packages would publish, the
-deployment gate — nine gates, all
-green) → `pnpm demo` (all four services answering in **4 seconds**) → `pnpm verify:ui` (every
-browser check, green) → all six evaluations run and write their results.
+**Checked from a clean clone**, not asserted — and re-run from one on 2026-10-22, at the commit
+this sentence ships with: `git clone` → `pnpm install` → `pnpm build` (not optional — the
+services run from `dist/` and nothing builds on install) → `pnpm verify` (the project graph, the
+documents, build, lint, the whole test suite, the published numbers re-derived, conformance, what
+the packages would publish, the deployment gate — nine gates, all green) → `pnpm demo` (all four
+services answering, and the household's "File it" driven over the socket to a settled claim) →
+`pnpm verify:ui` (66 browser checks, green) → `pnpm eval:all` (all six evaluations run and write
+their results — and **five of the six come back byte-identical to the committed reports**, from a
+tree that had never built them; `latency.json` is the sixth and records the cores and load it was
+taken under, which is exactly why it cannot).
+
+**The timings, with the conditions that make them measurements** — Node v26.10.0, Darwin arm64,
+8 cores, one-minute load average 7.1, pnpm store already populated: install **40s**, build
+**12s**, the nine gates **35s**, four services answering **4s**, the browser gate **15s**, the
+six evaluations **7s**. An earlier revision of this line quoted 3.4s for the install and 29s for
+the build with no conditions at all. The first was a warm re-install and not a clean clone at
+all; the second was measured before this tree grew. A cold pnpm store makes the install slower
+again, and §13 argues on its own behalf why no number here is a promise.
 
 Open http://127.0.0.1:5173 and ask *"Alexa, what am I owed?"*.
 
