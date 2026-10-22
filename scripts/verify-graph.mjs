@@ -306,6 +306,94 @@ for (const [name, { dir, pkg }] of [...graph].sort((a, b) => a[0].localeCompare(
 }
 
 /**
+ * And the licence it declares is actually in the package.
+ *
+ * The block above checks `pkg.license !== undefined` — a *string in `package.json`* — under a
+ * comment calling itself the packaging half of the claim. Three of its four checks are
+ * declarations, and the file it does look for is the one that was there. So all five
+ * publishable packages passed it while shipping **no copy of the licence at all**: `LICENSE`
+ * and `NOTICE` existed only at the repository root, and npm's always-included set covers
+ * `LICENSE*` from *the package's own* directory and does not cover `NOTICE` in any directory.
+ *
+ * That matters because this repository invites the distribution. `NOTICE` says these packages
+ * "are licensed under it for use outside this repository", and readme §15 says three of them
+ * lift out as they stand — while Apache-2.0 §4(a) requires the licence to accompany every
+ * distribution of the work and §4(d) requires a redistribution to carry the NOTICE's
+ * attribution notices.
+ *
+ * Byte-identity is checked rather than mere presence, because the fix is five copies of an
+ * 11 KB text and five copies are five things that can drift. Same treatment
+ * `policy-library`'s duplicated breach kinds get from a test: the duplication is allowed and
+ * then held in step.
+ */
+const LEGAL = ["LICENSE", "NOTICE"];
+const rootLegal = new Map(LEGAL.map((file) => [file, readFileSync(join(REPO_ROOT, file), "utf8")]));
+
+/** `./dist/index.js` against a `files` entry of `dist` — the shapes npm actually resolves. */
+function shippedBy(entry, files) {
+  const target = entry.replace(/^\.\//, "");
+  return files.some((pattern) => {
+    const shipped = pattern.replace(/^\.\//, "").replace(/\/$/, "");
+    return target === shipped || target.startsWith(`${shipped}/`);
+  });
+}
+
+for (const [name, { dir, pkg }] of [...graph].sort((a, b) => a[0].localeCompare(b[0]))) {
+  if (pkg.private === true) continue;
+  const files = Array.isArray(pkg.files) ? pkg.files : [];
+
+  const legalProblems = [];
+  for (const file of LEGAL) {
+    const path = join(dir, file);
+    if (!exists(path)) {
+      legalProblems.push(`no ${file}`);
+      continue;
+    }
+    if (readFileSync(path, "utf8") !== rootLegal.get(file)) {
+      legalProblems.push(`${file} differs from the root's`);
+    }
+    // Listed explicitly even for LICENSE, which npm would include anyway: a rule that reads
+    // the same for both files is a rule somebody can check by eye against `files`.
+    if (!files.includes(file)) legalProblems.push(`${file} is not in files, so it is not packed`);
+  }
+
+  if (legalProblems.length === 0) {
+    process.stdout.write(
+      `  ok  ${name} ships the licence it declares — LICENSE and NOTICE, identical to the root, both in files\n`,
+    );
+  } else {
+    failures.push(`${name} declares ${pkg.license} and ${legalProblems.join("; ")}`);
+    process.stdout.write(`  FAIL ${name} declares ${pkg.license} — ${legalProblems.join("; ")}\n`);
+  }
+
+  /**
+   * And every entry point it advertises is inside the tarball.
+   *
+   * The neighbouring bug, and the reason this is here rather than in its own pass: `exports`
+   * and `files` are two independent lists, and `exports` pointing at something `files` does not
+   * ship is a package that installs and cannot be imported. `package.json` is exempt — npm
+   * always includes it, which is why it can be an export target without being in `files`.
+   */
+  const entryPoints = [
+    pkg.main,
+    pkg.types,
+    ...Object.values(pkg.exports ?? {}).flatMap((entry) =>
+      typeof entry === "string" ? [entry] : Object.values(entry ?? {}),
+    ),
+  ].filter((entry) => typeof entry === "string" && entry !== "./package.json");
+
+  const unshipped = [...new Set(entryPoints)].filter((entry) => !shippedBy(entry, files));
+  if (unshipped.length === 0) {
+    process.stdout.write(
+      `  ok  ${name} ships what it points at — ${[...new Set(entryPoints)].join(", ")}\n`,
+    );
+  } else {
+    failures.push(`${name} advertises ${unshipped.join(", ")} and no files entry ships them`);
+    process.stdout.write(`  FAIL ${name} advertises ${unshipped.join(", ")} — not in files\n`);
+  }
+}
+
+/**
  * And the graph is acyclic.
  *
  * A cycle is a build-order problem of the same family as a missing reference, and it is a

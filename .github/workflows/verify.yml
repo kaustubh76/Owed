@@ -138,6 +138,12 @@ jobs:
       # The external Alexa+ conformance checker, run against a real booted server.
       - run: pnpm conformance
 
+      # What these packages would actually publish. `verify:graph` above checks that each one
+      # *declares* a licence, `files` and `exports`; this opens the archive, because all five
+      # passed that while carrying no copy of the Apache-2.0 text and shipping compiled tests
+      # under a `files` entry of `dist`. Needs `dist`, so it runs after the build.
+      - run: pnpm verify:pack
+
       # Caddy, so the deployment gate below can validate the Caddyfile rather than report
       # it as skipped. Lifted out of the official image at a pinned version instead of
       # added as an apt repository: one file, no third-party source list, and the runner

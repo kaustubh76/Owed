@@ -80,14 +80,14 @@ partner-gated, and §13 of the readme carries the real-vs-simulated map.
 
 ```bash
 pnpm preflight        # a machine that can run it says so
-pnpm verify           # eight gates: graph, docs, build, lint, tests, eval, conformance, deploy
+pnpm verify           # nine gates: graph, docs, build, lint, tests, eval, conformance, pack, deploy
 pnpm verify:ui        # 66 browser assertions and four accessibility audits, needs Chrome
                       # (also a CI step since 2026-10-21 — it is not in the chain above)
 pnpm demo             # four processes; the home at http://127.0.0.1:5173
 ```
 
-Measured on an 8-core machine on 2026-10-22: `pnpm verify` 17s, or 28s with every Docker-backed
-gate demanded (~80s on CI's two-core runner), `pnpm verify:ui` 11s locally and 20s on CI (66
+Measured on an 8-core machine on 2026-10-22: `pnpm verify` 20s, or 44s with every Docker-backed
+gate demanded — the ninth gate builds five archives (~80s on CI's two-core runner), `pnpm verify:ui` 11s locally and 20s on CI (66
 browser assertions, zero failures), the whole suite green with DynamoDB Local up — one test
 skipped, a placeholder. **No test count is quoted here, deliberately.** This line read "570 tests
 across 50 files" while the suite had 587 across 52, because a count in prose has nothing holding

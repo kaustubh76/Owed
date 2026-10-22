@@ -15,6 +15,10 @@
   "files": [
     "dist",
     "policies",
+    "!dist/**/*.test.*",
+    "!dist/**/*.tsbuildinfo",
+    "LICENSE",
+    "NOTICE",
     "README.md"
   ],
   "scripts": {

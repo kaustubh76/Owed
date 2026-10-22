@@ -434,7 +434,7 @@ the fourth failed on a clean checkout with `TS2307: Cannot find module '@owed/ui
 from a tree that built fine on two other machines, with no change to any file involved.
 Nothing in the output suggests a missing reference; `TS2307` reads as a typo or a bad path.
 
-**Workaround.** Add the reference, then assert the whole graph: a 352-line script checks that
+**Workaround.** Add the reference, then assert the whole graph: a 440-line script checks that
 every `@owed/*` import is both declared in `dependencies` and present in `references`, and
 runs before the build it protects.
 

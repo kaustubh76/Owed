@@ -274,6 +274,35 @@ proposes in words and waits for `confirm`. Both paths are tested; see docs/frict
 > `packages/` or `apps/`. Writes deliberately do not count: proved by mutation — counting any
 > mention reports `resource_uri 4` and passes while the host ignores it.
 
+> **Amended D29 — the archive, which nothing had opened.** `verify:graph` checks that a
+> publishable package declares `license`, `files` and `exports` and has a README, under a
+> comment calling itself "the packaging half of the same claim". Three of those four are strings
+> in `package.json`. All five publishable packages passed it while **shipping no `NOTICE`**, and
+> three shipped compiled test files — `recourse-protocol` published `dist/protocol.test.js`,
+> which imports `vitest`, a devDependency the archive does not depend on, under a `files` entry
+> that said only `dist`.
+>
+> **What I claimed first and what packing showed.** I expected the archives to carry no licence
+> text at all, since `LICENSE` and `NOTICE` existed only at the repository root. Packing one in
+> its committed state refuted half of that: **pnpm 10.18.2 copies the workspace root's licence
+> into a packed workspace package that has none**, so `LICENSE` was already there, byte-identical,
+> by the packer's courtesy. `npm pack` performs no such substitution, and **nothing copies
+> `NOTICE`** — which is the file Apache-2.0 §4(d) is about, and where this project's copyright
+> holder and third-party notices live. Recording the correction rather than the first draft,
+> because the difference between "no licence" and "a licence this packer happens to supply" is
+> exactly the kind of thing this document exists to get right.
+>
+> Each of the five now carries `LICENSE` and `NOTICE` of its own, byte-identical to the root's
+> and listed in `files`, and excludes `dist/**/*.test.*` and `dist/**/*.tsbuildinfo`.
+>
+> **Two gates, deliberately asymmetric.** `verify:graph` reads the file system: it catches a
+> package losing its own copy, or a copy drifting from the root's. The new `pnpm verify:pack`
+> builds the archive and reads what is in it: it catches what `files` actually resolves to, and
+> an `exports` path no `files` entry ships. Neither subsumes the other, and the proof is a
+> mutation of each — deleting a package's `LICENSE` is **invisible** to the archive gate, because
+> pnpm supplies the root's again; dropping the `!dist/**/*.test.*` negation is **invisible** to
+> the static gate, because `files` still reads as it did.
+
 ### Measured against the targets this submission holds itself to
 
 This table used to be headed "Amazon's documented targets", and that overstated its
