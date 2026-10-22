@@ -251,6 +251,29 @@ proposes in words and waits for `confirm`. Both paths are tested; see docs/frict
 > seen and stay quiet (`apps/brain/src/proactive.ts`). `docs/proactive.md` opens on the premise
 > this broke: *"Owed exists to notice what the household did **not** ask about."*
 
+> **Amended D28 — the proposal argued for a field its own host ignored.** `docs/proactive.md`
+> offers an eight-field commitment schema with a paragraph per field on why a host needs it.
+> Counting *reads* rather than writes, seven had a consumer and `resource_uri` had **none** — the
+> field whose stated purpose is "The card to render where there is a screen. Absent is
+> legitimate: voice is enough." It was written in three places in `proactive/scheduler.ts` and
+> drawn in the architecture diagram, which is exactly how it looked wired.
+>
+> The brain decided the card a second way: `cardCallFor` picked a tool from `event.kind`, and the
+> card came from that tool result's `_meta.ui.resourceUri`. Two statements of "which card for
+> this event" in two packages, agreeing only because both were written to agree — the state
+> `schemas.sync.test.ts` exists to refuse everywhere else here. And the documented absence was
+> not honoured: an event declaring no card still got one, because nothing looked.
+>
+> `announce()` now renders the card the event names, and `proactiveTurn.test.ts` asserts the two
+> statements agree for every kind the storyboard produces — comparing the event to the tool
+> result directly, not to the brain's own reader. The tool call stays unconditional, because it
+> is what leaves the promise in focus and "file it" has to work on a device with no screen.
+>
+> **Gated, because the next field will look wired the same way.** `verify:docs` reads the field
+> table out of `docs/proactive.md` and requires every field in it to be *read* somewhere in
+> `packages/` or `apps/`. Writes deliberately do not count: proved by mutation — counting any
+> mention reports `resource_uri 4` and passes while the host ignores it.
+
 ### Measured against the targets this submission holds itself to
 
 This table used to be headed "Amazon's documented targets", and that overstated its

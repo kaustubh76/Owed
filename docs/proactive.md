@@ -46,6 +46,12 @@ whether to interrupt somebody.
 | `resource_uri` | The card to render where there is a screen. Absent is legitimate: voice is enough. |
 | `offer` | What the household can say next, and the tool it maps to. Without this an announcement is a dead end — somebody hears that something is wrong and has to work out for themselves how to ask for it to be fixed. |
 
+Every field above is **read** by the reference implementation, not merely produced by it, and
+`pnpm verify:docs` enforces that: it parses this table and fails if any field is written and
+never read. That check exists because `resource_uri` was written in three places and read
+nowhere for most of this build — the host decided the card from the tool it happened to call
+instead, and an event declaring no card got one anyway. Contract amendment D28.
+
 ## What we built instead
 
 A **projection, not a queue**:

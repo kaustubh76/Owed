@@ -938,6 +938,57 @@ for (const file of ["readme.md", "docs/contract-v1.md"]) {
 // ---------------------------------------------------------------------------
 // The messages the script tells a judge to POST
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+/**
+ * `docs/proactive.md` is a proposal, and it argues for each field one at a time.
+ *
+ * That document is this submission's answer to the one primitive it could find no
+ * documentation for: a schema offered to Amazon, with a table giving a reason **a host needs**
+ * every field in it. A proposal that argues for a field its own reference implementation
+ * ignores is a weaker proposal, and `resource_uri` was exactly that — written in three places
+ * in `proactive/scheduler.ts`, drawn in the architecture diagram, and **read nowhere**. The
+ * brain decided the card a second way instead, from the tool that `cardCallFor` picked.
+ *
+ * So the rule counts *reads*, not mentions. A write is `field:` inside an object literal,
+ * which is how `resource_uri` looked wired for as long as it was not; a read is `.field`. Had
+ * this check counted either, it would have passed on the day it was needed.
+ */
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the proactive proposal, against the host that consumes it ---\n");
+
+const proactiveDoc = read(join(DOCS, "proactive.md"));
+const proactiveFields = [...proactiveDoc.matchAll(/^\| `([a-z_]+)` \| /gm)].map(
+  (match) => match[1],
+);
+
+/**
+ * The empty-set guard, which this repository has needed twice. A table nobody parsed yields no
+ * fields, and a loop over no fields reports no problems.
+ */
+want(
+  "the field table in docs/proactive.md parses",
+  proactiveFields.length >= 8,
+  `${proactiveFields.length} field(s): ${proactiveFields.join(", ")}`,
+);
+
+const hostSource = sources.map((file) => withoutComments(read(file))).join("\n");
+const readCounts = new Map(
+  proactiveFields.map((field) => [
+    field,
+    (hostSource.match(new RegExp(`\\.${field}\\b`, "g")) ?? []).length,
+  ]),
+);
+const neverRead = proactiveFields.filter((field) => (readCounts.get(field) ?? 0) === 0);
+
+want(
+  "every field the proposal argues for is read by the implementation",
+  neverRead.length === 0,
+  neverRead.length === 0
+    ? [...readCounts].map(([field, count]) => `${field} ${count}`).join(", ")
+    : `written and never read: ${neverRead.join(", ")} — a field only an object literal names is` +
+        " not wired, however many places write it",
+);
+
 process.stdout.write("\n--- the curl payloads the script ships ---\n");
 
 const demoScriptText = read(join(DOCS, "demo-script.md"));

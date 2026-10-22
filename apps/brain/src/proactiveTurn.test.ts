@@ -206,3 +206,91 @@ describe("answering an announcement's offer", () => {
     }
   });
 });
+
+/** The `_meta.ui.resourceUri` a tool result carries, read straight rather than through the brain. */
+function viewTheToolSupplied(result: unknown): string | undefined {
+  const meta = (result as { _meta?: { ui?: { resourceUri?: unknown } } } | undefined)?._meta;
+  const uri = meta?.ui?.resourceUri;
+  return typeof uri === "string" ? uri : undefined;
+}
+
+describe("the card an announcement declares", () => {
+  /**
+   * Two declarations of "which card for this event", in two packages.
+   *
+   * `proactive/scheduler.ts` puts a `resource_uri` on every event it builds, and the tool that
+   * supplies the data carries its own `_meta.ui.resourceUri`. Nothing compared them. They agreed
+   * because both were written to agree, which is the state `schemas.sync.test.ts` exists to
+   * refuse everywhere else in this repository — and here one half was read by nothing at all.
+   *
+   * Read off the tool result directly rather than through the brain's own reader, so this
+   * compares the *server's* two statements instead of comparing the brain to itself.
+   */
+  it("is the card the tool that fills it agrees to, for every kind the week produces", {
+    timeout: TEST_TIMEOUT,
+  }, async () => {
+    const owed = await brainAgainstOwed();
+    try {
+      const before = await owed.commitments();
+      await owed.brain.turn("what am I owed");
+      await owed.brain.turn("file it");
+      const after = await owed.commitments();
+
+      // Every kind, and the settled one only exists because the claim above was filed.
+      const events = [...before, ...after].filter(
+        (event, index, all) =>
+          all.findIndex((other) => other.event_id === event.event_id) === index,
+      );
+      const kinds = new Set(events.map((event) => event.kind));
+      expect(kinds, "all three kinds reached").toStrictEqual(
+        new Set(["promise_breached", "claim_recovered", "claim_settled"]),
+      );
+
+      for (const event of events) {
+        expect(event.resource_uri, `${event.event_id} declares a card`).toBeDefined();
+        const announced = await owed.brain.announce(event);
+
+        expect(announced.view?.uri, `${event.event_id} rendered the card it declared`).toBe(
+          event.resource_uri,
+        );
+        expect(
+          viewTheToolSupplied(announced.view?.result),
+          `${event.event_id}: the tool's own view`,
+        ).toBe(event.resource_uri);
+      }
+    } finally {
+      await owed.close();
+    }
+  });
+
+  /**
+   * "Absent is legitimate: voice is enough" — the schema's own words.
+   *
+   * The old path read the uri off the tool result, so an event that declared no card got one
+   * anyway. Unreachable through `scheduler.ts`, which sets it on all three kinds; reachable the
+   * moment anything else produces one of these, which is the point of publishing a schema.
+   */
+  it("is nothing at all when the event declares none, and the announcement still speaks", {
+    timeout: TEST_TIMEOUT,
+  }, async () => {
+    const owed = await brainAgainstOwed();
+    try {
+      const breach = breachWithOffer(await owed.commitments());
+      const { resource_uri: _declared, ...voiceOnly } = breach;
+
+      const announced = await owed.brain.announce(voiceOnly);
+
+      // `.uri`, not the whole payload: a view carries ~460 KB of inlined HTML, and asserting
+      // on the object dumps all of it into the diff. Found by watching this very assertion
+      // fail under mutation and print 96 KB of bundled React.
+      expect(announced.view?.uri, "no card was drawn").toBeUndefined();
+      expect(announced.reply, "and it still said it out loud").toBe(breach.spoken);
+      // The tool still ran, which is what makes "file it" work on a device with no screen.
+      expect(owed.brain.focus, "focus was still left on the promise").toBe(
+        breach.subject.promise_id,
+      );
+    } finally {
+      await owed.close();
+    }
+  });
+});

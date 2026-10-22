@@ -174,13 +174,37 @@ export class OwedBrain {
     if (call === undefined) return message;
 
     try {
+      /**
+       * Called even when the event declares no card, because this is the call that leaves the
+       * promise in focus — and "file it" has to work on a device with no screen at all.
+       */
       const result = await this.#session.call((client) => client.callTool(call));
       this.#rememberFocus(result);
 
-      const uri = readResourceUri(result);
-      if (uri === undefined) return message;
-      const html = await this.#viewHtml(uri);
-      if (html !== undefined) message.view = { uri, html, result };
+      /**
+       * The card the **event** names, which is the whole of what `resource_uri` is for.
+       *
+       * This used to read the uri off the tool result instead, which meant Owed decided the
+       * card twice: once in `proactive/scheduler.ts`, where every event declares a
+       * `resource_uri`, and once here, from whichever tool `cardCallFor` picked. Two
+       * definitions in two packages, agreeing only because both were written to — and the
+       * event's half was read by nothing at all, in a schema `docs/proactive.md` publishes as
+       * a proposal with a paragraph on why a host needs this field.
+       *
+       * Absent is not an oversight, it is a producer saying voice is enough — the schema says
+       * so in as many words — and the old path would have drawn a card anyway. Unreachable in
+       * this repository, where the scheduler sets it on all three kinds, and that is exactly
+       * the kind of unreachable that stops being unreachable in somebody else's producer.
+       *
+       * The two are asserted equal for every kind in `proactiveTurn.test.ts`, so a card fed
+       * another card's data cannot ship. If it ever did, `useOwedView` already answers it:
+       * "Owed sent something this card could not read."
+       */
+      const declared = event.resource_uri;
+      if (declared === undefined) return message;
+
+      const html = await this.#viewHtml(declared);
+      if (html !== undefined) message.view = { uri: declared, html, result };
     } catch {
       // A card that cannot be drawn must never silence the announcement. Voice is the
       // surface that always exists.
