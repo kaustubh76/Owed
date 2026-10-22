@@ -911,6 +911,7 @@ these are the behaviours that exist for that and are tested for it:
 | **The home reconnects** | A brain restart used to leave every open page dead until a human reloaded it. |
 | **A store failure is a failed request** | `/control/commitments` fired a floating promise, so one DynamoDB throttle became an unhandled rejection and took the server down — on an endpoint the brain polls every 1500ms. It answers 503 now, and `packages/mcp-server/src/failure.test.ts` asserts the process survives. |
 | **`/health` touches the ledger** | So a proxy can tell "listening" from "working", which are different and were indistinguishable. |
+| **The public surface is resolved, not read** | The Caddyfile refuses `/control/*` and `/health` on purpose, and nothing asserted it — deleting both blocks passed all nine gates. `pnpm verify:deploy` now resolves every route the server registers against the config `caddy adapt` compiles, because Caddy sorts `handle` blocks by specificity and the file's text therefore does not say what answers a request. It found one: `/docs/account-linking`, which `auth/metadata.ts` advertises to clients by absolute URL as `service_documentation`, was routed nowhere and answered **index.html with a 200**. |
 | **SIGTERM drains** | All three services close their listeners and the store on the way out. |
 
 ### 12.2 Going public, and the four variables that matter

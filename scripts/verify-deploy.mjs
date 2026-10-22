@@ -18,6 +18,11 @@
  * present and are reported as skipped when it is not, which is honest about what a green
  * run on a Mac does and does not establish. GitHub's ubuntu runners carry the first two.
  *
+ * One check is not just parsing: the public surface is resolved against the config `caddy
+ * adapt` compiles, because Caddy sorts `handle` blocks by specificity and the file's text
+ * therefore does not say what answers a request. Without caddy that one cannot run, and the
+ * deny blocks go unasserted — which is the sharpest reason for the variable below.
+ *
  * **`OWED_REQUIRE_VALIDATORS=1` turns an absent binary into a failure**, and CI sets it.
  * Reporting a skip and exiting 0 is right on a laptop — a clean clone must run `pnpm verify`
  * green with nothing installed — and wrong where all three are supposed to exist: if the
@@ -307,6 +312,207 @@ want(
 );
 
 /**
+ * Every route the server registers, resolved the way Caddy resolves it.
+ *
+ * `deploy/Caddyfile` carries a security claim in a comment — `/control/*` "left exposed would
+ * be three ledger leaks and an unauthenticated write […] This block is the control that makes
+ * them unreachable" — and `deploy/README.md` repeats it as a feature. **Nothing asserted it.**
+ * The section above checks the opposite direction, that every port the file proxies has
+ * something listening, and pins one exposure; it never read the deny blocks at all. Deleting
+ * them was a nine-gates-green edit. And `/health` has no second control behind it: no token,
+ * no auth, the household's event count and a full ledger replay on every anonymous request.
+ *
+ * Reading the compiled config rather than the file text is the whole point. Caddy sorts
+ * `handle` blocks by specificity rather than by the order they are written, so the text does
+ * not say what answers a request — `caddy adapt` does. A reorder, a `route` block, a
+ * `handle_path`, or a more specific matcher added above a deny block all defeat a grep, and
+ * none of them defeat this. Same binary and same container as `caddy validate` below.
+ *
+ * It found one. `/docs/account-linking` was registered, tested, and advertised to clients by
+ * absolute URL — `auth/metadata.ts` puts `${issuer}/docs/account-linking` in the RFC 8414
+ * document as `service_documentation`, and the issuer is the public origin — while the
+ * Caddyfile routed it nowhere, so it fell through to the static site and answered
+ * **index.html with a 200**. `auth/accountLinking.ts` records that this same field once
+ * promised a path nothing served; a route was added and a test pinned it *on loopback*, and
+ * the public path to it was never checked. Half a fix.
+ *
+ * The route list is derived from the source rather than written here, because a list somebody
+ * has to remember to extend is how the defects in this repository survive. A new endpoint
+ * enters this check by existing, and fails it until it is classified below.
+ */
+process.stdout.write("\n--- every registered route, against the compiled Caddy config ---\n");
+
+const SERVER_SRC = join(REPO_ROOT, "packages", "mcp-server", "src");
+const ROUTE_CALL = /\b(?:app|router)\.(?:get|post|put|delete|all)\(\s*"(\/[^"]*)"/g;
+
+/**
+ * What the public listener may do with each route, and why. Longest matching prefix wins.
+ *
+ * `reached: false` means it must be refused outright; everything else must arrive at the MCP
+ * server, on the port that server's own source declares. The reasons are here because this is
+ * the table a future reader argues with when they want to publish something new.
+ */
+const EDGE_POLICY = [
+  {
+    prefix: "/control/",
+    reached: false,
+    why: "a ledger leak and an unauthenticated write; the brain reaches these over loopback",
+  },
+  {
+    prefix: "/health",
+    reached: false,
+    why: "the event count, a ledger replay per call, and a 200 that would mean nothing",
+  },
+  { prefix: "/mcp", reached: true, why: "the add-on contract" },
+  {
+    prefix: "/.well-known/",
+    reached: true,
+    why: "OAuth discovery, which a client fetches before anything else",
+  },
+  { prefix: "/oauth/", reached: true, why: "authorize and token" },
+  {
+    prefix: "/docs/",
+    reached: true,
+    why: "named by absolute URL as service_documentation in the RFC 8414 document",
+  },
+];
+
+const sources = (await readdir(SERVER_SRC, { recursive: true })).filter(
+  (name) => name.endsWith(".ts") && !name.endsWith(".test.ts"),
+);
+const registered = new Set();
+for (const name of sources) {
+  for (const [, path] of readFileSync(join(SERVER_SRC, name), "utf8").matchAll(ROUTE_CALL)) {
+    registered.add(path);
+  }
+}
+const routes = [...registered].sort();
+
+/**
+ * The floor, because a scan that finds nothing would report nothing and pass.
+ *
+ * Fourteen is what the server registers today, counted rather than assumed: `/mcp`, five
+ * under `/control`, `/health`, four `.well-known` documents, two `/oauth` endpoints and the
+ * account-linking page. Adding routes is fine; losing the ability to see them is not.
+ */
+const ROUTE_FLOOR = 14;
+want(
+  "the route scan found the server's endpoints",
+  routes.length >= ROUTE_FLOOR,
+  routes.length >= ROUTE_FLOOR
+    ? `${routes.length} routes across ${sources.length} source files`
+    : `only ${routes.length}, expected at least ${ROUTE_FLOOR} — the scan broke, which would ` +
+        "make every check below it vacuous",
+);
+
+const adapted = tool("caddy", ["adapt", "--config", join(DEPLOY, "Caddyfile")]);
+if (adapted === undefined) {
+  process.stdout.write(
+    "  not run here (caddy absent): the deny blocks go unasserted on this machine\n",
+  );
+} else if (adapted.status !== 0) {
+  want("caddy adapt reads the Caddyfile", false, adapted.stderr.trim().slice(0, 400));
+} else {
+  const config = JSON.parse(adapted.stdout);
+  const servers = Object.values(config.apps?.http?.servers ?? {});
+  want(
+    "the Caddyfile defines exactly one site",
+    servers.length === 1,
+    `${servers.length} server block(s) — a second one would route requests nobody reviewed`,
+  );
+
+  /** Handlers that answer. Caddy stops at the first of these, so it decides the outcome. */
+  const TERMINAL = new Set(["static_response", "reverse_proxy", "file_server", "error"]);
+
+  const pathMatches = (pattern, path) => {
+    const matcher = pattern.toLowerCase();
+    const candidate = path.toLowerCase();
+    return matcher.endsWith("*")
+      ? candidate.startsWith(matcher.slice(0, -1))
+      : matcher === candidate;
+  };
+
+  /**
+   * Host and file matchers are not path gates. The host is the one site above, and the `file`
+   * matcher guards the static block's own `try_files` rewrite — treating either as a filter
+   * would report a path as unhandled when the static site is exactly what answers it.
+   */
+  const matches = (match, path) =>
+    match === undefined ||
+    match.every((m) => m.path === undefined || m.path.some((p) => pathMatches(p, path)));
+
+  const answering = (routeList, path) => {
+    for (const route of routeList) {
+      if (!matches(route.match, path)) continue;
+      for (const handler of route.handle ?? []) {
+        if (handler.handler === "subroute") {
+          const inner = answering(handler.routes ?? [], path);
+          if (inner !== undefined) return inner;
+          continue;
+        }
+        if (TERMINAL.has(handler.handler)) return handler;
+      }
+    }
+    return undefined;
+  };
+
+  const mcpPort = [...defaults.entries()].find(([, label]) => label === "mcp server")?.[0];
+  const say = (handler) => {
+    if (handler === undefined) return "nothing answers it";
+    if (handler.handler === "reverse_proxy") {
+      return `proxied to ${(handler.upstreams ?? []).map((u) => u.dial).join(", ")}`;
+    }
+    if (handler.handler === "static_response") return `refused with ${handler.status_code}`;
+    if (handler.handler === "file_server") {
+      return "the static site answers it — index.html, with a 200";
+    }
+    return handler.handler;
+  };
+
+  for (const path of routes) {
+    const [policy] = EDGE_POLICY.filter((entry) => path.startsWith(entry.prefix)).sort(
+      (a, b) => b.prefix.length - a.prefix.length,
+    );
+    if (policy === undefined) {
+      want(
+        `${path} is classified`,
+        false,
+        "no EDGE_POLICY entry covers it — add one with its reason, so that publishing a new " +
+          "endpoint is a decision somebody wrote down and not a default",
+      );
+      continue;
+    }
+
+    const handler = answering(
+      servers.flatMap((server) => server.routes ?? []),
+      path,
+    );
+
+    if (policy.reached) {
+      const dialled =
+        handler?.handler === "reverse_proxy"
+          ? (handler.upstreams ?? []).map((u) => String(u.dial).split(":").pop())
+          : [];
+      const ok = mcpPort !== undefined && dialled.length > 0 && dialled.every((p) => p === mcpPort);
+      want(
+        `${path} reaches the server`,
+        ok,
+        ok ? `proxied to ${mcpPort} — ${policy.why}` : `${say(handler)}, and it is ${policy.why}`,
+      );
+    } else {
+      const ok = handler?.handler === "static_response" && Number(handler.status_code) === 404;
+      want(
+        `${path} is refused at the edge`,
+        ok,
+        ok
+          ? `404, never proxied — ${policy.why}`
+          : `${say(handler)} — exposed, it is ${policy.why}`,
+      );
+    }
+  }
+}
+
+/**
  * The IAM policy, in both places it lives.
  *
  * `iam-policy-phase1.json` is the policy; `create-cli-user.sh` carries a second copy inline,
@@ -524,9 +730,11 @@ if (skipped.length > 0) {
   }
   process.stdout.write(
     `\n  ${REQUIRED ? "FAIL" : "not run here"} (binary absent): ${absent}\n` +
-      "  The structural checks above do not depend on them. CI runs all three: its runners\n" +
-      "  carry shellcheck and systemd-analyze, and the workflow lifts caddy out of the\n" +
-      "  official image before this step.\n" +
+      "  The structural checks above do not depend on them — but the route resolution does:\n" +
+      "  without caddy, nothing here asserts that /control/* and /health are refused at the\n" +
+      "  edge, or that /docs/account-linking is reachable at all.\n" +
+      "  CI runs all three: its runners carry shellcheck and systemd-analyze, and the\n" +
+      "  workflow lifts caddy out of the official image before this step.\n" +
       (DOCKER ? "" : "  `OWED_DOCKER_VALIDATORS=1` runs all three in Linux containers instead.\n"),
   );
 }

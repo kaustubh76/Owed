@@ -5,7 +5,7 @@ judge the demo — `pnpm demo` is unchanged and still needs no account and no ke
 
 | File | |
 |---|---|
-| `Caddyfile` | The entire public surface. Validated against real Caddy. Deliberately does **not** proxy `/control/*`. |
+| `Caddyfile` | The entire public surface. Validated against real Caddy, and every route the server registers is resolved against the config `caddy adapt` compiles. Deliberately does **not** proxy `/control/*` or `/health`; deliberately **does** proxy `/docs/*`, which the OAuth metadata advertises by absolute URL. |
 | `caddy.service` | Shipped because Caddy installs as a static binary here, so there is no packaged unit. |
 | `owed-server.service`, `owed-brain.service`, `owed-merchants.service` | One process each, so a crash is visible and restartable rather than one shell holding three. |
 | `bootstrap.sh` | Amazon Linux 2023 arm64, run once as root. Installs checksum-verified Node and Caddy, builds, writes `/etc/owed/owed.env`, enables the units. |
@@ -15,8 +15,9 @@ judge the demo — `pnpm demo` is unchanged and still needs no account and no ke
 
 ## Checking this directory without a Linux box
 
-`pnpm verify:deploy` runs 34 structural checks on the four units and the Caddyfile on any
-machine. The three real validators need Linux — `systemd-analyze` cannot meaningfully exist on
+`pnpm verify:deploy` runs 35 structural checks on the four units and the Caddyfile on any
+machine, and fifteen more that resolve every route the server registers against the config
+`caddy adapt` compiles — those need caddy, natively or in a container. The three real validators need Linux — `systemd-analyze` cannot meaningfully exist on
 macOS — so on a Mac they report as skipped and only CI ever ran them, which left this
 directory the one place edited locally and checked remotely.
 
@@ -71,6 +72,13 @@ box and proxies to loopback, so nothing needs a public interface. The security g
 only 80, 443, and 22 from one address. That is also why `/control/*` — which carries no auth
 of its own and would otherwise leak the merchant negotiations verbatim — needs no public
 route at all.
+
+**That is now a check and not a comment.** The Caddyfile's deny blocks were the only thing
+standing between those endpoints and the internet, and nothing asserted them: deleting both
+was an edit all nine gates passed. `pnpm verify:deploy` resolves each registered route
+against the compiled config and requires it to be deliberately proxied or deliberately
+refused, so publishing one is now an edit to a table of reasons rather than a deletion
+nobody notices.
 
 ## `pnpm verify:ui` needs a fresh ledger
 
@@ -141,7 +149,9 @@ curl -s http://127.0.0.1:3939/health      # on the box: the ledger, not just the
 **It is loopback-only, and the Caddyfile answers 404 for it explicitly.** Not merely
 unrouted — without that block `/health` falls through to the static site and returns
 `index.html` with a **200**, so a monitor pointed at the public URL would report healthy
-forever regardless of the ledger. Verified by running it, which is how that was found.
+forever regardless of the ledger. Verified by running it, which is how that was found — and
+asserted since, because `/health` has no token behind it the way `/control/*` does, so that
+one block is the whole of its protection.
 
 **Caddy does not probe it either**, and that is deliberate. An earlier version used
 `health_uri /health` on the `/mcp` proxy; testing showed Caddy's health checker sends

@@ -85,6 +85,20 @@ owed.example.com {
 		reverse_proxy 127.0.0.1:3939
 	}
 
+	# The account-linking page, which the OAuth metadata advertises by absolute URL.
+	#
+	# `service_documentation` in auth/metadata.ts names ${OWED_BASE_URL}/docs/account-linking,
+	# and clients follow what that document says. Without this block the path falls through to
+	# the static site below and answers **index.html with a 200** — so the field points at the
+	# household's home page rather than at the documentation, which is how it read in every
+	# deployment until `verify:deploy` started resolving routes against the compiled config.
+	#
+	# The whole /docs namespace is the server's: apps/home has nothing under it, so anything
+	# else here gets Express's 404, which is the right answer.
+	handle /docs/* {
+		reverse_proxy 127.0.0.1:3939
+	}
+
 	# ── The household UI ───────────────────────────────────────────────────────────────
 	#
 	# The brain's WebSocket. Caddy upgrades transparently, which is most of why this is a
