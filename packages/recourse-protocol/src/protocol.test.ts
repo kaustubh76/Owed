@@ -204,6 +204,62 @@ describe("protocol enforcement", () => {
     await expect(runSession(alwaysAccept, broken)).rejects.toThrow(ProtocolViolation);
   });
 
+  /**
+   * The settlement that is really a refusal.
+   *
+   * `DECLINE` is required to carry a reason *and* an escalation route, because a merchant may
+   * refuse but may not leave a household with nowhere to go. A `SETTLE` for nothing closed the
+   * claim as a settlement, was spoken as a recovery, and carried neither.
+   */
+  it("refuses a settlement of nothing, which is a decline wearing a settlement's clothes", async () => {
+    await expect(runSession(alwaysAccept, respondent("nothing", [settle(usd(0))]))).rejects.toThrow(
+      /DECLINE/,
+    );
+  });
+
+  /** A zero *offer* is ordinary haggling, and the evaluation grid runs `anchor_ratio: 0`. */
+  it("allows an offer of nothing, which is only a hard opening position", async () => {
+    const result = await runSession(
+      alwaysAccept,
+      respondent("lowball", [offer(usd(0)), settle(usd(5))]),
+    );
+
+    expect(result.outcome).toBe("settled");
+  });
+
+  /**
+   * Deliberately allowed, and tested so nobody "fixes" it.
+   *
+   * A rule refusing any reply above `claim.ask` was written and the pre-registered evaluation
+   * grid refused it — `reply names 1600 USD against an ask of 1500`. `accept_ratio` runs above
+   * 1 on purpose: a merchant whose published terms are more generous than the claimant's
+   * reading of them pays more than it was asked for, which is a merchant behaving well. The
+   * claimant asks; it does not cap.
+   */
+  it("accepts a reply more generous than the ask", async () => {
+    const result = await runSession(alwaysAccept, respondent("generous", [settle(usd(20))]));
+
+    expect(CLAIM.ask).toEqual(usd(15));
+    expect(result.settled).toEqual(usd(20));
+  });
+
+  /**
+   * And the published suite reports it, without a check of its own.
+   *
+   * A dedicated conformance check could never be exercised: `runSession` refuses the transcript
+   * before the suite could inspect a zero settlement, so `reaches-a-conclusion` is where a
+   * merchant author sees it — carrying the violation's own message, which is more use than a
+   * boolean.
+   */
+  it("tells a merchant author why, through the conformance suite", async () => {
+    const report = await checkMerchantConformance(respondent("nothing", [settle(usd(0))]));
+
+    expect(report.passed).toBe(false);
+    const failed = report.results.filter((check) => !check.pass);
+    expect(failed.map((check) => check.id)).toStrictEqual(["reaches-a-conclusion"]);
+    expect(failed[0]?.detail).toMatch(/DECLINE/);
+  });
+
   it("requires a session to open with a CLAIM", async () => {
     const notAClaim = {
       open: () => offer(usd(5)) as unknown as ClaimMessage,

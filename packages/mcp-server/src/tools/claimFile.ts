@@ -11,6 +11,7 @@ import {
   remedyContextFor,
   type SiblingVerdict,
   sourceVerdictFor,
+  UnspeakableAmount,
 } from "@owed/core";
 import {
   addMs,
@@ -462,7 +463,12 @@ async function handleClaimFile(
       coverageStatement: coverageStatement(assessment.coverage),
     });
   } catch (error) {
-    if (error instanceof ProtocolViolation) return recordWithoutAgent("unusable");
+    // Two different rules, one answer: the agent said something Owed will not record, so
+    // the claim goes on a route that does not need the agent. `UnspeakableAmount` is Owed's
+    // own ceiling rather than the protocol's, raised by `filing.ts` before the append.
+    if (error instanceof ProtocolViolation || error instanceof UnspeakableAmount) {
+      return recordWithoutAgent("unusable");
+    }
     throw error;
   }
 

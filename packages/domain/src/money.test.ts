@@ -3,6 +3,8 @@ import {
   addMoney,
   compareMoney,
   formatMoney,
+  isSpeakable,
+  MAX_SPEAKABLE_MINOR,
   maxMoney,
   minMoney,
   money,
@@ -128,6 +130,66 @@ describe("speakMoney", () => {
  * helper is a promise nobody checked, and `assertSameCurrency` underneath them means they
  * are not as trivial as they look.
  */
+/**
+ * The ceiling, and the only property that matters about it.
+ *
+ * `numberToWords` has always thrown above a billion major units; what was missing was anything
+ * tying that limit to what the system *accepts*. `MoneySchema` takes any safe integer, so
+ * `formatMoney` rendered `$90071992547409.91` while `speakMoney` raised `RangeError` for the
+ * same value — and `voice.ts` speaks the summed recovered total out of an append-only ledger.
+ * A merchant settling an $8.00 claim for $1,000,000,000.00 was accepted, recorded, and broke
+ * every spoken summary from that moment on.
+ *
+ * So the test is not "the constant is 1e9". It is that **`isSpeakable` predicts `speakMoney`
+ * exactly**, which is the thing the boundaries rely on. Both derive from one constant, so
+ * moving that constant moves them together; a second literal anywhere would show up here as a
+ * disagreement rather than as a RangeError three reads later.
+ */
+describe("what Owed can say, and therefore hold", () => {
+  const says = (minor: number): boolean => {
+    try {
+      speakMoney({ minor, currency: "USD" });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const AROUND_THE_EDGE = [
+    0,
+    1,
+    800,
+    99_999_999_999,
+    MAX_SPEAKABLE_MINOR,
+    MAX_SPEAKABLE_MINOR + 1,
+    100_000_000_000,
+    Number.MAX_SAFE_INTEGER,
+  ];
+
+  it("agrees with speakMoney on every amount, in both signs", () => {
+    for (const minor of AROUND_THE_EDGE) {
+      for (const signed of [minor, -minor]) {
+        expect(isSpeakable({ minor: signed, currency: "USD" }), `minor ${signed}`).toBe(
+          says(signed),
+        );
+      }
+    }
+  });
+
+  it("puts the edge exactly where speakMoney stops", () => {
+    expect(says(MAX_SPEAKABLE_MINOR)).toBe(true);
+    expect(says(MAX_SPEAKABLE_MINOR + 1)).toBe(false);
+  });
+
+  /** The card had no ceiling, which is why nothing noticed the voice channel had one. */
+  it("renders on the card what it cannot say aloud", () => {
+    const unspeakable = { minor: MAX_SPEAKABLE_MINOR + 1, currency: "USD" as const };
+
+    expect(formatMoney(unspeakable)).toBe("$1000000000.00");
+    expect(() => speakMoney(unspeakable)).toThrow(RangeError);
+  });
+});
+
 describe("choosing between two amounts", () => {
   it("takes the smaller and the larger", () => {
     expect(minMoney(money(300, "USD"), money(800, "USD"))).toStrictEqual(money(300, "USD"));

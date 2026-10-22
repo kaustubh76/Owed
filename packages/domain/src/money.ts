@@ -91,6 +91,36 @@ export function formatMoney(a: Money): string {
   return `${sign}${symbol}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
 }
 
+/**
+ * The largest major unit the spoken channel can say, and the ceiling on money as a whole.
+ *
+ * `numberToWords` throws above this. It always has; what was missing is anything connecting
+ * that limit to what the system will *accept*. `MoneySchema` takes any safe integer, so
+ * `formatMoney` rendered `$90071992547409.91` happily while `speakMoney` raised a `RangeError`
+ * for the same value — and `voice.ts` speaks the **summed** recovered total, out of an
+ * append-only ledger. A merchant that settled an $8.00 claim for $1,000,000,000.00 was
+ * accepted, recorded, and took `ledger_summary`'s spoken line down for good: the same shape as
+ * the EUR settlement that once took two tools down permanently, through the same guard.
+ *
+ * So the limit is named once here and derived everywhere else. An amount Owed cannot say is an
+ * amount Owed will not hold, and `isSpeakable` is how the boundaries ask.
+ */
+export const SPOKEN_MAJOR_CEILING = 1_000_000_000;
+
+/** The same ceiling in minor units: the largest amount `speakMoney` can render. */
+export const MAX_SPEAKABLE_MINOR = SPOKEN_MAJOR_CEILING * 100 - 1;
+
+/**
+ * Can `speakMoney` state this amount without throwing?
+ *
+ * Derived from the constant the thrower uses rather than comparing against a second literal,
+ * so the two cannot drift apart. Sign-independent, because `speakMoney` renders "minus" and
+ * `numberToWords` is handed the absolute value.
+ */
+export function isSpeakable(a: Money): boolean {
+  return Number.isInteger(a.minor) && Math.abs(a.minor) <= MAX_SPEAKABLE_MINOR;
+}
+
 const ONES = [
   "zero",
   "one",
@@ -120,7 +150,7 @@ export function numberToWords(value: number): string {
   if (!Number.isInteger(value) || value < 0) {
     throw new RangeError(`numberToWords expects a non-negative integer, got ${value}`);
   }
-  if (value >= 1_000_000_000)
+  if (value >= SPOKEN_MAJOR_CEILING)
     throw new RangeError("numberToWords supports values below one billion");
   if (value < 20) return ONES[value] as string;
   if (value < 100) {

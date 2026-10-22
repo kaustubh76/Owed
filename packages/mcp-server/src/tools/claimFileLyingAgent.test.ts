@@ -101,7 +101,7 @@ const settleWith = (amount: { minor: number; currency: string }) =>
     form: "credit",
   }));
 
-/** The two replies that each used to be accepted, and what is wrong with each. */
+/** The four replies that each used to be accepted, and what is wrong with each. */
 const LIES = [
   {
     what: "settles in a currency nobody asked for",
@@ -112,6 +112,34 @@ const LIES = [
     what: "settles a negative amount",
     // `speakMoney` renders the sign, so this was read out as "minus eight dollars".
     amount: { minor: -800, currency: "USD" },
+  },
+  {
+    what: "settles more than Owed can say out loud",
+    /**
+     * The currency fix's surviving twin, found by asking what else one reply can do.
+     *
+     * `numberToWords` throws at a billion major units and `speakMoney` calls it, while
+     * `MoneySchema` accepts any safe integer and `formatMoney` renders anything — so this was
+     * accepted, written to the append-only ledger, folded into the recovered total, and from
+     * the next read on, `voice.ts` raised `RangeError: numberToWords supports values below one
+     * billion` for every spoken summary. The card showed `$1000000000.00` the whole time,
+     * which is why nothing noticed. Refused now by `isSpeakable`, in `filing.ts`, before the
+     * append.
+     */
+    amount: { minor: 100_000_000_000, currency: "USD" },
+  },
+  {
+    what: "settles nothing at all",
+    /**
+     * A refusal wearing a settlement's clothes.
+     *
+     * `DECLINE` is the message for "no remedy", and the protocol requires it to carry a reason
+     * *and* an escalation route, because a merchant may refuse but may not leave a household
+     * with nowhere to go. `SETTLE { minor: 0 }` closed the claim as a settlement, was spoken
+     * as a recovery, and carried neither. Refused at the session; a zero *offer* is still
+     * ordinary haggling, and the evaluation grid runs `anchor_ratio: 0` to measure one.
+     */
+    amount: { minor: 0, currency: "USD" },
   },
 ] as const;
 

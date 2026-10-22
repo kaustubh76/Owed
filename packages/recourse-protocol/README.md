@@ -43,6 +43,11 @@ Every message carries the `claim_id` it belongs to, so a transcript cannot be sp
    `id`s. A merchant is not handed the household's material again on every round.
 2. **A `DECLINE` must carry an escalation route.** Refusing is allowed. Leaving a household
    with nowhere to go is not — and the schema enforces it, including against blank strings.
+   A `SETTLE` naming nothing is a refusal in a settlement's envelope: it closes the claim as
+   agreed, is read out as a recovery, and carries neither the reason nor the route this
+   obligation exists for. `runSession` refuses it, so a merchant that does this fails
+   `reaches-a-conclusion` with that sentence as the detail. A zero *offer* is untouched —
+   opening at nothing is a negotiating position, not an evasion.
 3. **A merchant never opens a claim and never counters.** `OFFER`, `SETTLE`, `DECLINE`.
 4. **Sessions terminate.** Within the round cap, or by a terminal message.
 

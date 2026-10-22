@@ -4,7 +4,10 @@ import {
   type Detection,
   type Evidence,
   type Instant,
+  isSpeakable,
   type LedgerEvent,
+  MAX_SPEAKABLE_MINOR,
+  type Money,
   type OwedPromise,
 } from "@owed/domain";
 import { type Respondent, runSession, type SessionResult } from "@owed/recourse-protocol";
@@ -271,5 +274,65 @@ export async function fileClaim(input: FileClaimInput): Promise<FileClaimResult>
     });
   }
 
+  assertEveryAmountSpeakable(events, promise.merchant);
+
   return { events, session };
+}
+
+/**
+ * A merchant named an amount Owed cannot state.
+ *
+ * Its own class rather than a `RangeError`, because the only useful thing to do with it is
+ * what `claim_file` already does with a `ProtocolViolation`: record the claim on a route that
+ * does not need the agent and tell the household the agent "answered with something I couldn't
+ * use". A bare `RangeError` escaped that catch and became the spoken line, which is the exact
+ * failure `claimFileLyingAgent.test.ts` exists to prevent.
+ */
+export class UnspeakableAmount extends Error {}
+
+/** Every amount this batch would make permanent, including the one nested in evidence. */
+function amountsIn(event: LedgerEvent): Money[] {
+  const found: Money[] = [];
+  if ("amount" in event && event.amount !== undefined) found.push(event.amount);
+  if (
+    event.type === "EvidenceObserved" &&
+    "amount" in event.evidence &&
+    event.evidence.amount !== undefined
+  ) {
+    found.push(event.evidence.amount);
+  }
+  return found;
+}
+
+/**
+ * The last place an amount can still be refused.
+ *
+ * `fileClaim` returns events for the caller to append, and the ledger is append-only, so this
+ * return is the boundary between "a merchant said something" and "the household's history says
+ * it for ever". A `SETTLE` for $1,000,000,000.00 against an $8.00 claim was accepted by the
+ * session, written here, folded into the recovered total by `summarize`, and from the next read
+ * onward `voice.ts` raised `RangeError: numberToWords supports values below one billion` for
+ * every spoken summary. The card kept rendering `$1000000000.00` throughout, which is why
+ * nothing noticed: `formatMoney` has no ceiling and `speakMoney` does.
+ *
+ * So the rule is Owed's, not the protocol's: **an amount Owed cannot say is an amount Owed will
+ * not record.** `isSpeakable` derives from the constant `numberToWords` throws on, so the two
+ * cannot drift apart, and this raises the same `RangeError` the voice channel would have — at
+ * the one moment it is still recoverable rather than three reads later and permanent.
+ *
+ * Every amount in the batch is checked rather than the settlement alone. The offer, the
+ * counter, the observed credit and the settlement all become ledger rows, and guarding the one
+ * field that happened to be noticed is how the currency hole survived its own fix.
+ */
+function assertEveryAmountSpeakable(events: readonly LedgerEvent[], merchant: string): void {
+  for (const event of events) {
+    for (const amount of amountsIn(event)) {
+      if (isSpeakable(amount)) continue;
+      throw new UnspeakableAmount(
+        `${merchant} named ${amount.minor} ${amount.currency}, which Owed cannot say: ` +
+          `${event.type} would put it in an append-only ledger and every spoken total after ` +
+          `it would throw. The ceiling is ${MAX_SPEAKABLE_MINOR} minor units.`,
+      );
+    }
+  }
 }

@@ -108,6 +108,32 @@ function expectValid(message: unknown, from: string): RecourseMessage {
  * lifted out of this repository as it stands; a receiver refusing what the wire format
  * permits is Owed's policy, and policy belongs at the session boundary where the claim it
  * is being compared against is in scope.
+ *
+ * **And then the quantity went unchecked anyway**, which is what the paragraph above says
+ * `MoneySchema` cannot do for us. Currency and sign were covered; magnitude was not. A
+ * merchant answering an $8.00 claim with a `SETTLE` for $1,000,000,000.00 was accepted, the
+ * amount was written to the append-only ledger, and `voice.ts` speaks the **summed** recovered
+ * total — so every later `ledger_summary` raised `RangeError: numberToWords supports values
+ * below one billion`. The EUR bug's twin, through this same function, with nothing in between.
+ *
+ * **The bound is not the ask**, which is worth recording because it was the obvious answer and
+ * it is wrong. A rule refusing any reply above `claim.ask` was written here, and the
+ * pre-registered evaluation grid refused it: `reply names 1600 USD against an ask of 1500`.
+ * `accept_ratio` runs above 1 on purpose — a merchant whose published terms are more generous
+ * than the claimant's reading of them pays more than it was asked for, and that is a merchant
+ * behaving well, not a peer lying. The claimant asks; it does not cap. So nothing here compares
+ * a reply to the ask beyond its currency.
+ *
+ * What *is* enforceable from the claim alone, and is: **a `SETTLE` of nothing is a `DECLINE`.**
+ * Zero closes the claim as a settlement and is spoken as a recovery, while `DECLINE` — the
+ * message that means "no remedy" — is required to carry a reason *and* an escalation route,
+ * because "a merchant may refuse, but may not leave a household with nowhere to go". Settling
+ * at zero evaded both. Not applied to `OFFER`: a zero opening offer is ordinary haggling, and
+ * the grid runs `anchor_ratio: 0` deliberately to measure what the claimant does with one.
+ *
+ * The magnitude ceiling is therefore absolute rather than relative, it is Owed's own, and it
+ * lives with Owed's own code — `isSpeakable`, enforced in `@owed/core`'s `filing.ts` before the
+ * append, which is where permanence begins. It cannot live here, and it does not need to.
  */
 function assertAnswersTheClaim(reply: RespondentMessage, claim: ClaimMessage): void {
   if (!("amount" in reply)) return;
@@ -119,6 +145,12 @@ function assertAnswersTheClaim(reply: RespondentMessage, claim: ClaimMessage): v
   }
   if (reply.amount.minor < 0) {
     throw new ProtocolViolation(`reply names a negative amount in ${reply.amount.currency}`);
+  }
+  if (reply.type === "SETTLE" && reply.amount.minor === 0) {
+    throw new ProtocolViolation(
+      "a SETTLE of nothing is a DECLINE — send that instead, with the reason and the " +
+        "escalation route it requires",
+    );
   }
 }
 

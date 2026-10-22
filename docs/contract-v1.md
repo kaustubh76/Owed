@@ -383,6 +383,50 @@ A `DECLINE` must carry a human escalation route.
 > why the guard is tested through an injected directory in
 > `tools/claimFileLyingAgent.test.ts`.
 
+> **Amended D30 — the quantity still went unchecked, and that was the half D24 named.** D24's
+> own first paragraph says `MoneySchema` leaves open "the currency ... or **the quantity** to be
+> positive". Currency and sign were then both closed; magnitude was not, and `positive` is a
+> weaker property than `sayable`.
+>
+> **What that cost.** `numberToWords` throws at a billion major units and `speakMoney` calls it,
+> while `MoneySchema` accepts any safe integer and `formatMoney` has no ceiling at all. Nothing
+> connected the limit on what Owed can *say* to the limit on what it will *accept*. So a
+> merchant answering an $8.00 claim with `SETTLE { minor: 100000000000 }` was accepted, written
+> to the append-only ledger, and folded into the recovered total — after which `voice.ts`, which
+> speaks that **summed** total, raised `RangeError: numberToWords supports values below one
+> billion` for every `ledger_summary` from then on. The card rendered `$1000000000.00`
+> throughout, which is why nothing noticed: the two renderers disagreed and only one of them
+> threw. D24's exact mechanism, D24's exact permanence, through D24's own guard.
+>
+> **Where the ceiling went, and why not beside the others.** `recourse-protocol` has no
+> workspace dependencies and may not acquire one, so the limit cannot be imported there. It is
+> Owed's own rule rather than the protocol's — `isSpeakable`, derived in `@owed/domain` from the
+> one constant `numberToWords` throws on, and enforced in `@owed/core`'s `filing.ts` on **every**
+> amount in the batch immediately before the append, because append-only is what made D24
+> permanent and the offer, counter, observed credit and settlement all become rows. Guarding
+> only the field somebody happened to think of is how the currency hole survived its own fix.
+> It raises `UnspeakableAmount`, which `claim_file` routes exactly as it routes a
+> `ProtocolViolation`: the claim is filed without the agent and the household hears the Owed
+> sentence. A bare `RangeError` escaped that catch and became the spoken line.
+>
+> **The bound is not the ask, which was the obvious answer and is wrong.** A rule refusing any
+> reply above `claim.ask` was written in `session.ts` first, and the pre-registered evaluation
+> grid refused it: `reply names 1600 USD against an ask of 1500`. `accept_ratio` runs above 1 on
+> purpose — a merchant whose published terms are more generous than the claimant's reading of
+> them pays more than it asked for, and that is a merchant behaving well, not a peer lying. The
+> claimant asks; it does not cap. `protocol.test.ts` now pins that a more generous reply is
+> **accepted**, so the rule cannot be reintroduced quietly.
+>
+> **A `SETTLE` of nothing is a `DECLINE`.** The one relative rule that survived, and it needs
+> only the claim: zero closed the claim as a settlement and was spoken as a recovery, while
+> `DECLINE` is required to carry a reason *and* an escalation route, because a merchant may
+> refuse but may not leave a household with nowhere to go. Settling at zero evaded both. Not
+> applied to `OFFER` — a zero opening offer is ordinary haggling, and the grid runs
+> `anchor_ratio: 0` deliberately to measure what the claimant does with one. The published
+> suite needs no new check for it: `runSession` refuses the transcript before the suite could
+> inspect a zero settlement, so a merchant author reads it off `reaches-a-conclusion`, which
+> carries the violation's own sentence.
+
 > **Amended D25 — the grant Alexa+ does not support was a way into the ledger.** The
 > authorization server advertised `grant_types_supported: ["authorization_code",
 > "refresh_token", "client_credentials"]` and implemented all three. Amazon's account-linking
