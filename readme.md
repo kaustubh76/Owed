@@ -600,6 +600,9 @@ deployment — both opt-in, neither needed to run or judge anything below.
 # prerequisites: Node 24+ (repo is pinned to 26 via .nvmrc) and pnpm
 #                 24, not 20: the ledger's SQLite adapter imports `node:sqlite`, which
 #                 does not exist before 22.5 and needs a flag before 23.4
+#                 that floor is run, not asserted: a second CI job reads the major out of
+#                 `engines.node` and runs the whole suite on it, so raising the floor moves
+#                 the job with it. Until 2026-10-22 every green run was Node 26
 #                 `pnpm verify:ui` additionally needs Google Chrome installed
 #                 (Playwright is run with channel: "chrome", not a bundled browser)
 pnpm install

@@ -19,6 +19,59 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The oldest Node this repository says it runs on, which nothing had ever run it on.
+  #
+  # `package.json` declares `engines: { node: ">=24" }` and `readme.md` §12 tells a judge
+  # "prerequisites: Node 24+", with the reason spelled out — `node:sqlite` does not exist
+  # before 22.5 and needs a flag before 23.4. Every green run until now was Node 26, because
+  # the job below reads `.nvmrc`. So the floor was a promise with nothing behind it, which is
+  # the same shape as the browser gate that ran nowhere while ten requirements rows cited it.
+  #
+  # The suite, not the whole chain: the gates are Node-agnostic scripts and `tsc` emits the
+  # same JavaScript either way. What varies by runtime is what the tests exercise.
+  floor:
+    name: the Node version package.json claims to need
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      # Derived, never hardcoded. `engines.node` is a *range*, and `>=24` is satisfied by 26,
+      # so `node-version-file: package.json` would leave setup-node free to install the very
+      # version this job exists to avoid. Taking the major out of the range means raising the
+      # floor moves the job with it; a literal `24` here could drift from the claim silently,
+      # which is the defect being fixed one level up.
+      - id: floor
+        run: |
+          major="$(jq -r '.engines.node | gsub("[^0-9.]";"") | split(".")[0]' package.json)"
+          echo "major=${major}" >> "$GITHUB_OUTPUT"
+          echo "package.json asks for Node >=${major}"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ steps.floor.outputs.major }}.x
+          cache: pnpm
+
+      # Printed so the log proves which runtime actually ran, rather than the job's colour
+      # implying it. A run that silently installed 26 would be this same defect with a tick.
+      - run: |
+          echo "running on $(node -v), floor is >=${{ steps.floor.outputs.major }}"
+          case "$(node -v)" in
+            v${{ steps.floor.outputs.major }}.*) echo "on the floor, as intended" ;;
+            *) echo "::error::setup-node installed $(node -v), not ${{ steps.floor.outputs.major }}.x"; exit 1 ;;
+          esac
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      # No DynamoDB service: the `verify` job runs that path with OWED_REQUIRE_DYNAMO=1, and
+      # the eight adapter tests skip here, which their own probe reports.
+      - run: pnpm test
+
   verify:
     runs-on: ubuntu-latest
     # The whole job takes ~80s, up from ~47s as gates were added. Ten minutes is generous
