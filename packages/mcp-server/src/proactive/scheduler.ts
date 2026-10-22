@@ -103,7 +103,20 @@ export function commitmentsDue(
       offer: {
         utterance: "File it",
         tool: "claim_file",
-        arguments: { promise_id: view.promise.id },
+        /**
+         * `confirm` as well as the promise, because the asking has already happened.
+         *
+         * The `spoken` line above ends "Shall I file it?" and this field is the household's
+         * answer to it — so the arguments have to be the ones that file. Without `confirm`
+         * they are the ones that *propose*, and a host following this offer would ask a
+         * second time about a claim the household had just agreed to. §3 of the contract
+         * requires `claim_file` to ask before it files; it does not require it to ask twice.
+         *
+         * Invisible until something used the field: nothing did until
+         * `apps/home/src/App.tsx` stopped discarding it, and `scheduler.test.ts` asserted
+         * only that `arguments.promise_id` named the subject.
+         */
+        arguments: { promise_id: view.promise.id, confirm: true },
       },
     });
   }

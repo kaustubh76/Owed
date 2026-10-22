@@ -12,7 +12,28 @@ export interface ScrubMessage {
   instant: string;
 }
 
-export type HomeToBrain = UtteranceMessage | ScrubMessage;
+/**
+ * The household answering an announcement's `offer`, by its tool rather than by its words.
+ *
+ * `docs/proactive.md` calls `offer` the field "without which an announcement is a dead end —
+ * ... what the household can say next, **and the tool it maps to**". The home had the tool
+ * and the arguments and sent the words, so the answer was re-derived by `routeUtterance` and
+ * resolved against the brain's `#focus` — which every announcement that carries a card moves.
+ * Two announcements in one burst and "File it" meant the wrong promise.
+ *
+ * Voice still goes through words, and must: on an Echo Dot there is no button, "file it" means
+ * the thing just mentioned, and `announce()` keeping focus is what makes that work. This is the
+ * other surface — a press on a specific offer — and it should mean exactly what it names.
+ */
+export interface OfferMessage {
+  type: "offer";
+  /** What the button said, so the transcript reads like something a person said. */
+  utterance: string;
+  tool: string;
+  arguments: Record<string, unknown>;
+}
+
+export type HomeToBrain = UtteranceMessage | ScrubMessage | OfferMessage;
 
 export interface ToolTrace {
   tool: string;

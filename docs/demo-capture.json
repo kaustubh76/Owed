@@ -1,7 +1,7 @@
 {
   "$comment": "Captured from a real run by scripts/capture-demo.mjs. Not hand-written. Re-runnable: pnpm build && node scripts/capture-demo.mjs",
-  "captured_at": "2026-10-22T03:45:02.668Z",
-  "commit": "70984846038651f3df2e1e5ee841ac5c2842da78",
+  "captured_at": "2026-10-22T05:25:22.583Z",
+  "commit": "f75b5540e99ad8336a730d9d18611a375910d25c",
   "server": {
     "info": {
       "name": "owed",
@@ -1914,7 +1914,8 @@
             "utterance": "File it",
             "tool": "claim_file",
             "arguments": {
-              "promise_id": "prm_011"
+              "promise_id": "prm_011",
+              "confirm": true
             }
           }
         }
@@ -2508,7 +2509,8 @@
             "utterance": "File it",
             "tool": "claim_file",
             "arguments": {
-              "promise_id": "prm_011"
+              "promise_id": "prm_011",
+              "confirm": true
             }
           }
         }
@@ -2673,7 +2675,7 @@
         "id": 0
       },
       "seq": 0,
-      "at": "2026-10-22T03:45:02.849Z"
+      "at": "2026-10-22T05:25:22.741Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2683,7 +2685,7 @@
         "method": "notifications/initialized"
       },
       "seq": 1,
-      "at": "2026-10-22T03:45:02.894Z"
+      "at": "2026-10-22T05:25:22.779Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2777,7 +2779,7 @@
         "id": 1
       },
       "seq": 2,
-      "at": "2026-10-22T03:45:02.904Z"
+      "at": "2026-10-22T05:25:22.810Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2805,7 +2807,7 @@
         }
       },
       "seq": 3,
-      "at": "2026-10-22T03:45:02.914Z"
+      "at": "2026-10-22T05:25:22.823Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2899,7 +2901,7 @@
         "id": 2
       },
       "seq": 4,
-      "at": "2026-10-22T03:45:02.915Z"
+      "at": "2026-10-22T05:25:22.824Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2927,13 +2929,13 @@
         }
       },
       "seq": 5,
-      "at": "2026-10-22T03:45:02.919Z"
+      "at": "2026-10-22T05:25:22.831Z"
     }
   ],
   "mcpFrames": [
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.633Z",
+      "at": "2026-10-22T05:25:22.548Z",
       "message": {
         "jsonrpc": "2.0",
         "id": "server-discover-probe-1",
@@ -2954,7 +2956,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.669Z",
+      "at": "2026-10-22T05:25:22.584Z",
       "message": {
         "method": "tools/list",
         "jsonrpc": "2.0",
@@ -2975,7 +2977,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.676Z",
+      "at": "2026-10-22T05:25:22.591Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 0,
@@ -4253,7 +4255,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.716Z",
+      "at": "2026-10-22T05:25:22.627Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4276,7 +4278,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.724Z",
+      "at": "2026-10-22T05:25:22.634Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 1,
@@ -4360,7 +4362,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.726Z",
+      "at": "2026-10-22T05:25:22.636Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4385,7 +4387,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.731Z",
+      "at": "2026-10-22T05:25:22.639Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 2,
@@ -4469,7 +4471,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.731Z",
+      "at": "2026-10-22T05:25:22.639Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4492,7 +4494,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.735Z",
+      "at": "2026-10-22T05:25:22.643Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 3,
@@ -4576,7 +4578,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.736Z",
+      "at": "2026-10-22T05:25:22.644Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4601,7 +4603,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.740Z",
+      "at": "2026-10-22T05:25:22.648Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 4,
@@ -4645,7 +4647,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.742Z",
+      "at": "2026-10-22T05:25:22.651Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4668,7 +4670,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.747Z",
+      "at": "2026-10-22T05:25:22.655Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 5,
@@ -4824,7 +4826,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.747Z",
+      "at": "2026-10-22T05:25:22.656Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4849,7 +4851,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.750Z",
+      "at": "2026-10-22T05:25:22.659Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 6,
@@ -5005,7 +5007,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.750Z",
+      "at": "2026-10-22T05:25:22.659Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5028,7 +5030,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.753Z",
+      "at": "2026-10-22T05:25:22.662Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 7,
@@ -5184,7 +5186,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.754Z",
+      "at": "2026-10-22T05:25:22.662Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5209,7 +5211,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.757Z",
+      "at": "2026-10-22T05:25:22.666Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 8,
@@ -5315,7 +5317,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.757Z",
+      "at": "2026-10-22T05:25:22.666Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5341,7 +5343,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.761Z",
+      "at": "2026-10-22T05:25:22.669Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 9,
@@ -5423,7 +5425,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.763Z",
+      "at": "2026-10-22T05:25:22.670Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5448,7 +5450,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.767Z",
+      "at": "2026-10-22T05:25:22.674Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 10,
@@ -5582,7 +5584,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.769Z",
+      "at": "2026-10-22T05:25:22.677Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5605,7 +5607,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.772Z",
+      "at": "2026-10-22T05:25:22.680Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 11,
@@ -5887,7 +5889,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.773Z",
+      "at": "2026-10-22T05:25:22.680Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5912,7 +5914,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.775Z",
+      "at": "2026-10-22T05:25:22.682Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 12,
@@ -6194,7 +6196,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.776Z",
+      "at": "2026-10-22T05:25:22.682Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6217,7 +6219,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.782Z",
+      "at": "2026-10-22T05:25:22.684Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 13,
@@ -6499,7 +6501,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.783Z",
+      "at": "2026-10-22T05:25:22.684Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6524,7 +6526,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.789Z",
+      "at": "2026-10-22T05:25:22.687Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 14,
@@ -6614,7 +6616,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.789Z",
+      "at": "2026-10-22T05:25:22.687Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6640,7 +6642,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.792Z",
+      "at": "2026-10-22T05:25:22.689Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 15,
@@ -6730,7 +6732,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.792Z",
+      "at": "2026-10-22T05:25:22.689Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6755,7 +6757,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.796Z",
+      "at": "2026-10-22T05:25:22.691Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 16,
@@ -6847,7 +6849,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.798Z",
+      "at": "2026-10-22T05:25:22.693Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6870,7 +6872,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.800Z",
+      "at": "2026-10-22T05:25:22.695Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 17,
@@ -7154,7 +7156,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.800Z",
+      "at": "2026-10-22T05:25:22.695Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -7179,7 +7181,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.803Z",
+      "at": "2026-10-22T05:25:22.697Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 18,
@@ -7463,7 +7465,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.803Z",
+      "at": "2026-10-22T05:25:22.697Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -7486,7 +7488,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.806Z",
+      "at": "2026-10-22T05:25:22.700Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 19,
@@ -7770,7 +7772,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.806Z",
+      "at": "2026-10-22T05:25:22.700Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -7795,7 +7797,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.808Z",
+      "at": "2026-10-22T05:25:22.702Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 20,
@@ -7885,7 +7887,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.808Z",
+      "at": "2026-10-22T05:25:22.702Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -7911,7 +7913,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.811Z",
+      "at": "2026-10-22T05:25:22.705Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 21,
@@ -8001,7 +8003,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.812Z",
+      "at": "2026-10-22T05:25:22.705Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -8026,7 +8028,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.814Z",
+      "at": "2026-10-22T05:25:22.707Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 22,
@@ -8118,7 +8120,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.816Z",
+      "at": "2026-10-22T05:25:22.708Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -8141,7 +8143,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.818Z",
+      "at": "2026-10-22T05:25:22.710Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 23,
@@ -8425,7 +8427,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.818Z",
+      "at": "2026-10-22T05:25:22.711Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -8450,7 +8452,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.820Z",
+      "at": "2026-10-22T05:25:22.713Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 24,
@@ -8734,7 +8736,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.820Z",
+      "at": "2026-10-22T05:25:22.713Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -8757,7 +8759,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.822Z",
+      "at": "2026-10-22T05:25:22.715Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 25,
@@ -9041,7 +9043,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.822Z",
+      "at": "2026-10-22T05:25:22.715Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9066,7 +9068,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.824Z",
+      "at": "2026-10-22T05:25:22.717Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 26,
@@ -9156,7 +9158,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.825Z",
+      "at": "2026-10-22T05:25:22.717Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9182,7 +9184,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.827Z",
+      "at": "2026-10-22T05:25:22.719Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 27,
@@ -9272,7 +9274,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.827Z",
+      "at": "2026-10-22T05:25:22.719Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9297,7 +9299,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.829Z",
+      "at": "2026-10-22T05:25:22.721Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 28,
@@ -9389,7 +9391,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.830Z",
+      "at": "2026-10-22T05:25:22.722Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9414,7 +9416,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.834Z",
+      "at": "2026-10-22T05:25:22.725Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 29,
@@ -9459,7 +9461,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.837Z",
+      "at": "2026-10-22T05:25:22.728Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9489,7 +9491,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.839Z",
+      "at": "2026-10-22T05:25:22.730Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 30,
@@ -9513,7 +9515,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.840Z",
+      "at": "2026-10-22T05:25:22.730Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9538,7 +9540,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.842Z",
+      "at": "2026-10-22T05:25:22.733Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 31,
@@ -9583,7 +9585,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.842Z",
+      "at": "2026-10-22T05:25:22.733Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9617,7 +9619,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.920Z",
+      "at": "2026-10-22T05:25:22.833Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 32,
@@ -9775,7 +9777,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.921Z",
+      "at": "2026-10-22T05:25:22.834Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9801,7 +9803,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.925Z",
+      "at": "2026-10-22T05:25:22.838Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 33,
@@ -9825,7 +9827,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.926Z",
+      "at": "2026-10-22T05:25:22.840Z",
       "message": {
         "method": "resources/read",
         "params": {
@@ -9847,7 +9849,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.934Z",
+      "at": "2026-10-22T05:25:22.850Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 34,
@@ -9885,7 +9887,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.937Z",
+      "at": "2026-10-22T05:25:22.856Z",
       "message": {
         "method": "resources/read",
         "params": {
@@ -9907,7 +9909,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.944Z",
+      "at": "2026-10-22T05:25:22.865Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 35,
@@ -9945,7 +9947,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T03:45:02.946Z",
+      "at": "2026-10-22T05:25:22.867Z",
       "message": {
         "method": "resources/read",
         "params": {
@@ -9967,7 +9969,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T03:45:02.952Z",
+      "at": "2026-10-22T05:25:22.875Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 36,

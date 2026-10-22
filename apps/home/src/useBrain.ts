@@ -26,6 +26,13 @@ export interface ViewPayload {
  * Carried on the turn rather than beside it because that is what it is: a turn nobody
  * started. The home badges it so a judge is never left guessing which part is real.
  */
+/** What the household can say back to an announcement, and the call it maps to. */
+export interface Offer {
+  utterance: string;
+  tool: string;
+  arguments: Record<string, unknown>;
+}
+
 export interface Announcement {
   kind: string;
   urgency: string;
@@ -37,9 +44,11 @@ export interface Announcement {
    * somebody hears that something is wrong and has to work out for themselves how to ask
    * for it to be fixed. The server produces it, the brain carries the event whole, and
    * this used to drop it on the floor — the demo only looked complete because a scripted
-   * chip happened to contain the same words.
+   * chip happened to contain the same words. Then it was rendered but still answered with
+   * `speak(offer.utterance)`, which threw the tool and the arguments away again and left the
+   * answer to be guessed from the words; `answer()` below sends what the offer names.
    */
-  offer?: { utterance: string; tool: string; arguments: Record<string, unknown> };
+  offer?: Offer;
 }
 
 export interface Turn {
@@ -95,6 +104,8 @@ export interface BrainState {
   range: ScenarioRange | null;
   speak: (text: string) => void;
   scrub: (instant: string) => void;
+  /** Answer an announcement by the tool its `offer` names, rather than by its words. */
+  answer: (offer: Offer) => void;
 }
 
 /** Capped so a long outage does not turn into a tight reconnect loop. */
@@ -267,5 +278,6 @@ export function useBrain(): BrainState {
     range,
     speak: useCallback((text: string) => send({ type: "utterance", text }), [send]),
     scrub: useCallback((instant: string) => send({ type: "scrub", instant }), [send]),
+    answer: useCallback((offer: Offer) => send({ type: "offer", ...offer }), [send]),
   };
 }

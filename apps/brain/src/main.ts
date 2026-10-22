@@ -2,7 +2,8 @@ import { SystemClock } from "@owed/core";
 import type { CommitmentEvent } from "@owed/mcp-server";
 import { type WebSocket, WebSocketServer } from "ws";
 import { OwedBrain } from "./brain.js";
-import type { BrainToHome, ClockMessage, HomeToBrain } from "./protocol.js";
+import { justCaused, subjectsOf } from "./proactive.js";
+import type { BrainToHome, ClockMessage, HomeToBrain, TurnMessage } from "./protocol.js";
 import { openSession } from "./session.js";
 
 const MCP_URL = new URL(process.env.OWED_MCP_URL ?? "http://127.0.0.1:3939/mcp");
@@ -272,7 +273,15 @@ let primed = false;
 let polling = false;
 
 /** Read the commitments the server is projecting, and announce whatever is new. */
-async function pollCommitments(): Promise<void> {
+/**
+ * Look for commitments that have fallen due, and announce the ones that are news.
+ *
+ * `silence` holds the promise and claim ids a turn just touched. Events naming them are
+ * marked seen and **not** spoken: see `proactive.ts` for why — filing a claim makes a
+ * `claim_settled` commitment fall due whose spoken line is the sentence the household has
+ * just heard, and announcing it also replaces the card they asked for.
+ */
+async function pollCommitments(options: { silence?: ReadonlySet<string> } = {}): Promise<void> {
   if (polling) return;
   polling = true;
   try {
@@ -302,6 +311,10 @@ async function pollCommitments(): Promise<void> {
       // must not leave the event looking unannounced to the next pass.
       announced.add(event.event_id);
 
+      // Seen, and deliberately not spoken. The household caused this one and has already
+      // been told; `announced` now carries it, so no later pass announces it either.
+      if (options.silence !== undefined && justCaused(event, options.silence)) continue;
+
       // Shown on the inspector as its own channel: the point of the beat is that a
       // judge can read the shape Alexa+ would have to emit, on the wire, in context.
       broadcast({
@@ -322,12 +335,28 @@ async function pollCommitments(): Promise<void> {
   }
 }
 
+/**
+ * Send a turn, then look for what it set off — without announcing the turn back.
+ */
+async function respond(turn: TurnMessage): Promise<void> {
+  await drainRecourse();
+  broadcast(turn);
+  await pollCommitments({ silence: subjectsOf(turn) });
+}
+
 async function handle(message: HomeToBrain): Promise<void> {
   if (message.type === "utterance") {
-    const turn = await brain.turn(message.text);
-    await drainRecourse();
-    broadcast(turn);
-    await pollCommitments();
+    await respond(await brain.turn(message.text));
+    return;
+  }
+  /**
+   * The household pressing an announcement's offer, which names its own tool and arguments.
+   *
+   * Not folded into `utterance`: the words path has to guess a subject and this one is told
+   * it. See `protocol.ts`'s `OfferMessage`.
+   */
+  if (message.type === "offer") {
+    await respond(await brain.answerOffer(message));
     return;
   }
   const now = await setClock(message.instant);

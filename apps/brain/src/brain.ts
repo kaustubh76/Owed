@@ -79,9 +79,51 @@ export class OwedBrain {
       args.promise_id = subject;
     }
 
+    return this.#call(utterance, intent.tool, args);
+  }
+
+  /**
+   * Answer an announcement's `offer` by calling the tool it names, with its arguments.
+   *
+   * Words go through `turn()` and resolve against `#focus`, which is right for voice: on an
+   * Echo Dot there is no button, "file it" means the thing just mentioned, and `announce()`
+   * holding focus is what makes that work. A *press on a specific offer* is a different act.
+   * It already carries its subject, so re-deriving one from the words threw away the only
+   * unambiguous thing about it — and left the hero beat depending on whichever announcement
+   * had moved focus last. `scripts/verify-ui.mjs` says so in its own comment: mid-burst, "the
+   * 'file it' below then refers to whatever the brain's focus happened to be, which may be a
+   * recovered claim with nothing to file".
+   *
+   * The tool is checked against what the session actually advertises, not against a list kept
+   * here. The home is not a hostile client, but a message that names a tool is a message that
+   * can name the wrong one, and `tools/list` is the only authority on what exists.
+   */
+  async answerOffer(offer: {
+    utterance: string;
+    tool: string;
+    arguments: Record<string, unknown>;
+  }): Promise<TurnMessage> {
+    const { tools } = await this.#session.call((client) => client.listTools());
+    if (!tools.some((advertised) => advertised.name === offer.tool)) {
+      return {
+        type: "turn",
+        utterance: offer.utterance,
+        reply: FALLBACK,
+        trace: [],
+      };
+    }
+    return this.#call(offer.utterance, offer.tool, { ...offer.arguments });
+  }
+
+  /** One tool call, its trace, its spoken line and its card — however the turn was reached. */
+  async #call(
+    utterance: string,
+    tool: string,
+    args: Record<string, unknown>,
+  ): Promise<TurnMessage> {
     const started = performance.now();
     const result = await this.#session.call((client) =>
-      client.callTool({ name: intent.tool, arguments: args }),
+      client.callTool({ name: tool, arguments: args }),
     );
     const ms = Math.round(performance.now() - started);
     this.#rememberFocus(result);
@@ -89,7 +131,7 @@ export class OwedBrain {
     const resourceUri = readResourceUri(result);
     const trace: ToolTrace[] = [
       {
-        tool: intent.tool,
+        tool,
         args,
         ms,
         isError: result.isError === true,

@@ -25,7 +25,7 @@ const SURFACES: ReadonlyArray<{ id: Surface; label: string }> = [
 ];
 
 export function App() {
-  const { connected, session, error, turn, frames, now, range, speak, scrub } = useBrain();
+  const { connected, session, error, turn, frames, now, range, speak, scrub, answer } = useBrain();
 
   /**
    * Both hops good — the same condition the badge below calls `--on`.
@@ -123,7 +123,10 @@ export function App() {
                   title={`${turn.proactive.offer.tool} ${JSON.stringify(turn.proactive.offer.arguments)}`}
                   onClick={() => {
                     const offer = turn.proactive?.offer;
-                    if (offer) speak(offer.utterance);
+                    // The offer's own tool and arguments, not its words. Sending the words
+                    // made the brain guess a subject from `#focus`, which the announcement
+                    // that arrived after this one had already moved.
+                    if (offer) answer(offer);
                   }}
                 >
                   {turn.proactive.offer.utterance}

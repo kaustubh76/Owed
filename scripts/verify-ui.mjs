@@ -367,9 +367,41 @@ try {
    * every read re-resolves the frame rather than holding a handle across turns.
    */
   const card = () => page.frameLocator("iframe.echo__screen");
+
+  /**
+   * What the screen actually held, for when a card does not arrive.
+   *
+   * A bare Playwright timeout names only the selector it wanted, which is the one thing you
+   * already know. Twice this gate died on `.claim__amount` with nothing else recorded, and
+   * neither failure could be diagnosed afterwards — the run was over and the browser gone.
+   * The spoken line is the useful half: it says whether Owed was answering the household or
+   * had interrupted with something else.
+   */
+  const onScreen = async () => {
+    const parts = [];
+    try {
+      const spoken = await page.locator(".voice__reply").last().textContent({ timeout: 2_000 });
+      parts.push(`Owed was saying ${JSON.stringify(spoken?.trim() ?? "")}`);
+    } catch {
+      parts.push("nothing was on the voice bar");
+    }
+    for (const root of ["ledger", "claim", "evidence"]) {
+      const count = await card()
+        .locator(`[class^="${root}__"], [class*=" ${root}__"]`)
+        .count()
+        .catch(() => 0);
+      if (count > 0) parts.push(`the ${root} card was up (${count} element(s))`);
+    }
+    return parts.join("; ");
+  };
+
   const cardText = async (selector) => {
     const locator = card().locator(selector);
-    await locator.waitFor({ state: "visible", timeout: 20_000 });
+    try {
+      await locator.waitFor({ state: "visible", timeout: 20_000 });
+    } catch (cause) {
+      throw new Error(`${selector} never became visible. ${await onScreen()}`, { cause });
+    }
     return (await locator.textContent())?.trim() ?? "";
   };
 
@@ -545,9 +577,16 @@ try {
    *
    * Crossing Sunday evening brings several commitments due at once, and the brain announces
    * them oldest-first so the household is left looking at the most recent. Reading
-   * `.voice__reply` the instant `.app__proactive` appears catches whichever landed first,
-   * and — worse — the "file it" below then refers to whatever the brain's focus happened to
-   * be mid-burst, which may be a recovered claim with nothing to file.
+   * `.voice__reply` the instant `.app__proactive` appears catches whichever landed first.
+   *
+   * The second half of this paragraph used to say that the "file it" below would then refer to
+   * "whatever the brain's focus happened to be mid-burst, which may be a recovered claim with
+   * nothing to file". **That was never true**, and it is worth correcting rather than deleting:
+   * `brain.ts`'s `#rememberFocus` only takes a promise whose result carries a `status`, and a
+   * claim card carries a `state`, so an announcement about a settled or recovered claim cannot
+   * take focus at all. The guard was already there; the comment claimed a hazard it prevented.
+   * And the press no longer resolves words in any case — it sends the offer's own tool and
+   * arguments (`protocol.ts`, `OfferMessage`).
    *
    * Both were reliably fine only because an in-memory ledger made the burst instant. With
    * the ledger in DynamoDB each announcement is a real round trip. This waits for the state
@@ -636,6 +675,37 @@ try {
   await page.locator(".app__proactive-offer").click();
 
   check("claim settles", await cardText(".claim__amount"), EXPECTED.settled);
+
+  /**
+   * And Owed does not then announce it back, over the card it just drew.
+   *
+   * Filing settles the claim, which makes a `claim_settled` commitment fall due, and the brain
+   * polls the instant a turn is broadcast. So the household said "File it", heard "Northwind
+   * Parcel settled at eight dollars. I'll tell you when the credit lands." — and was then told
+   * "Northwind Parcel settled at eight dollars. I will tell you when the credit lands." by an
+   * interruption, which carried its own card and replaced theirs. The same sentence twice, and
+   * the answer to their question painted over.
+   *
+   * `docs/proactive.md` opens on the premise this breaks: "Owed exists to notice what the
+   * household did **not** ask about."
+   *
+   * The count is the discriminating one — restoring the bug moves it from 5 to 6. The check
+   * after it is weaker than it looks and is labelled accordingly: the announcement's card is
+   * *also* a claim card reading $8.00, so this cannot tell whose it is. What it does catch is
+   * the card going away entirely, which is the shape the two unexplained `.claim__amount`
+   * timeouts took. The brain's cadence is 1500 ms, so the wait has to outlast one.
+   */
+  check(
+    "filing is not announced back to the household",
+    await page.locator(".inspector__line--proactive").count(),
+    proactiveFrames + crossings,
+  );
+  await page.waitForTimeout(2500);
+  check(
+    "and a claim card survives the next poll",
+    await cardText(".claim__amount"),
+    EXPECTED.settled,
+  );
   const steps = await card().locator(".claim__step-label").allTextContents();
   check(
     "claim shows the exchange",

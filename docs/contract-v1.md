@@ -224,6 +224,33 @@ the request rides in the result, or a client that has declared the capability. P
 serving of the 2025 revision cannot make server-to-client requests at all, so there the tool
 proposes in words and waits for `confirm`. Both paths are tested; see docs/friction-log.md §10.
 
+> **Amended D27 — the announcement asked, and the offer did not answer.** A
+> `promise_breached` announcement speaks *"… Shall I file it?"* and carries an `offer` —
+> `docs/proactive.md` calls it the field "without which an announcement is a dead end …
+> what the household can say next, **and the tool it maps to**". Its arguments were
+> `{ promise_id }`, which are the arguments that **propose**, not the ones that file. So the
+> published offer did not perform what it offered: a host following it would ask a second
+> time about a claim the household had just agreed to, and §3 above requires `claim_file` to
+> ask before it files, not to ask twice. The offer now carries `confirm: true`, because the
+> asking has already happened in the spoken line.
+>
+> Invisible because nothing used the field. The home rendered the offer as a button and then
+> answered it with `speak(offer.utterance)` — the words — so the tool and the arguments had
+> exactly one consumer between them, a `title` tooltip, and `scheduler.test.ts` asserted only
+> that `arguments.promise_id` named the subject. The home now sends the offer itself
+> (`OfferMessage` in `apps/brain/src/protocol.ts`), and the brain calls what it names after
+> checking it against `tools/list`. Voice still goes through words and must: on an Echo Dot
+> there is no button, and "file it" has to mean the thing just mentioned.
+>
+> **And Owed no longer announces back what the household just asked for.** Filing settles the
+> claim, which makes a `claim_settled` commitment fall due, and the brain polls the instant a
+> turn is broadcast — so the household heard *"Northwind Parcel settled at eight dollars. I'll
+> tell you when the credit lands."* and was then told *"Northwind Parcel settled at eight
+> dollars. I will tell you when the credit lands."* by an interruption, which carried its own
+> card and replaced theirs. The poll still runs; events naming what the turn touched are marked
+> seen and stay quiet (`apps/brain/src/proactive.ts`). `docs/proactive.md` opens on the premise
+> this broke: *"Owed exists to notice what the household did **not** ask about."*
+
 ### Measured against the targets this submission holds itself to
 
 This table used to be headed "Amazon's documented targets", and that overstated its
