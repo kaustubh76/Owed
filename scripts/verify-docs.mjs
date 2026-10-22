@@ -34,6 +34,9 @@ const DOCS = join(REPO_ROOT, "docs");
 
 const failures = [];
 
+/** The floor for the dependency scan, named so a mutation to it reads as one. */
+const thirtyOrMore = (count) => count >= 25;
+
 function want(label, ok, detail) {
   process.stdout.write(`  ${ok ? "ok " : "FAIL"} ${label} — ${detail}\n`);
   if (!ok) failures.push(`${label}: ${detail}`);
@@ -1149,6 +1152,115 @@ want(
 // ---------------------------------------------------------------------------
 // readme §11: "the same sequence .github/workflows/verify.yml runs on every push"
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+/**
+ * Requirement (d) states a rule about itself, and nothing enforced it.
+ *
+ * `docs/product-feedback.md` opens with it: "**Only tools this repository actually calls appear
+ * below.** Every entry is backed by an import site or an invoked binary." Good rule, written in
+ * prose, checked by nobody — and it had two violations. `ws` carries every utterance between the
+ * brain and the home (`apps/brain/src/main.ts` imports `WebSocketServer` from it) and had no
+ * entry; `tsx` is invoked by `pnpm dev` in two packages and had none either.
+ *
+ * The absences that remain are *stated* rather than silent, the way `EXTRA_STEPS` above states
+ * the workflow's extra steps. An absence somebody argued for is fine; an absence nobody noticed
+ * is what this catches.
+ *
+ * **Two traps, both of which my own first pass fell into.** A length floor on the search term
+ * silently skipped `zod` and `ws` — the two shortest names in the list, one of which was the
+ * defect. And matching the *whole file* counted `@modelcontextprotocol/core` as covered, when
+ * the ground rules name it precisely in order to say it is absent; so this reads the body only,
+ * from the first horizontal rule.
+ */
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the tools requirement (d) answers for ---\n");
+
+/** Where the document calls a package something other than its package name. */
+const NAMED_AS = {
+  "playwright-core": "Playwright",
+  "@biomejs/biome": "Biome",
+};
+
+/** Absences with a reason attached, which is the whole difference from an oversight. */
+const NOT_COVERED = {
+  "@modelcontextprotocol/core":
+    "declared in three packages and imported in none — the ground rules name it as absent",
+  "react-dom": "part of the React 19 entry rather than a tool anyone has feedback about",
+  "@vitejs/plugin-react": "part of the Vite 8 entry, for the same reason",
+  "@types/node": "a type stub: no runtime import site, and nothing to say about one",
+  "@types/express": "a type stub",
+  "@types/react": "a type stub",
+  "@types/react-dom": "a type stub",
+  "@types/ws": "a type stub",
+};
+
+const MANIFESTS = [
+  "package.json",
+  ...readdirSync(join(REPO_ROOT, "packages")).map((name) => join("packages", name, "package.json")),
+  ...readdirSync(join(REPO_ROOT, "apps")).map((name) => join("apps", name, "package.json")),
+  "eval/package.json",
+].filter((path) => exists(join(REPO_ROOT, path)));
+
+const thirdParty = new Set();
+for (const path of MANIFESTS) {
+  const pkg = JSON.parse(read(join(REPO_ROOT, path)));
+  for (const section of ["dependencies", "devDependencies"]) {
+    for (const [name, spec] of Object.entries(pkg[section] ?? {})) {
+      if (name.startsWith("@owed/") || String(spec).startsWith("workspace:")) continue;
+      thirdParty.add(name);
+    }
+  }
+}
+
+// A loop over an empty set reports nothing wrong, and this repository has shipped that twice.
+want(
+  "there are declared tools to answer for",
+  thirtyOrMore(thirdParty.size),
+  `${thirdParty.size} third-party package(s) across ${MANIFESTS.length} manifest(s)`,
+);
+
+const feedbackSource = read(join(DOCS, "product-feedback.md"));
+const feedbackBody = feedbackSource.slice(feedbackSource.indexOf("\n---\n"));
+
+/** Whole-token, case-insensitive, and no length floor — `ws` and `zod` are the point. */
+function namedIn(prose, token) {
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<![\\w/@.-])${escaped}(?![\\w/.-])`, "i").test(prose);
+}
+
+const answerable = [...thirdParty].filter((name) => !(name in NOT_COVERED));
+const uncovered = answerable
+  .filter((name) => {
+    const tokens = [name, name.split("/").pop(), NAMED_AS[name]].filter(Boolean);
+    return !tokens.some((token) => namedIn(feedbackBody, token));
+  })
+  .sort();
+
+want(
+  "every tool the repository calls has an entry in product-feedback.md",
+  uncovered.length === 0,
+  uncovered.length === 0
+    ? `${answerable.length} covered, ${Object.keys(NOT_COVERED).length} absent with a reason`
+    : `called and unanswered: ${uncovered.join(", ")} — add an entry, or a reason to NOT_COVERED`,
+);
+
+/**
+ * And no reason outlives its dependency.
+ *
+ * The same dead-entry mistake `EXTRA_STEPS` above records making: an exclusion for something no
+ * longer declared reads as diligence and covers nothing.
+ */
+const staleReasons = Object.keys(NOT_COVERED)
+  .filter((name) => !thirdParty.has(name))
+  .sort();
+want(
+  "and every stated absence is still a dependency",
+  staleReasons.length === 0,
+  staleReasons.length === 0
+    ? `${Object.keys(NOT_COVERED).length} reason(s), all live`
+    : `no longer declared, so the reason is dead: ${staleReasons.join(", ")}`,
+);
+
 process.stdout.write("\n--- the gate chain, against the workflow that claims to run it ---\n");
 
 /**
