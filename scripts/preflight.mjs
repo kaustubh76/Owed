@@ -14,6 +14,9 @@ import { createServer } from "node:net";
 const results = [];
 const record = (name, ok, detail, fix) => results.push({ name, ok, detail, fix });
 
+/** Read once: three checks below take their requirement from it rather than restating it. */
+const MANIFEST = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+
 function version(command) {
   try {
     return execSync(command, { stdio: ["ignore", "pipe", "ignore"] })
@@ -36,15 +39,37 @@ function version(command) {
 // one failure mode this script exists to prevent. 24 rather than 23.4 because 23 is an
 // odd-numbered release and already end-of-life; pointing anyone at it would be a worse
 // answer than pointing them at 24.
+//
+// The floor itself is read from `engines.node`, not typed here — which is the lesson the
+// pnpm check below states in as many words, applied to the check that taught it. It was
+// `>= 24` in this file and `">=24"` in package.json, two numbers for one requirement; the
+// CI job added on 2026-10-22 derives it too, so raising `engines` now moves all three.
+// The comment above stays because it carries what no derivation can: *why* 24 and not 23.4.
+const declared = String(MANIFEST.engines?.node ?? "");
+const floor = /(\d+)/.exec(declared);
 const nodeMajor = Number(process.versions.node.split(".")[0]);
-record(
-  "Node",
-  nodeMajor >= 24,
-  `v${process.versions.node}`,
-  "Owed needs Node 24 or newer: the ledger's SQLite adapter imports `node:sqlite`, which " +
-    "does not exist before 22.5 and needs a flag before 23.4. The repo is pinned to 26 in " +
-    ".nvmrc; `nvm use` picks it up.",
-);
+
+if (floor === null) {
+  // Same stance as the pnpm check: a check that cannot find its own requirement has not
+  // cleared anything, so it says so rather than passing.
+  record(
+    "Node",
+    false,
+    `cannot read the floor: engines.node is ${JSON.stringify(MANIFEST.engines?.node)}`,
+    "Set `engines.node` in package.json — this check takes the minimum from it, so there is " +
+      "no second copy to fall back on.",
+  );
+} else {
+  const required = Number(floor[1]);
+  record(
+    "Node",
+    nodeMajor >= required,
+    `v${process.versions.node}`,
+    `Owed needs Node ${required} or newer: the ledger's SQLite adapter imports ` +
+      "`node:sqlite`, which does not exist before 22.5 and needs a flag before 23.4. The " +
+      "repo is pinned to 26 in .nvmrc; `nvm use` picks it up.",
+  );
+}
 
 // The requirement is read from `packageManager`, not typed here.
 //
@@ -61,9 +86,7 @@ record(
 // Reading the pin rather than restating it is the point. The old remedy line below carried
 // its own copy of `10.18.2`, which is a second number to forget to update — and this
 // session has been closing that exact class of bug everywhere else in the repo.
-const PACKAGE_MANAGER = JSON.parse(
-  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-).packageManager;
+const PACKAGE_MANAGER = MANIFEST.packageManager;
 const pinned = /^pnpm@(\d+)\.\d+\.\d+/.exec(PACKAGE_MANAGER ?? "");
 
 const pnpmVersion = version("pnpm --version");
@@ -179,13 +202,46 @@ for (const result of results) {
   if (!result.ok) process.stdout.write(`       ${result.fix}\n`);
 }
 
+/**
+ * The chain, read out of `package.json` rather than listed here.
+ *
+ * This said "eight gates" and named eight — "the graph, the documents, build, lint, the whole
+ * test suite, the published numbers re-derived, conformance, deployment" — while the chain had
+ * nine: `verify:pack` was added on 2026-10-22 and nothing told this file. A judge runs
+ * `pnpm preflight` first, so it was the first thing they would have been told, and it was wrong.
+ * Found by running this script for the first time since that gate existed.
+ */
+const GATES = String(MANIFEST.scripts?.verify ?? "")
+  .split("&&")
+  .map((part) => part.trim().replace(/^pnpm\s+/, ""))
+  .filter((name) => name !== "");
+
+/** Wrapped by hand to the width of the block it sits in, which no formatter owns. */
+const gateLines = (() => {
+  const lines = [];
+  let line = "";
+  for (const gate of GATES) {
+    const next = line === "" ? gate : `${line}, ${gate}`;
+    if (next.length > 58) {
+      lines.push(line);
+      line = gate;
+    } else {
+      line = next;
+    }
+  }
+  if (line !== "") lines.push(line);
+  return lines
+    .map((text, index) => `                   ${text}${index < lines.length - 1 ? "," : ""}`)
+    .join("\n");
+})();
+
 if (failed.length === 0) {
   process.stdout.write(`
   Everything needed is here. Next:
 
     pnpm demo      then open http://127.0.0.1:5173 and ask "what am I owed?"
-    pnpm verify    eight gates: the graph, the documents, build, lint, the whole test
-                   suite, the published numbers re-derived, conformance, deployment
+    pnpm verify    ${GATES.length} gates, in order:
+${gateLines}
     pnpm verify:ui the same storyboard, driven in a real browser
 
 `);

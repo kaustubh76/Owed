@@ -361,7 +361,33 @@ const linesUnder = (dir, predicate) => {
 // Deliberately not a total of `.mjs` lines. That is the one count here whose files are
 // still being edited, so pinning it would fire the gate on every unrelated change; the
 // prose dropped the figure instead, which is what §14 of the readme did with its test count.
+/**
+ * The Node floor, which one file declares and three state.
+ *
+ * `package.json`'s `engines.node` is the declaration. `scripts/preflight.mjs` reads it, the CI
+ * job that runs the suite on the floor derives it, and `readme.md` §12 tells a judge the number
+ * in prose — the one copy no code can follow. Raising the floor without editing that sentence
+ * would leave the first thing a judge reads saying the wrong thing, which is what happened to
+ * preflight's own "eight gates" line when a ninth gate landed.
+ */
+const nodeFloor = /(\d+)/.exec(
+  String(JSON.parse(read(join(REPO_ROOT, "package.json"))).engines?.node ?? ""),
+);
+want(
+  "package.json declares a Node floor this can read",
+  nodeFloor !== null,
+  nodeFloor === null
+    ? "engines.node is missing or has no number in it"
+    : `engines.node >= ${nodeFloor[1]}`,
+);
+
 const COUNTS = [
+  {
+    what: "the Node major engines.node requires",
+    measured: Number(nodeFloor?.[1] ?? Number.NaN),
+    rendered: `Node ${nodeFloor?.[1] ?? "?"}+`,
+    document: "readme.md",
+  },
   {
     what: "lines in deploy/Caddyfile",
     measured: lineCount("deploy/Caddyfile"),
