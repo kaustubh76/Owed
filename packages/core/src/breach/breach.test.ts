@@ -11,8 +11,10 @@ import {
   BREACH_COVERAGE_MIN,
   coveragePercent,
   durationMs,
+  failedBreachGate,
   fromEpochMs,
   interval,
+  meetsBreachGate,
   toEpochMs,
   usd,
 } from "@owed/domain";
@@ -21,7 +23,7 @@ import { describe, expect, it } from "vitest";
 import { coverageGaps, measuredMs } from "../evidence/coverage.js";
 import { missedWindow } from "./detectors.js";
 import { assessPromise } from "./engine.js";
-import { conclude } from "./types.js";
+import { conclude, confidenceFromCoverage } from "./types.js";
 
 const HH = "hh_test";
 
@@ -754,6 +756,63 @@ describe("the gate", () => {
 
     expect(undecided, "undecidable cases generated").toBeGreaterThan(50);
     expect(decided, "decidable cases generated").toBeGreaterThan(50);
+  });
+
+  /**
+   * `failedBreachGate` is the same gate, read backwards.
+   *
+   * It exists so a refusal can name the number that refused instead of assuming it was the
+   * window, and the one thing it must never do is disagree with the gate it explains — a
+   * sentence blaming a gate that passed is worse than the generic one it replaced.
+   */
+  it("names a failing gate exactly when the gate refuses", () => {
+    const fractions = [0, 0.3, 0.5, 0.69, 0.7, 0.71, 0.84, 0.85, 0.86, 0.95, 1];
+    for (const confidence of fractions) {
+      for (const coverage of fractions) {
+        expect(
+          failedBreachGate(confidence, coverage) === undefined,
+          `confidence ${confidence}, coverage ${coverage}`,
+        ).toBe(meetsBreachGate(confidence, coverage));
+      }
+    }
+  });
+
+  /**
+   * The coincidence three spoken sentences used to rest on, now stated and enforced.
+   *
+   * The absence detectors derive confidence from coverage, and
+   * `confidenceFromCoverage(BREACH_COVERAGE_MIN)` lands **exactly** on
+   * `BREACH_CONFIDENCE_MIN` — so for those detections the two gates fail together, and the
+   * coverage sentence has always been the true reason. Nothing said so: three independently
+   * chosen constants happened to agree, and `GAP_CREDIBILITY`'s own comment justifies 0.5 by
+   * what a gap can hide without mentioning the threshold it lands on.
+   *
+   * `claim_file`'s refusal no longer depends on this — it asks which gate failed. These two
+   * still do, because the views they read carry `coverage` and not `confidence`:
+   *
+   *   voice.ts `speakDeclined`      "There's one I'm not claiming, because I only watched …"
+   *   voice.ts `speakPromiseCheck`  "I'm not claiming …. I watched … percent of the window."
+   *
+   * So if this fails, the calibration moved and those two sentences can now blame a window
+   * that was fine. Re-calibrate, or give those views a confidence field and ask
+   * `failedBreachGate` the way `claim_file` does.
+   */
+  it("is calibrated so a coverage-derived detection fails both gates together", () => {
+    expect(confidenceFromCoverage(BREACH_COVERAGE_MIN)).toBe(BREACH_CONFIDENCE_MIN);
+
+    const disagreed: string[] = [];
+    for (let step = 0; step <= 100; step += 1) {
+      const coverage = step / 100;
+      const byCoverage = coverage >= BREACH_COVERAGE_MIN;
+      const byConfidence = confidenceFromCoverage(coverage) >= BREACH_CONFIDENCE_MIN;
+      if (byCoverage !== byConfidence) disagreed.push(coverage.toFixed(2));
+    }
+
+    expect(
+      disagreed,
+      "the two gates no longer agree for coverage-derived detections, so `speakDeclined` and " +
+        "`speakPromiseCheck` can now blame a window that passed — see this test's comment",
+    ).toStrictEqual([]);
   });
 });
 

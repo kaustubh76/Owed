@@ -77,6 +77,7 @@ export function evidenceViewFor(
       : {
           verdict: assessment.verdict,
           coverage: assessment.coverage,
+          confidence: assessment.confidence,
           evaluation_interval: assessment.evaluation_interval,
           explanation: assessment.explanation,
         }),

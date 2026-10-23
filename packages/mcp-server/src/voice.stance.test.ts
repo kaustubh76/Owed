@@ -1,7 +1,13 @@
-import { type EvidenceView, evidenceStance, VerdictSchema } from "@owed/domain";
+import {
+  type EvidenceView,
+  evidenceStance,
+  type LedgerSummaryView,
+  usd,
+  VerdictSchema,
+} from "@owed/domain";
 import { STANCE_LABEL } from "@owed/ui-views";
 import { describe, expect, it } from "vitest";
-import { MAX_SPOKEN_CHARS, speakPromiseCheck } from "./voice.js";
+import { MAX_SPOKEN_CHARS, speakLedgerSummary, speakPromiseCheck } from "./voice.js";
 
 /**
  * The card and the spoken line, over every stance there is.
@@ -71,5 +77,73 @@ describe("every stance a view can take", () => {
 
   it("derives the stance from the view, so a verdict outranks a stale flag", () => {
     expect(evidenceStance({ ...viewFor("Breached"), watched: false })).toBe("Breached");
+  });
+});
+
+/**
+ * Which of §2's two gates refused, in the two sentences that read a view rather than a detection.
+ *
+ * `Suspected` needs only one gate to fail, and both of these said the window was too small. A
+ * phantom delivery whose claimed moment fell inside a gap takes
+ * `confidenceFromCoverage(coverage) * 0.6` — **at most 0.6 whatever the coverage** — so a camera
+ * up ninety-five percent of the window that blinked at the delivery moment failed on confidence
+ * alone, and Owed told the household it was the window. Not a hypothetical: that multiplier is
+ * `detectors.ts:270` and the reason §2 gives for it is exactly this case.
+ *
+ * Both branches are pinned, because the coverage wording is what the storyboard says and the
+ * capture quotes.
+ */
+describe("saying which gate refused", () => {
+  const suspected = (coverage: number, confidence: number): EvidenceView => ({
+    promise_id: "prm_010",
+    merchant: "Northwind Parcel",
+    kind: "delivery_window",
+    status: "Suspected",
+    verdict: "Suspected",
+    coverage,
+    confidence,
+    gaps: [],
+    items: [],
+  });
+
+  const summaryWith = (coverage: number, confidence: number): LedgerSummaryView => ({
+    currency: "USD",
+    recovered: usd(47),
+    open: usd(8),
+    kept: 0,
+    declined: 1,
+    items: [
+      {
+        promise_id: "prm_010",
+        merchant: "Northwind Parcel",
+        kind: "delivery_window",
+        status: "Suspected",
+        coverage,
+        confidence,
+      },
+    ],
+    period: "week",
+    as_of: "2026-10-19T19:30:00-07:00",
+  });
+
+  it("blames the window when the window failed", () => {
+    // The storyboard's own case: a fifth of the window, where both gates fail.
+    expect(speakPromiseCheck(suspected(0.2, 0.36))).toContain("That isn't enough to be sure");
+    expect(speakLedgerSummary(summaryWith(0.2, 0.36))).toContain(
+      "because I only watched twenty percent of the window",
+    );
+  });
+
+  it("blames its own certainty when the window was watched and it still is not sure", () => {
+    const spoken = speakPromiseCheck(suspected(0.95, 0.585));
+
+    expect(spoken).toContain("I watched ninety-five percent of the window");
+    expect(spoken).toContain("I still can't be sure what happened");
+    expect(spoken, "the window was plenty").not.toContain("That isn't enough to be sure");
+
+    const summary = speakLedgerSummary(summaryWith(0.95, 0.585));
+
+    expect(summary).toContain("I saw enough of the window, but I couldn't be sure enough");
+    expect(summary, "it must not blame a window it was happy with").not.toContain("I only watched");
   });
 });

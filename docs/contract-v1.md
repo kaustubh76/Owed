@@ -145,6 +145,50 @@ negotiation is **argued out against a merchant agent** over that merchant's own 
 policy. The storyboard states only what was observed and when a claim was filed; the
 figures, the verdicts and the transcripts are all outcomes.
 
+> **Amended D32 — the refusal named a gate it had not checked.** `Suspected` is returned when a
+> broken promise fails **either** of the two gates above, and all three sentences that explained
+> that refusal to a household read `coverage` and blamed the window:
+>
+> | where | what it said |
+> |---|---|
+> | `claim_file` | "I won't file that one. I only watched *N* percent of the window. That isn't enough to say it was broken." |
+> | `ledger_summary` | "There's one I'm not claiming, **because** I only watched *N* percent of the window" |
+> | `promise_check` | "I'm not claiming …. I watched *N* percent of the window. That isn't enough to be sure." |
+>
+> **It is reachable, which is what made this worth fixing rather than noting.** The confidence
+> section above ends with the multiplier: if the claimed moment itself fell inside a gap,
+> confidence is `confidenceFromCoverage(coverage) * 0.6`, which is **at most 0.6 whatever the
+> coverage was**. So a doorbell camera up ninety-five percent of the window that happened to blink
+> at the delivery moment fails the confidence gate alone — the exact case the 0.6 exists for — and
+> Owed told the household *"I only watched ninety-five percent of the window. That isn't enough to
+> say it was broken."* A sentence that contradicts itself, about money, out loud.
+>
+> **Why nobody noticed.** For a detection that saw the moment, confidence is
+> `confidenceFromCoverage(coverage)` — and `confidenceFromCoverage(0.70)` is **exactly 0.85**. The
+> two gates in the table above are calibrated to fail together, so for every case without the
+> multiplier the coverage sentence was the true reason. Three independently chosen constants
+> agreeing: nothing stated it, and `GAP_CREDIBILITY`'s own comment justifies 0.5 by what a gap can
+> hide without mentioning the threshold it lands on. `breach.test.ts` now asserts the calibration,
+> and the failure message names these sentences rather than the arithmetic.
+>
+> **`failedBreachGate(confidence, coverage)`** sits beside `meetsBreachGate` so the thresholds are
+> compared in one place, and answers **coverage first** — so when both gates fail, which is the
+> storyboard's twenty-percent promise and every case the demo reaches, every spoken line is
+> byte-identical to before. This is a robustness fix, not a change of voice.
+>
+> **Two of the three needed a field.** `claim_file` holds the `Detection` and could just ask.
+> `ledger_summary` and `promise_check` speak from views that carried `coverage` and not
+> `confidence`, so both gained an optional `confidence` — the same move as §D21's `watched`, and
+> for the same reason: the state existed and the sentence had no path to it. Populated from the
+> assessment already in scope in both builders. `docs/demo-capture.json` was regenerated; the only
+> things that moved are the new field, the three `ui://` bundle hashes that embed the schema, and
+> the capture's own timestamp. Every spoken sentence in it is unchanged.
+>
+> Not fixed, and stated instead: `speakDeclined` still speaks for all declined promises using the
+> one with the lowest coverage, so "there are three I'm not claiming, because …" gives one
+> promise's reason for three. Defensible as the worst case; it is still one reason standing in for
+> several.
+
 ---
 
 ## 3. Tool surface (6 tools, `snake_case`, frozen)

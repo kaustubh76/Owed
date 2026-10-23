@@ -39,6 +39,36 @@ export function meetsBreachGate(confidence: Confidence, coverage: Coverage): boo
   return confidence >= BREACH_CONFIDENCE_MIN && coverage >= BREACH_COVERAGE_MIN;
 }
 
+/** One of §2's two gates. */
+export type BreachGate = "confidence" | "coverage";
+
+/**
+ * Which gate refused, so the household can be told the true reason.
+ *
+ * `Suspected` means a broken promise failed **either** gate, and every sentence Owed says
+ * about that decision named coverage — "I only watched twenty percent of the window", "because
+ * I only watched…", "That isn't enough to say it was broken". None of them looked at
+ * confidence. They were true anyway, by an arithmetic coincidence nobody had written down:
+ * `confidenceFromCoverage(BREACH_COVERAGE_MIN)` lands exactly on `BREACH_CONFIDENCE_MIN`, so
+ * for the coverage-derived detectors the two gates fail together, and every fixed-confidence
+ * detector sits at 0.9 or above. Move one of those three constants and Owed would start saying
+ * "I only watched ninety-five percent of the window. That isn't enough" — about money, out
+ * loud, with every gate green. `coverage.test.ts` pins the calibration; this makes the sentence
+ * independent of it.
+ *
+ * **Coverage first on purpose.** When both gates fail — every reachable case today, including
+ * the storyboard's twenty-percent promise — the answer is `"coverage"`, which keeps the spoken
+ * line it already produces. The concrete number is also the more credible thing to say.
+ */
+export function failedBreachGate(
+  confidence: Confidence,
+  coverage: Coverage,
+): BreachGate | undefined {
+  if (coverage < BREACH_COVERAGE_MIN) return "coverage";
+  if (confidence < BREACH_CONFIDENCE_MIN) return "confidence";
+  return undefined;
+}
+
 /** Spoken/displayed form of a coverage fraction, e.g. 0.82 -> 82. */
 export function coveragePercent(coverage: Coverage): number {
   return Math.round(coverage * 100);

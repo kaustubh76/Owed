@@ -4,6 +4,7 @@ import {
   coveragePercent,
   type EvidenceView,
   evidenceStance,
+  failedBreachGate,
   isDerivedKind,
   isZeroMoney,
   type LedgerSummaryView,
@@ -123,15 +124,32 @@ function speakReadyToFile(view: LedgerSummaryView): string {
 function speakDeclined(view: LedgerSummaryView): string {
   if (view.declined === 0) return "";
 
-  const coverages = view.items
-    .filter((item) => item.status === "Suspected" && item.coverage !== undefined)
-    .map((item) => item.coverage as number);
-  const lowest = coverages.length > 0 ? Math.min(...coverages) : undefined;
+  const suspected = view.items.filter(
+    (item) => item.status === "Suspected" && item.coverage !== undefined,
+  );
+  const worst = suspected.reduce<(typeof suspected)[number] | undefined>(
+    (lowest, item) =>
+      lowest === undefined || (item.coverage as number) < (lowest.coverage as number)
+        ? item
+        : lowest,
+    undefined,
+  );
 
+  /**
+   * Which gate refused, not an assumption that it was the window.
+   *
+   * `Suspected` needs only one of §2's two gates to fail, and a phantom delivery whose claimed
+   * moment fell in a gap is capped at 0.6 confidence however wide the coverage — so "because I
+   * only watched ninety-five percent of the window" was a sentence this could say. A missing
+   * `confidence` on an item whose coverage passed can only mean the confidence gate refused,
+   * which is what the zero below resolves to.
+   */
   const reason =
-    lowest === undefined
+    worst === undefined
       ? "I didn't see enough of the window to be sure"
-      : `I only watched ${numberToWords(coveragePercent(lowest))} percent of the window`;
+      : failedBreachGate(worst.confidence ?? 0, worst.coverage as number) === "confidence"
+        ? "I saw enough of the window, but I couldn't be sure enough"
+        : `I only watched ${numberToWords(coveragePercent(worst.coverage as number))} percent of the window`;
 
   return view.declined === 1
     ? `There's one I'm not claiming, because ${reason}`
@@ -214,8 +232,19 @@ export function speakPromiseCheck(view: EvidenceView): string {
   const stance = evidenceStance(view);
 
   if (stance === "Suspected") {
+    // `watched` is a statement of fact in both branches; what changes is what it is blamed on.
+    const refused =
+      view.coverage === undefined
+        ? undefined
+        : failedBreachGate(view.confidence ?? 0, view.coverage);
     return assertSpeakable(
-      joinSpoken([`I'm not claiming ${subject}`, watched, "That isn't enough to be sure"]),
+      joinSpoken([
+        `I'm not claiming ${subject}`,
+        watched,
+        refused === "confidence"
+          ? "I still can't be sure what happened"
+          : "That isn't enough to be sure",
+      ]),
     );
   }
   if (stance === "Kept") {

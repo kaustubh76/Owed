@@ -1,7 +1,7 @@
 import * as z from "zod/v4";
 import type { Verdict } from "./breach.js";
 import { ClaimRoundSchema, ClaimStateSchema } from "./claim.js";
-import { CoverageSchema } from "./coverage.js";
+import { ConfidenceSchema, CoverageSchema } from "./coverage.js";
 import { EvidenceKindSchema } from "./evidence.js";
 import { CurrencySchema, MoneySchema } from "./money.js";
 import { PromiseKindSchema, PromiseStatusSchema } from "./promise.js";
@@ -22,6 +22,18 @@ export const LedgerSummaryItemSchema = z.object({
   amount: MoneySchema.optional(),
   claim_id: z.string().optional(),
   coverage: CoverageSchema.optional(),
+  /**
+   * The other half of §2's gate, because a refusal has to be able to name which half failed.
+   *
+   * Carried for the same reason `watched` is (§D21): the state existed and the household had
+   * no path to it. `Suspected` means a broken promise failed `confidence >= 0.85` **or**
+   * `coverage >= 0.7`, and every sentence explaining that refusal read `coverage` and said the
+   * window was too small. A phantom-delivery verdict whose claimed moment fell inside a gap
+   * takes `confidenceFromCoverage(coverage) * 0.6`, which is at most 0.6 however good the
+   * coverage was — so a camera up ninety-five percent of the window that blinked at the
+   * delivery moment was refused for its confidence and told the household it was the window.
+   */
+  confidence: ConfidenceSchema.optional(),
   /**
    * `false` when nothing will ever reach a verdict on this promise.
    *
@@ -79,6 +91,8 @@ export const EvidenceViewSchema = z.object({
   status: PromiseStatusSchema,
   verdict: z.enum(["Kept", "Suspected", "Breached", "Undetermined"]).optional(),
   coverage: CoverageSchema.optional(),
+  /** The other half of the gate — see `EvidenceView.confidence`. */
+  confidence: ConfidenceSchema.optional(),
   evaluation_interval: IntervalSchema.optional(),
   /** The stretches nobody was watching, stated rather than glossed over. */
   gaps: z.array(IntervalSchema),

@@ -21,6 +21,7 @@ import {
   ClaimViewSchema,
   coveragePercent,
   DAY_MS,
+  failedBreachGate,
   formatMoney,
   isActionable,
   MAX_CLAIMS_PER_MERCHANT,
@@ -561,7 +562,7 @@ function coverageStatement(coverage: number): string {
 function refusalFor(
   merchant: string,
   status: PromiseStatus,
-  assessment: { verdict: string; coverage: number } | undefined,
+  assessment: { verdict: string; coverage: number; confidence: number } | undefined,
 ): string {
   /**
    * A promise Owed is not sure anybody made.
@@ -583,6 +584,21 @@ function refusalFor(
     return assertSpeakable(`${merchant} kept that one, so there's nothing to claim.`);
   }
   if (assessment.verdict === "Suspected") {
+    /**
+     * Which gate refused, rather than assuming it was the window.
+     *
+     * §2 needs confidence **and** coverage, and a detection can see the whole window and still
+     * not be sure enough about what it saw. `failedBreachGate` answers coverage first, so the
+     * sentence below is unchanged for every case the storyboard reaches.
+     */
+    if (failedBreachGate(assessment.confidence, assessment.coverage) === "confidence") {
+      return assertSpeakable(
+        joinSpoken([
+          "I won't file that one",
+          "I saw enough of the window, but I'm not sure enough that it was broken",
+        ]),
+      );
+    }
     return assertSpeakable(
       joinSpoken([
         `I won't file that one`,

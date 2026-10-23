@@ -329,7 +329,7 @@ Measured on 120 labelled messages and, separately, on 40 held out — see §10 a
 
 ### 8.2 Breach engine
 `breach = f(promise, evidence[])` → `{kind, confidence, coverage, evidence_ids, explanation}`.
-- Coverage = fraction of the promise window observed by any evidence source. Below threshold → `Suspected`, never `Breached`. The card says what was and wasn't seen.
+- Two gates, not one: `Breached` needs `confidence >= 0.85` **and** `coverage >= 0.7`. Coverage is the fraction of the promise window observed by any evidence source; confidence is what the detector makes of what it saw. Fail either → `Suspected`, never `Breached`, and the card says what was and wasn't seen. **The refusal names the gate that actually refused** (§D32): a camera up ninety-five percent of the window that blinked at the delivery moment is capped at 0.6 confidence by design, and Owed used to call that a coverage problem out loud.
 - Breach kinds v1: `late_eta`, `missed_window`, `phantom_delivery`, `no_show`, `late_refund`, `price_drop`.
 - Evidence kinds v1: `timestamp`, `carrier_scan`, `doorbell_event`, `doorbell_snapshot`,
   `refund_observed`, `price_observed`. Six, not five: `price_observed` was added at D5

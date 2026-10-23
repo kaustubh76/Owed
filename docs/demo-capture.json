@@ -1,7 +1,7 @@
 {
   "$comment": "Captured from a real run by scripts/capture-demo.mjs. Not hand-written. Re-runnable: pnpm build && node scripts/capture-demo.mjs",
-  "captured_at": "2026-10-22T05:25:22.583Z",
-  "commit": "f75b5540e99ad8336a730d9d18611a375910d25c",
+  "captured_at": "2026-10-23T05:15:16.918Z",
+  "commit": "ee49e0e0d9dec4ed43f2dbf71667961e2524937d",
   "server": {
     "info": {
       "name": "owed",
@@ -410,7 +410,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -428,7 +429,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
@@ -484,7 +486,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -502,7 +505,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
@@ -556,7 +560,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -574,7 +579,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
@@ -602,6 +608,7 @@
           "status": "Filed",
           "verdict": "Breached",
           "coverage": 0.8166666666666667,
+          "confidence": 0.9083333333333333,
           "evaluation_interval": {
             "start": "2026-10-06T20:42:00.000Z",
             "end": "2026-10-06T21:42:00.000Z"
@@ -652,6 +659,7 @@
           "status": "Filed",
           "verdict": "Breached",
           "coverage": 0.8166666666666667,
+          "confidence": 0.9083333333333333,
           "evaluation_interval": {
             "start": "2026-10-06T20:42:00.000Z",
             "end": "2026-10-06T21:42:00.000Z"
@@ -789,7 +797,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -801,7 +810,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -813,7 +823,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -825,7 +836,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -837,21 +849,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -863,14 +878,16 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
@@ -888,7 +905,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "week",
@@ -926,7 +944,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -938,7 +957,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -950,7 +970,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -962,7 +983,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -974,21 +996,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -1000,14 +1025,16 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
@@ -1025,7 +1052,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "month",
@@ -1061,7 +1089,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -1073,7 +1102,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -1085,7 +1115,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -1097,7 +1128,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -1109,21 +1141,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -1135,14 +1170,16 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
@@ -1160,7 +1197,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "week",
@@ -1182,6 +1220,7 @@
           "status": "Suspected",
           "verdict": "Suspected",
           "coverage": 0.2,
+          "confidence": 0.36,
           "evaluation_interval": {
             "start": "2026-10-11T23:10:00.000Z",
             "end": "2026-10-12T00:10:00.000Z"
@@ -1224,6 +1263,7 @@
           "status": "Suspected",
           "verdict": "Suspected",
           "coverage": 0.2,
+          "confidence": 0.36,
           "evaluation_interval": {
             "start": "2026-10-11T23:10:00.000Z",
             "end": "2026-10-12T00:10:00.000Z"
@@ -1359,7 +1399,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -1371,7 +1412,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -1383,7 +1425,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -1395,7 +1438,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -1407,21 +1451,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -1433,21 +1480,24 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Breached",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_007",
@@ -1459,7 +1509,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "week",
@@ -1497,7 +1548,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -1509,7 +1561,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -1521,7 +1574,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -1533,7 +1587,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -1545,21 +1600,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -1571,21 +1629,24 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Breached",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_007",
@@ -1597,7 +1658,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "month",
@@ -1633,7 +1695,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -1645,7 +1708,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -1657,7 +1721,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -1669,7 +1734,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -1681,21 +1747,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -1707,21 +1776,24 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Breached",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_007",
@@ -1733,7 +1805,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "week",
@@ -1755,6 +1828,7 @@
           "status": "Suspected",
           "verdict": "Suspected",
           "coverage": 0.2,
+          "confidence": 0.36,
           "evaluation_interval": {
             "start": "2026-10-11T23:10:00.000Z",
             "end": "2026-10-12T00:10:00.000Z"
@@ -1797,6 +1871,7 @@
           "status": "Suspected",
           "verdict": "Suspected",
           "coverage": 0.2,
+          "confidence": 0.36,
           "evaluation_interval": {
             "start": "2026-10-11T23:10:00.000Z",
             "end": "2026-10-12T00:10:00.000Z"
@@ -1954,7 +2029,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -1966,7 +2042,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -1978,7 +2055,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -1990,7 +2068,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -2002,21 +2081,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -2028,21 +2110,24 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Breached",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_007",
@@ -2054,7 +2139,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "week",
@@ -2092,7 +2178,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -2104,7 +2191,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -2116,7 +2204,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -2128,7 +2217,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -2140,21 +2230,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -2166,21 +2259,24 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Breached",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_007",
@@ -2192,7 +2288,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "month",
@@ -2228,7 +2325,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 1
             },
             {
               "promise_id": "prm_005",
@@ -2240,7 +2338,8 @@
                 "minor": 1500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_001",
@@ -2252,7 +2351,8 @@
                 "minor": 300,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             },
             {
               "promise_id": "prm_003",
@@ -2264,7 +2364,8 @@
                 "minor": 900,
                 "currency": "USD"
               },
-              "coverage": 0.8888888888888888
+              "coverage": 0.8888888888888888,
+              "confidence": 0.9444444444444444
             },
             {
               "promise_id": "prm_002",
@@ -2276,21 +2377,24 @@
                 "minor": 1200,
                 "currency": "USD"
               },
-              "coverage": 0.8166666666666667
+              "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333
             },
             {
               "promise_id": "prm_009",
               "merchant": "Alder Home Services",
               "kind": "appointment_slot",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_008",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Kept",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.97
             },
             {
               "promise_id": "prm_006",
@@ -2302,21 +2406,24 @@
                 "minor": 800,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_010",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Suspected",
-              "coverage": 0.2
+              "coverage": 0.2,
+              "confidence": 0.36
             },
             {
               "promise_id": "prm_011",
               "merchant": "Northwind Parcel",
               "kind": "delivery_window",
               "status": "Breached",
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.98
             },
             {
               "promise_id": "prm_007",
@@ -2328,7 +2435,8 @@
                 "minor": 500,
                 "currency": "USD"
               },
-              "coverage": 1
+              "coverage": 1,
+              "confidence": 0.99
             }
           ],
           "period": "week",
@@ -2350,6 +2458,7 @@
           "status": "Suspected",
           "verdict": "Suspected",
           "coverage": 0.2,
+          "confidence": 0.36,
           "evaluation_interval": {
             "start": "2026-10-11T23:10:00.000Z",
             "end": "2026-10-12T00:10:00.000Z"
@@ -2392,6 +2501,7 @@
           "status": "Suspected",
           "verdict": "Suspected",
           "coverage": 0.2,
+          "confidence": 0.36,
           "evaluation_interval": {
             "start": "2026-10-11T23:10:00.000Z",
             "end": "2026-10-12T00:10:00.000Z"
@@ -2628,8 +2738,8 @@
         "resourceDomains": [],
         "connectDomains": []
       },
-      "bytes": 463568,
-      "sha256": "06280f1acf803540c787ce11fd4966ea60474fd9edb7c5f1b5b6d56f9c00c174",
+      "bytes": 463618,
+      "sha256": "21d2bafd8073c7d4577df9353468c5cb2ff54e125fe0e618772158b2a37aab84",
       "matchesDist": true
     },
     {
@@ -2640,8 +2750,8 @@
         "resourceDomains": [],
         "connectDomains": []
       },
-      "bytes": 463573,
-      "sha256": "0a527530937edf30ed02592558b95185e9d397a40ef5c4f84801813b764d97f0",
+      "bytes": 463623,
+      "sha256": "a00c55b89a1624d09987c798c3c11e140611eeb0ca0184024c82c455a7607a77",
       "matchesDist": true
     },
     {
@@ -2652,8 +2762,8 @@
         "resourceDomains": [],
         "connectDomains": []
       },
-      "bytes": 464382,
-      "sha256": "b7f7d678c09867faa50164abef1ac8b23f2d4e3affaca2c01a1294252acf3860",
+      "bytes": 464432,
+      "sha256": "c337238fe3c33922c1a118de5488e4a4177d9a65c7e9c643d2b9174e5190b37e",
       "matchesDist": true
     }
   ],
@@ -2675,7 +2785,7 @@
         "id": 0
       },
       "seq": 0,
-      "at": "2026-10-22T05:25:22.741Z"
+      "at": "2026-10-23T05:15:17.095Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2685,7 +2795,7 @@
         "method": "notifications/initialized"
       },
       "seq": 1,
-      "at": "2026-10-22T05:25:22.779Z"
+      "at": "2026-10-23T05:15:17.140Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2779,7 +2889,7 @@
         "id": 1
       },
       "seq": 2,
-      "at": "2026-10-22T05:25:22.810Z"
+      "at": "2026-10-23T05:15:17.148Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2807,7 +2917,7 @@
         }
       },
       "seq": 3,
-      "at": "2026-10-22T05:25:22.823Z"
+      "at": "2026-10-23T05:15:17.162Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2901,7 +3011,7 @@
         "id": 2
       },
       "seq": 4,
-      "at": "2026-10-22T05:25:22.824Z"
+      "at": "2026-10-23T05:15:17.163Z"
     },
     {
       "merchant": "Northwind Parcel",
@@ -2929,13 +3039,13 @@
         }
       },
       "seq": 5,
-      "at": "2026-10-22T05:25:22.831Z"
+      "at": "2026-10-23T05:15:17.170Z"
     }
   ],
   "mcpFrames": [
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.548Z",
+      "at": "2026-10-23T05:15:16.876Z",
       "message": {
         "jsonrpc": "2.0",
         "id": "server-discover-probe-1",
@@ -2956,7 +3066,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.584Z",
+      "at": "2026-10-23T05:15:16.919Z",
       "message": {
         "method": "tools/list",
         "jsonrpc": "2.0",
@@ -2977,7 +3087,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.591Z",
+      "at": "2026-10-23T05:15:16.926Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 0,
@@ -3141,6 +3251,11 @@
                           "type": "string"
                         },
                         "coverage": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "confidence": {
                           "type": "number",
                           "minimum": 0,
                           "maximum": 1
@@ -3352,6 +3467,11 @@
                           "minimum": 0,
                           "maximum": 1
                         },
+                        "confidence": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
                         "watched": {
                           "type": "boolean"
                         }
@@ -3470,6 +3590,11 @@
                     ]
                   },
                   "coverage": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "confidence": {
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1
@@ -3653,6 +3778,11 @@
                     ]
                   },
                   "coverage": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "confidence": {
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1
@@ -4255,7 +4385,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.627Z",
+      "at": "2026-10-23T05:15:16.963Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4278,7 +4408,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.634Z",
+      "at": "2026-10-23T05:15:16.972Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 1,
@@ -4362,7 +4492,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.636Z",
+      "at": "2026-10-23T05:15:16.974Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4387,7 +4517,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.639Z",
+      "at": "2026-10-23T05:15:16.978Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 2,
@@ -4471,7 +4601,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.639Z",
+      "at": "2026-10-23T05:15:16.978Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4494,7 +4624,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.643Z",
+      "at": "2026-10-23T05:15:16.983Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 3,
@@ -4578,7 +4708,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.644Z",
+      "at": "2026-10-23T05:15:16.983Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4603,7 +4733,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.648Z",
+      "at": "2026-10-23T05:15:16.988Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 4,
@@ -4647,7 +4777,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.651Z",
+      "at": "2026-10-23T05:15:16.991Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4670,7 +4800,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.655Z",
+      "at": "2026-10-23T05:15:16.995Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 5,
@@ -4718,7 +4848,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -4736,7 +4867,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
@@ -4790,7 +4922,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -4808,7 +4941,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
@@ -4826,7 +4960,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.656Z",
+      "at": "2026-10-23T05:15:16.995Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -4851,7 +4985,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.659Z",
+      "at": "2026-10-23T05:15:17.000Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 6,
@@ -4899,7 +5033,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -4917,7 +5052,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
@@ -4971,7 +5107,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -4989,7 +5126,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
@@ -5007,7 +5145,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.659Z",
+      "at": "2026-10-23T05:15:17.000Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5030,7 +5168,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.662Z",
+      "at": "2026-10-23T05:15:17.004Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 7,
@@ -5078,7 +5216,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -5096,7 +5235,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
@@ -5150,7 +5290,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -5168,7 +5309,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
@@ -5186,7 +5328,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.662Z",
+      "at": "2026-10-23T05:15:17.004Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5211,7 +5353,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.666Z",
+      "at": "2026-10-23T05:15:17.008Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 8,
@@ -5231,6 +5373,7 @@
               "status": "Filed",
               "verdict": "Breached",
               "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333,
               "evaluation_interval": {
                 "start": "2026-10-06T20:42:00.000Z",
                 "end": "2026-10-06T21:42:00.000Z"
@@ -5278,6 +5421,7 @@
             "status": "Filed",
             "verdict": "Breached",
             "coverage": 0.8166666666666667,
+            "confidence": 0.9083333333333333,
             "evaluation_interval": {
               "start": "2026-10-06T20:42:00.000Z",
               "end": "2026-10-06T21:42:00.000Z"
@@ -5317,7 +5461,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.666Z",
+      "at": "2026-10-23T05:15:17.008Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5343,7 +5487,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.669Z",
+      "at": "2026-10-23T05:15:17.011Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 9,
@@ -5363,6 +5507,7 @@
               "status": "Filed",
               "verdict": "Breached",
               "coverage": 0.8166666666666667,
+              "confidence": 0.9083333333333333,
               "evaluation_interval": {
                 "start": "2026-10-06T20:42:00.000Z",
                 "end": "2026-10-06T21:42:00.000Z"
@@ -5398,6 +5543,7 @@
             "status": "Filed",
             "verdict": "Breached",
             "coverage": 0.8166666666666667,
+            "confidence": 0.9083333333333333,
             "evaluation_interval": {
               "start": "2026-10-06T20:42:00.000Z",
               "end": "2026-10-06T21:42:00.000Z"
@@ -5425,7 +5571,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.670Z",
+      "at": "2026-10-23T05:15:17.012Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5450,7 +5596,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.674Z",
+      "at": "2026-10-23T05:15:17.016Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 10,
@@ -5584,7 +5730,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.677Z",
+      "at": "2026-10-23T05:15:17.019Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5607,7 +5753,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.680Z",
+      "at": "2026-10-23T05:15:17.022Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 11,
@@ -5643,7 +5789,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -5655,7 +5802,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -5667,7 +5815,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -5679,7 +5828,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -5691,21 +5841,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -5717,14 +5870,16 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
@@ -5742,7 +5897,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "week",
@@ -5778,7 +5934,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -5790,7 +5947,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -5802,7 +5960,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -5814,7 +5973,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -5826,21 +5986,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -5852,14 +6015,16 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
@@ -5877,7 +6042,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "week",
@@ -5889,7 +6055,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.680Z",
+      "at": "2026-10-23T05:15:17.022Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -5914,7 +6080,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.682Z",
+      "at": "2026-10-23T05:15:17.025Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 12,
@@ -5950,7 +6116,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -5962,7 +6129,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -5974,7 +6142,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -5986,7 +6155,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -5998,21 +6168,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -6024,14 +6197,16 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
@@ -6049,7 +6224,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "month",
@@ -6085,7 +6261,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -6097,7 +6274,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -6109,7 +6287,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -6121,7 +6300,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -6133,21 +6313,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -6159,14 +6342,16 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
@@ -6184,7 +6369,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "month",
@@ -6196,7 +6382,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.682Z",
+      "at": "2026-10-23T05:15:17.025Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6219,7 +6405,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.684Z",
+      "at": "2026-10-23T05:15:17.028Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 13,
@@ -6255,7 +6441,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -6267,7 +6454,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -6279,7 +6467,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -6291,7 +6480,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -6303,21 +6493,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -6329,14 +6522,16 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
@@ -6354,7 +6549,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "week",
@@ -6390,7 +6586,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -6402,7 +6599,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -6414,7 +6612,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -6426,7 +6625,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -6438,21 +6638,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -6464,14 +6667,16 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
@@ -6489,7 +6694,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "week",
@@ -6501,7 +6707,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.684Z",
+      "at": "2026-10-23T05:15:17.028Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6526,7 +6732,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.687Z",
+      "at": "2026-10-23T05:15:17.031Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 14,
@@ -6546,6 +6752,7 @@
               "status": "Suspected",
               "verdict": "Suspected",
               "coverage": 0.2,
+              "confidence": 0.36,
               "evaluation_interval": {
                 "start": "2026-10-11T23:10:00.000Z",
                 "end": "2026-10-12T00:10:00.000Z"
@@ -6585,6 +6792,7 @@
             "status": "Suspected",
             "verdict": "Suspected",
             "coverage": 0.2,
+            "confidence": 0.36,
             "evaluation_interval": {
               "start": "2026-10-11T23:10:00.000Z",
               "end": "2026-10-12T00:10:00.000Z"
@@ -6616,7 +6824,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.687Z",
+      "at": "2026-10-23T05:15:17.031Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6642,7 +6850,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.689Z",
+      "at": "2026-10-23T05:15:17.034Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 15,
@@ -6662,6 +6870,7 @@
               "status": "Suspected",
               "verdict": "Suspected",
               "coverage": 0.2,
+              "confidence": 0.36,
               "evaluation_interval": {
                 "start": "2026-10-11T23:10:00.000Z",
                 "end": "2026-10-12T00:10:00.000Z"
@@ -6701,6 +6910,7 @@
             "status": "Suspected",
             "verdict": "Suspected",
             "coverage": 0.2,
+            "confidence": 0.36,
             "evaluation_interval": {
               "start": "2026-10-11T23:10:00.000Z",
               "end": "2026-10-12T00:10:00.000Z"
@@ -6732,7 +6942,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.689Z",
+      "at": "2026-10-23T05:15:17.034Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6757,7 +6967,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.691Z",
+      "at": "2026-10-23T05:15:17.037Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 16,
@@ -6849,7 +7059,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.693Z",
+      "at": "2026-10-23T05:15:17.040Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -6872,7 +7082,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.695Z",
+      "at": "2026-10-23T05:15:17.042Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 17,
@@ -6908,7 +7118,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -6920,7 +7131,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -6932,7 +7144,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -6944,7 +7157,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -6956,21 +7170,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -6982,21 +7199,24 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Breached",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_007",
@@ -7008,7 +7228,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "week",
@@ -7044,7 +7265,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -7056,7 +7278,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -7068,7 +7291,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -7080,7 +7304,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -7092,21 +7317,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -7118,21 +7346,24 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Breached",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_007",
@@ -7144,7 +7375,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "week",
@@ -7156,7 +7388,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.695Z",
+      "at": "2026-10-23T05:15:17.042Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -7181,7 +7413,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.697Z",
+      "at": "2026-10-23T05:15:17.045Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 18,
@@ -7217,7 +7449,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -7229,7 +7462,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -7241,7 +7475,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -7253,7 +7488,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -7265,21 +7501,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -7291,21 +7530,24 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Breached",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_007",
@@ -7317,7 +7559,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "month",
@@ -7353,7 +7596,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -7365,7 +7609,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -7377,7 +7622,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -7389,7 +7635,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -7401,21 +7648,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -7427,21 +7677,24 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Breached",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_007",
@@ -7453,7 +7706,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "month",
@@ -7465,7 +7719,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.697Z",
+      "at": "2026-10-23T05:15:17.045Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -7488,7 +7742,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.700Z",
+      "at": "2026-10-23T05:15:17.047Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 19,
@@ -7524,7 +7778,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -7536,7 +7791,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -7548,7 +7804,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -7560,7 +7817,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -7572,21 +7830,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -7598,21 +7859,24 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Breached",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_007",
@@ -7624,7 +7888,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "week",
@@ -7660,7 +7925,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -7672,7 +7938,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -7684,7 +7951,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -7696,7 +7964,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -7708,21 +7977,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -7734,21 +8006,24 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Breached",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_007",
@@ -7760,7 +8035,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "week",
@@ -7772,7 +8048,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.700Z",
+      "at": "2026-10-23T05:15:17.047Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -7797,7 +8073,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.702Z",
+      "at": "2026-10-23T05:15:17.051Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 20,
@@ -7817,6 +8093,7 @@
               "status": "Suspected",
               "verdict": "Suspected",
               "coverage": 0.2,
+              "confidence": 0.36,
               "evaluation_interval": {
                 "start": "2026-10-11T23:10:00.000Z",
                 "end": "2026-10-12T00:10:00.000Z"
@@ -7856,6 +8133,7 @@
             "status": "Suspected",
             "verdict": "Suspected",
             "coverage": 0.2,
+            "confidence": 0.36,
             "evaluation_interval": {
               "start": "2026-10-11T23:10:00.000Z",
               "end": "2026-10-12T00:10:00.000Z"
@@ -7887,7 +8165,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.702Z",
+      "at": "2026-10-23T05:15:17.051Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -7913,7 +8191,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.705Z",
+      "at": "2026-10-23T05:15:17.053Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 21,
@@ -7933,6 +8211,7 @@
               "status": "Suspected",
               "verdict": "Suspected",
               "coverage": 0.2,
+              "confidence": 0.36,
               "evaluation_interval": {
                 "start": "2026-10-11T23:10:00.000Z",
                 "end": "2026-10-12T00:10:00.000Z"
@@ -7972,6 +8251,7 @@
             "status": "Suspected",
             "verdict": "Suspected",
             "coverage": 0.2,
+            "confidence": 0.36,
             "evaluation_interval": {
               "start": "2026-10-11T23:10:00.000Z",
               "end": "2026-10-12T00:10:00.000Z"
@@ -8003,7 +8283,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.705Z",
+      "at": "2026-10-23T05:15:17.053Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -8028,7 +8308,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.707Z",
+      "at": "2026-10-23T05:15:17.056Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 22,
@@ -8120,7 +8400,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.708Z",
+      "at": "2026-10-23T05:15:17.057Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -8143,7 +8423,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.710Z",
+      "at": "2026-10-23T05:15:17.059Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 23,
@@ -8179,7 +8459,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -8191,7 +8472,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -8203,7 +8485,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -8215,7 +8498,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -8227,21 +8511,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -8253,21 +8540,24 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Breached",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_007",
@@ -8279,7 +8569,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "week",
@@ -8315,7 +8606,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -8327,7 +8619,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -8339,7 +8632,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -8351,7 +8645,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -8363,21 +8658,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -8389,21 +8687,24 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Breached",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_007",
@@ -8415,7 +8716,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "week",
@@ -8427,7 +8729,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.711Z",
+      "at": "2026-10-23T05:15:17.059Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -8452,7 +8754,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.713Z",
+      "at": "2026-10-23T05:15:17.062Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 24,
@@ -8488,7 +8790,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -8500,7 +8803,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -8512,7 +8816,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -8524,7 +8829,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -8536,21 +8842,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -8562,21 +8871,24 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Breached",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_007",
@@ -8588,7 +8900,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "month",
@@ -8624,7 +8937,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -8636,7 +8950,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -8648,7 +8963,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -8660,7 +8976,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -8672,21 +8989,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -8698,21 +9018,24 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Breached",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_007",
@@ -8724,7 +9047,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "month",
@@ -8736,7 +9060,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.713Z",
+      "at": "2026-10-23T05:15:17.062Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -8759,7 +9083,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.715Z",
+      "at": "2026-10-23T05:15:17.064Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 25,
@@ -8795,7 +9119,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 1
                 },
                 {
                   "promise_id": "prm_005",
@@ -8807,7 +9132,8 @@
                     "minor": 1500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_001",
@@ -8819,7 +9145,8 @@
                     "minor": 300,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 },
                 {
                   "promise_id": "prm_003",
@@ -8831,7 +9158,8 @@
                     "minor": 900,
                     "currency": "USD"
                   },
-                  "coverage": 0.8888888888888888
+                  "coverage": 0.8888888888888888,
+                  "confidence": 0.9444444444444444
                 },
                 {
                   "promise_id": "prm_002",
@@ -8843,21 +9171,24 @@
                     "minor": 1200,
                     "currency": "USD"
                   },
-                  "coverage": 0.8166666666666667
+                  "coverage": 0.8166666666666667,
+                  "confidence": 0.9083333333333333
                 },
                 {
                   "promise_id": "prm_009",
                   "merchant": "Alder Home Services",
                   "kind": "appointment_slot",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_008",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Kept",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.97
                 },
                 {
                   "promise_id": "prm_006",
@@ -8869,21 +9200,24 @@
                     "minor": 800,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_010",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Suspected",
-                  "coverage": 0.2
+                  "coverage": 0.2,
+                  "confidence": 0.36
                 },
                 {
                   "promise_id": "prm_011",
                   "merchant": "Northwind Parcel",
                   "kind": "delivery_window",
                   "status": "Breached",
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.98
                 },
                 {
                   "promise_id": "prm_007",
@@ -8895,7 +9229,8 @@
                     "minor": 500,
                     "currency": "USD"
                   },
-                  "coverage": 1
+                  "coverage": 1,
+                  "confidence": 0.99
                 }
               ],
               "period": "week",
@@ -8931,7 +9266,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 1
               },
               {
                 "promise_id": "prm_005",
@@ -8943,7 +9279,8 @@
                   "minor": 1500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_001",
@@ -8955,7 +9292,8 @@
                   "minor": 300,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               },
               {
                 "promise_id": "prm_003",
@@ -8967,7 +9305,8 @@
                   "minor": 900,
                   "currency": "USD"
                 },
-                "coverage": 0.8888888888888888
+                "coverage": 0.8888888888888888,
+                "confidence": 0.9444444444444444
               },
               {
                 "promise_id": "prm_002",
@@ -8979,21 +9318,24 @@
                   "minor": 1200,
                   "currency": "USD"
                 },
-                "coverage": 0.8166666666666667
+                "coverage": 0.8166666666666667,
+                "confidence": 0.9083333333333333
               },
               {
                 "promise_id": "prm_009",
                 "merchant": "Alder Home Services",
                 "kind": "appointment_slot",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_008",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Kept",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.97
               },
               {
                 "promise_id": "prm_006",
@@ -9005,21 +9347,24 @@
                   "minor": 800,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_010",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Suspected",
-                "coverage": 0.2
+                "coverage": 0.2,
+                "confidence": 0.36
               },
               {
                 "promise_id": "prm_011",
                 "merchant": "Northwind Parcel",
                 "kind": "delivery_window",
                 "status": "Breached",
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.98
               },
               {
                 "promise_id": "prm_007",
@@ -9031,7 +9376,8 @@
                   "minor": 500,
                   "currency": "USD"
                 },
-                "coverage": 1
+                "coverage": 1,
+                "confidence": 0.99
               }
             ],
             "period": "week",
@@ -9043,7 +9389,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.715Z",
+      "at": "2026-10-23T05:15:17.064Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9068,7 +9414,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.717Z",
+      "at": "2026-10-23T05:15:17.067Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 26,
@@ -9088,6 +9434,7 @@
               "status": "Suspected",
               "verdict": "Suspected",
               "coverage": 0.2,
+              "confidence": 0.36,
               "evaluation_interval": {
                 "start": "2026-10-11T23:10:00.000Z",
                 "end": "2026-10-12T00:10:00.000Z"
@@ -9127,6 +9474,7 @@
             "status": "Suspected",
             "verdict": "Suspected",
             "coverage": 0.2,
+            "confidence": 0.36,
             "evaluation_interval": {
               "start": "2026-10-11T23:10:00.000Z",
               "end": "2026-10-12T00:10:00.000Z"
@@ -9158,7 +9506,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.717Z",
+      "at": "2026-10-23T05:15:17.067Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9184,7 +9532,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.719Z",
+      "at": "2026-10-23T05:15:17.069Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 27,
@@ -9204,6 +9552,7 @@
               "status": "Suspected",
               "verdict": "Suspected",
               "coverage": 0.2,
+              "confidence": 0.36,
               "evaluation_interval": {
                 "start": "2026-10-11T23:10:00.000Z",
                 "end": "2026-10-12T00:10:00.000Z"
@@ -9243,6 +9592,7 @@
             "status": "Suspected",
             "verdict": "Suspected",
             "coverage": 0.2,
+            "confidence": 0.36,
             "evaluation_interval": {
               "start": "2026-10-11T23:10:00.000Z",
               "end": "2026-10-12T00:10:00.000Z"
@@ -9274,7 +9624,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.719Z",
+      "at": "2026-10-23T05:15:17.069Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9299,7 +9649,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.721Z",
+      "at": "2026-10-23T05:15:17.072Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 28,
@@ -9391,7 +9741,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.722Z",
+      "at": "2026-10-23T05:15:17.074Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9416,7 +9766,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.725Z",
+      "at": "2026-10-23T05:15:17.077Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 29,
@@ -9461,7 +9811,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.728Z",
+      "at": "2026-10-23T05:15:17.082Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9491,7 +9841,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.730Z",
+      "at": "2026-10-23T05:15:17.084Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 30,
@@ -9515,7 +9865,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.730Z",
+      "at": "2026-10-23T05:15:17.085Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9540,7 +9890,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.733Z",
+      "at": "2026-10-23T05:15:17.087Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 31,
@@ -9585,7 +9935,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.733Z",
+      "at": "2026-10-23T05:15:17.087Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9619,7 +9969,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.833Z",
+      "at": "2026-10-23T05:15:17.171Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 32,
@@ -9777,7 +10127,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.834Z",
+      "at": "2026-10-23T05:15:17.173Z",
       "message": {
         "method": "tools/call",
         "params": {
@@ -9803,7 +10153,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.838Z",
+      "at": "2026-10-23T05:15:17.176Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 33,
@@ -9827,7 +10177,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.840Z",
+      "at": "2026-10-23T05:15:17.178Z",
       "message": {
         "method": "resources/read",
         "params": {
@@ -9849,7 +10199,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.850Z",
+      "at": "2026-10-23T05:15:17.188Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 34,
@@ -9874,8 +10224,8 @@
               },
               "owed/elided": {
                 "reason": "view bundle published as its own file; see `views` in this capture",
-                "bytes": 463568,
-                "sha256": "06280f1acf803540c787ce11fd4966ea60474fd9edb7c5f1b5b6d56f9c00c174"
+                "bytes": 463618,
+                "sha256": "21d2bafd8073c7d4577df9353468c5cb2ff54e125fe0e618772158b2a37aab84"
               }
             }
           ],
@@ -9887,7 +10237,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.856Z",
+      "at": "2026-10-23T05:15:17.200Z",
       "message": {
         "method": "resources/read",
         "params": {
@@ -9909,7 +10259,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.865Z",
+      "at": "2026-10-23T05:15:17.211Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 35,
@@ -9934,8 +10284,8 @@
               },
               "owed/elided": {
                 "reason": "view bundle published as its own file; see `views` in this capture",
-                "bytes": 463573,
-                "sha256": "0a527530937edf30ed02592558b95185e9d397a40ef5c4f84801813b764d97f0"
+                "bytes": 463623,
+                "sha256": "a00c55b89a1624d09987c798c3c11e140611eeb0ca0184024c82c455a7607a77"
               }
             }
           ],
@@ -9947,7 +10297,7 @@
     },
     {
       "direction": "out",
-      "at": "2026-10-22T05:25:22.867Z",
+      "at": "2026-10-23T05:15:17.217Z",
       "message": {
         "method": "resources/read",
         "params": {
@@ -9969,7 +10319,7 @@
     },
     {
       "direction": "in",
-      "at": "2026-10-22T05:25:22.875Z",
+      "at": "2026-10-23T05:15:17.229Z",
       "message": {
         "jsonrpc": "2.0",
         "id": 36,
@@ -9994,8 +10344,8 @@
               },
               "owed/elided": {
                 "reason": "view bundle published as its own file; see `views` in this capture",
-                "bytes": 464382,
-                "sha256": "b7f7d678c09867faa50164abef1ac8b23f2d4e3affaca2c01a1294252acf3860"
+                "bytes": 464432,
+                "sha256": "c337238fe3c33922c1a118de5488e4a4177d9a65c7e9c643d2b9174e5190b37e"
               }
             }
           ],

@@ -276,7 +276,9 @@ export function summarize(state: LedgerState, currency: Currency, since?: Instan
             amount: claim.recovered_amount ?? claim.settled_amount ?? claim.ask,
           }
         : {}),
-      ...(view.assessment ? { coverage: view.assessment.coverage } : {}),
+      ...(view.assessment
+        ? { coverage: view.assessment.coverage, confidence: view.assessment.confidence }
+        : {}),
       // Only when it is bad news, matching `EvidenceView.watched`: an assessed promise is
       // self-evidently watched, and one under a detector's care needs no announcement. The
       // brain reads this to know there is something here it can be asked about.
