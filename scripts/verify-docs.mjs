@@ -213,6 +213,91 @@ for (const file of markdown) {
 want("at least one citation was checked", citations > 0, `${citations} checked`);
 
 // ---------------------------------------------------------------------------
+// The contract's amendments, and the documents that cite them.
+//
+// This submission has three kinds of internal cross-reference and gated two of them: the
+// friction-log citations above, the relative links below, and the contract's `D`-numbered
+// amendments, which had nothing pointed at them. `docs/contract-v1.md` is the document
+// readme §5 invites a judge to re-derive the sequence diagram out of, and it declared
+// **seventeen amendments under sixteen ids** — two unrelated amendments both called `D18`,
+// added in one commit, with `D19` left unused.
+//
+// Citations are matched on a bare `D<n>`, which is wider than it looks and deliberately so:
+// the prose cites amendments as "§D26", "amendment D23", "added at D5", "until D20" and
+// "Before D21", and a narrower pattern checked nine of the fourteen. If a future document
+// uses `D<n>` to mean something that is not an amendment, this will say so — and the answer
+// is to write that differently rather than to loosen the check, which is the same reasoning
+// as stripping comments before grepping source.
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the contract's amendments, and the documents that cite them ---\n");
+
+const CONTRACT = "docs/contract-v1.md";
+const declaredAmendments = [...read(join(REPO_ROOT, CONTRACT)).matchAll(/\*\*Amended (D\d+)/g)]
+  .map((match) => match[1])
+  .filter((id) => id !== undefined);
+
+/**
+ * Sixteen is what the contract declares today. A scan that found none would report nothing
+ * and pass, which is how two gates in this repository were caught being decorative.
+ */
+const AMENDMENT_FLOOR = 16;
+want(
+  "the amendment log parsed",
+  declaredAmendments.length >= AMENDMENT_FLOOR,
+  declaredAmendments.length >= AMENDMENT_FLOOR
+    ? `${declaredAmendments.length} amendment(s) declared`
+    : `only ${declaredAmendments.length}, expected at least ${AMENDMENT_FLOOR} — the scan ` +
+        "broke, so every check below it is vacuous",
+);
+
+const amendmentCount = new Map();
+for (const id of declaredAmendments) {
+  amendmentCount.set(id, (amendmentCount.get(id) ?? 0) + 1);
+}
+const reused = [...amendmentCount].filter(([, n]) => n > 1).map(([id]) => id);
+
+/**
+ * What to renumber a duplicate to: the next unused number **after** it, not the lowest unused
+ * one. The gaps at D1-D4 are older than the duplicate, so "D1 is free" is true and useless —
+ * the ids run chronologically and a correction has to keep doing that.
+ */
+const takenNumbers = new Set([...amendmentCount.keys()].map((id) => Number(id.slice(1))));
+const freeAfter = (id) => {
+  let n = Number(id.slice(1)) + 1;
+  while (takenNumbers.has(n)) n += 1;
+  return `D${n}`;
+};
+
+want(
+  "every amendment has its own number",
+  reused.length === 0,
+  reused.length === 0
+    ? `${amendmentCount.size} distinct id(s)`
+    : `${reused.map((id) => `${id} (renumber one to ${freeAfter(id)})`).join(", ")} used twice`,
+);
+
+// Nothing asserts the ids are dense or in file order: the gaps at D1-D4 and D6-D17 are
+// history, and the file is laid out by section while the ids run chronologically.
+let amendmentCitations = 0;
+for (const file of markdown) {
+  if (file === CONTRACT) continue;
+  for (const match of read(join(REPO_ROOT, file)).matchAll(/\bD\d+\b/g)) {
+    const id = match[0];
+    amendmentCitations += 1;
+    want(
+      `${file} cites ${id}`,
+      amendmentCount.has(id),
+      amendmentCount.has(id) ? "declared in the contract" : "no such amendment",
+    );
+  }
+}
+want(
+  "at least one amendment citation was checked",
+  amendmentCitations > 0,
+  `${amendmentCitations} checked`,
+);
+
+// ---------------------------------------------------------------------------
 // Relative links. A dead link in a submission is a judge hitting a 404.
 // ---------------------------------------------------------------------------
 process.stdout.write("\n--- relative links in readme.md and docs/ ---\n");

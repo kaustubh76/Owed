@@ -706,8 +706,13 @@ product without the gate failing.
 - **After settlement:** *"Northwind Parcel settled at eight dollars in two rounds. I'll tell you when the credit lands."*
 - **Sun 19:30, "Alexa, what am I owed?":** *"You've recovered forty-seven dollars this week, and eight dollars is still open. Two promises were kept. There's one I'm not claiming, because I only watched twenty percent of the window. There's one more I can file."*
 
-**Amended D18.** All three were previously written by hand, and all three were sentences the
+**Amended D19.** All three were previously written by hand, and all three were sentences the
 server cannot produce.
+
+> *Issued as a second **D18** in the same commit as the one in §3, leaving D19 unused, and
+> renumbered here rather than corrected quietly — this file's own header asks for a migration
+> note. Nothing cited either number. `verify:docs` now fails on a reused amendment id and tells
+> you which number to take, and checks that every `D<n>` the other documents cite exists.*
 
 The first contained digits — *"scanned delivered at 2:12"*, *"between 1:42 and 2:42"* — and
 `packages/mcp-server/src/voice.ts` forbids `/[0-9]/` outright ("numbers must be written the
