@@ -298,6 +298,101 @@ want(
 );
 
 // ---------------------------------------------------------------------------
+// The clauses Owed quotes, against the documents they cite.
+//
+// The hero beat's narration is the product's whole argument — "it countered by quoting
+// *their own* clause back at them" — and it rests on two files agreeing.
+// `packages/policy-library/policies/*.json` is what the negotiator argues from, and each
+// clause there carries a `source` naming a document and a `quote` copied out of it;
+// `docs/policies/*.md` is that document, and `docs/demo-script.md` sends the viewer straight
+// at it. So a judge hears "Delivery Guarantee 4.1, eight dollars" on camera, opens
+// `docs/policies/northwind-parcel.md`, and reads "we credit $8, or up to $10".
+//
+// All six clauses agreed when this was written. Nothing held them there: edit a figure on one
+// side and Owed would cite a clause whose own words contradict the number it asked for, in the
+// one place the submission invites a judge to check it by hand.
+//
+// Not asserted, deliberately: that every clause in the markdown has a JSON entry. The
+// documents carry clauses the product does not implement — Northwind's 4.3 is "Making a
+// claim" and resolves to no remedy — so a completeness check would fail on correct content.
+// The direction that matters is that nothing Owed *quotes* is invented.
+// ---------------------------------------------------------------------------
+process.stdout.write("\n--- the clauses Owed quotes, against the documents they cite ---\n");
+
+const POLICY_DATA = join(REPO_ROOT, "packages", "policy-library", "policies");
+const POLICY_DOCS = join(DOCS, "policies");
+const policyDocNames = new Set(readdirSync(POLICY_DOCS).filter((name) => name.endsWith(".md")));
+const policyFiles = readdirSync(POLICY_DATA).filter((name) => name.endsWith(".json"));
+
+const clauses = [];
+for (const name of policyFiles) {
+  const policy = JSON.parse(read(join(POLICY_DATA, name)));
+  for (const clause of policy.clauses ?? []) clauses.push(clause);
+}
+
+/** Six clauses across four merchants today; a glob matching nothing would report nothing. */
+const CLAUSE_FLOOR = 6;
+const POLICY_FLOOR = 4;
+want(
+  "the policy library parsed",
+  clauses.length >= CLAUSE_FLOOR && policyFiles.length >= POLICY_FLOOR,
+  clauses.length >= CLAUSE_FLOOR && policyFiles.length >= POLICY_FLOOR
+    ? `${clauses.length} clause(s) across ${policyFiles.length} merchant(s)`
+    : `${clauses.length} clause(s) across ${policyFiles.length} merchant(s), expected at least ` +
+        `${CLAUSE_FLOOR} and ${POLICY_FLOOR} — the scan broke, so every check below it is vacuous`,
+);
+
+/** Dollar figures a sentence names, in minor units, so they compare with a remedy. */
+const figuresIn = (text) =>
+  new Set(
+    [...text.matchAll(/\$([0-9]+(?:\.[0-9]{2})?)/g)].map((match) =>
+      Math.round(Number(match[1]) * 100),
+    ),
+  );
+
+/** The markdown hard-wraps and the JSON does not, so both sides are flattened to compare. */
+const flatten = (text) => text.replace(/\s+/g, " ").trim();
+
+for (const clause of clauses) {
+  const named = /\(([^)]+\.md)\)/.exec(clause.source ?? "");
+  const docName = named === null ? undefined : (named[1] ?? "").split("/").pop();
+  const exists = docName !== undefined && policyDocNames.has(docName);
+  want(
+    `${clause.id} cites a document that exists`,
+    exists,
+    exists ? docName : `no readable .md in ${JSON.stringify(clause.source ?? "")}`,
+  );
+  if (!exists) continue;
+
+  const prose = flatten(read(join(POLICY_DOCS, docName)));
+  const quoted = flatten(clause.quote ?? "");
+  const verbatim = quoted.length > 0 && prose.includes(quoted);
+  want(
+    `${clause.id} quotes ${docName} verbatim`,
+    verbatim,
+    quoted.length === 0
+      ? "the clause carries no quote"
+      : verbatim
+        ? `${quoted.length} characters, word for word`
+        : "the document does not contain that sentence",
+  );
+
+  const said = figuresIn(quoted);
+  for (const field of ["stated", "ceiling", "floor"]) {
+    const amount = clause.remedy?.[field];
+    if (amount === undefined) continue;
+    const names = said.has(amount.minor);
+    want(
+      `${clause.id} ${field} is a figure the clause itself names`,
+      names,
+      names
+        ? `${amount.minor} ${amount.currency}`
+        : `${amount.minor} is not among ${[...said].sort((a, b) => a - b).join(", ") || "nothing"}`,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Relative links. A dead link in a submission is a judge hitting a 404.
 // ---------------------------------------------------------------------------
 process.stdout.write("\n--- relative links in readme.md and docs/ ---\n");
