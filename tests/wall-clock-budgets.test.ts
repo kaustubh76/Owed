@@ -203,6 +203,7 @@ describe("a wall-clock test's two budgets", () => {
     expect(wallClock.map((one) => one.file).sort(), "the files the rule applies to").toStrictEqual([
       "apps/brain/src/alexaPlusClient.test.ts",
       "apps/brain/src/boot.test.ts",
+      "packages/mcp-server/src/restart.test.ts",
       "packages/mcp-server/src/store/dynamo.test.ts",
     ]);
   });

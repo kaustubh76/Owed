@@ -149,11 +149,26 @@ if (existing.length === 0) {
   );
   // Catch the id generator up to the ledger it just found.
   //
-  // Without this, the counters start at zero while the ledger already contains
-  // `clm_000001` and friends, so the first claim filed after a restart is handed an id
-  // that already exists — and the idempotency check then reads it back as "already
-  // filed", so nothing happens and no card appears. That failure needs persistence to
-  // show up at all, which is why it survived until the ledger moved to DynamoDB.
+  // Without this, the counters start at zero while the ledger already holds a week, so the
+  // next id minted is one that already exists. That failure needs persistence to show up at
+  // all, which is why it survived until the ledger moved to DynamoDB.
+  //
+  // **Which ids, exactly**, because the first answer is wrong and the correction is the
+  // reason this is worth a comment. The paragraph here used to say the collision hit claim
+  // ids — "the first claim filed after a restart is handed an id that already exists, and the
+  // idempotency check then reads it back as already filed, so nothing happens and no card
+  // appears". True when it was written; not reachable now. The seed writes promise and claim
+  // ids as short readable literals (`prm_001`, `clm_007`) while this generator pads to six
+  // (`prm_000001`), and `claimIdFor` derives a claim's id from its promise, so neither can
+  // collide any more.
+  //
+  // What the seed *does* take from this counter is everything that does not have to be
+  // readable: `evt_000001`-`evt_000081`, `brc_000001`-`brc_000011`, `evd_000001` upward. Those
+  // are minted again by every live capture, so the real failure is a second `evt_000001` —
+  // and an `evd_` collision is the one with teeth, since evidence is looked up by id and the
+  // card would show the wrong thing. `restart.test.ts` boots this file twice against one
+  // `OWED_DB` and fails naming them; deleting the line below reddens it with
+  // `evt_000001, evt_000002, …`.
   for (const event of existing) observeIds(event, idGen);
 }
 
