@@ -46,6 +46,31 @@ and they mean different problems:
 | `add-on unreachable` | the brain cannot reach the MCP server. The server is down or the token expired. |
 | `brain offline` | the socket itself is down. The brain process is not running. |
 
+**Rehearse as much as you like, then restart `pnpm demo` before the take.** This is the one
+piece of setup that is invisible until it has cost you a take. The hero beat at 1:28 files
+`prm_011`, and `claim_file` is idempotent per promise — so once you have practised it, the demo
+is already standing where the take is supposed to end up.
+
+Two things then go wrong, and the first is the opening line of the video:
+
+> Fresh: *"…and **eight dollars** is still open. Two promises were kept. There's one I'm not
+> claiming, because I only watched twenty percent of the window. **There's one more I can
+> file.**"*
+>
+> After a rehearsal: *"…and **sixteen dollars** is still open. Two promises were kept. There's
+> one I'm not claiming, because I only watched twenty percent of the window."*
+
+The figure is not the one quoted at 0:12, and the clause that sets up the whole second half is
+gone. Then "File it" answers instantly — *"Northwind Parcel settled at eight dollars in two
+rounds"*, all four rounds already on the card — because there is nothing left to negotiate. The
+beat still works; the negotiation does not happen on camera, which is the part worth watching.
+
+Restarting fixes it because **the ledger is in memory by default**, so every boot reseeds the
+week from scratch. It takes a few seconds and there is nothing to clean up. The exception is
+`OWED_DB`: with the ledger on disk a restart prints `not reseeding` and changes nothing, so the
+one setting that sounds like a safety net is the one that removes it. Leave it unset for the
+recording. `packages/mcp-server/src/restart.test.ts` is where both halves of that are pinned.
+
 The demo starts on **Sunday 19:30** in the seeded week. Leave it there.
 
 Two things worth knowing before you talk over it:
@@ -263,6 +288,10 @@ tuning. Showing both, and showing the one that went against us, is the point.
   and `brain offline` are different problems with different fixes. `pnpm preflight` will tell
   you if a port was taken and which service owns it. The page reconnects by itself with
   backoff, so give it a few seconds before reloading.
+- **The opening line says sixteen dollars, or "File it" settles instantly.** The claim is
+  already filed — from a rehearsal, or from an earlier take you did not restart after. Nothing
+  is broken and nothing needs cleaning up: stop, restart `pnpm demo`, and begin again. See
+  "Before you press record"; the ledger is in memory, so a restart is the reset.
 - **The proactive badge doesn't appear.** You did not scrub back far enough. The moment is
   Sunday **18:25**, not 19:30. Go back before it and cross it again.
 - **"File it" says it has nothing in mind.** It replies *"Tell me which promise you mean, or
