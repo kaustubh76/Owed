@@ -1,5 +1,7 @@
 # Owed — the Alexa+ add-on that works for the customer, not the brand
 
+[![verify](https://github.com/kaustubh76/Owed/actions/workflows/verify.yml/badge.svg)](https://github.com/kaustubh76/Owed/actions/workflows/verify.yml)
+
 > **"Alexa, what am I owed?"**
 > Owed records every promise a business makes to your household — a delivery window, a ride ETA, a refund SLA, a guarantee — notices when it's broken, and collects what you're owed by negotiating with the merchant's agent. You never lift a finger.
 
