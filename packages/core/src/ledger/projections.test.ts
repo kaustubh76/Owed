@@ -198,6 +198,54 @@ describe("ledger projection", () => {
     expect(summary.open).toEqual(usd(0));
   });
 
+  /**
+   * One claim's whole life, recorded twice, and the money that must not move.
+   *
+   * `claim_file` reads the ledger, checks whether the promise already has a claim, negotiates,
+   * and only then appends — so two calls arriving together both passed the check and both wrote
+   * `ClaimProposed`, `ClaimFiled`, `Settled` and `Recovered` under the same claim id. The tool
+   * holds one filing per promise now, but the ledger is append-only: a household whose log
+   * already contains a doubled claim still has to read correctly for ever.
+   *
+   * It does, for a reason sharper than it first looks, and nothing asserted it until this test.
+   * The claim id is derived from the promise, so a second filing is the *same* claim — and
+   * `ClaimProposed` is a **constructor, not a merge**: it does `state.claims.set(id, { …,
+   * rounds: [] })`, so the duplicate lifecycle rebuilds the claim and overwrites the first
+   * rather than compounding it. Both filings are identical, so the result is identical.
+   *
+   * Worth saying because the obvious guess is wrong. Folding `Settled` and `Recovered` amounts
+   * into a running total — the plausible refactor, and how `summarize`'s own accumulator already
+   * works — does **not** double the money, because the second `ClaimProposed` resets the field
+   * first. What does break it is making `ClaimProposed` preserve a claim it already has, which
+   * is the equally plausible "don't clobber" change: the rounds then accumulate and one claim
+   * reads as two negotiations. That is the regression this test is positioned to catch, which is
+   * why it asserts the round count and not only the totals.
+   */
+  it("absorbs a claim recorded twice, because two filings are one claim", async () => {
+    const once = recoveredChain("prm_7", "Northwind Parcel", "delivery_window", 1, 8);
+    // The claim-scoped rows a second time, with fresh event ids and the same claim id: what
+    // two concurrent filings actually wrote.
+    const again = recoveredChain("prm_7", "Northwind Parcel", "delivery_window", 1, 8).filter(
+      (event) => "claim_id" in event,
+    );
+    const doubled = [...once, ...again];
+
+    const single = summarize(await projectAll(once), "USD");
+    const twice = summarize(await projectAll(doubled), "USD");
+
+    expect(twice.recovered, "eight dollars owed once is eight dollars recovered").toEqual(usd(8));
+    expect(twice.recovered).toEqual(single.recovered);
+    expect(twice.open).toEqual(single.open);
+    expect(twice.items.length).toBe(single.items.length);
+
+    // And the claim reads once, with the rounds it actually had.
+    const state = await projectAll(doubled);
+    expect(state.claims.size).toBe(1);
+    expect(state.claims.get("clm_prm_7")?.rounds.length).toBe(
+      (await projectAll(once)).claims.get("clm_prm_7")?.rounds.length,
+    );
+  });
+
   it("counts a settled-but-not-yet-observed claim as open, not recovered", async () => {
     const events = recoveredChain("prm_x", "Northwind Parcel", "delivery_window", 1, 12);
     const beforeCredit = events.slice(0, -1);

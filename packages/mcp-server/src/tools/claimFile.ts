@@ -169,7 +169,7 @@ export function registerClaimFile(
           return spokenError("All right, I won't file it.");
         }
 
-        const outcome = await handleClaimFile(deps, promise_id, confirmed, attach);
+        const outcome = await fileOnce(deps, promise_id, confirmed, attach);
         if (outcome.kind === "result") return outcome.result;
 
         if (connectionCanAsk(server, era)) {
@@ -217,6 +217,78 @@ function retargetToSource(context: ToolContext, asked: PromiseView): PromiseView
   const source = sourceVerdictFor(asked.promise, siblings);
   if (source === undefined) return asked;
   return context.state.promises.get(source.promise.id) ?? asked;
+}
+
+/**
+ * One filing per promise at a time.
+ *
+ * `handleClaimFile` reads the ledger, checks whether this promise already has a claim,
+ * negotiates with the merchant and only then appends — and the check and the write are
+ * separated by the whole negotiation, up to three round trips to an agent across a network.
+ * Two calls that arrive together both passed the check, so the promise was claimed twice:
+ * `ClaimProposed`, `ClaimFiled` and `Settled` written twice for one claim id, and the
+ * merchant asked twice in the same instant about the same promise. Two taps on the home's
+ * "File it" chip reach that, as do two Echo devices and a brain retrying a call it believed
+ * had timed out.
+ *
+ * The store cannot catch it: `#reserveSequenceBlock` hands concurrent appends **disjoint**
+ * sequence numbers, so `attribute_not_exists(sk)` keeps the log append-only and says nothing
+ * about logical uniqueness. Nor could the figures catch it — they stayed correct throughout,
+ * because the claim id is derived from the promise and every projection is a map keyed by it
+ * whose events *set* fields rather than accumulate. What was wrong was the ledger holding one
+ * claim's whole life twice and the merchant hearing about it twice, which is the pile-on the
+ * frequency cap exists to prevent and which it cannot see, since it counts distinct claims.
+ *
+ * Same shape as `ensure()` in `apps/brain/src/session.ts`: one shared in-flight attempt, so N
+ * calls produce one. A joined caller gets the first call's outcome, which is the claim that
+ * was filed — the same answer the sequential path already returns from its idempotency check.
+ * Entered only for a **confirmed** call, because an unconfirmed one asks a question and does
+ * no work, and handing a caller that said `confirm: true` somebody else's "shall I?" would be
+ * a new bug. Cleared in `finally`, so a failed attempt is not cached and the next call retries.
+ *
+ * **Per process, which is the deployment that exists** — one `owed-server` unit per box. Two
+ * instances behind a load balancer would still race, and the answer there is a conditional
+ * write on the *deterministic claim id* rather than on the sequence number. The id scheme
+ * already allows it; nothing here implements it.
+ */
+const inFlightFilings = new WeakMap<OwedDeps["store"], Map<string, Promise<ClaimFileOutcome>>>();
+
+/**
+ * `handleClaimFile`, but at most one at a time per household and promise.
+ *
+ * Keyed by the **store**, which took one wrong turn worth recording: the map started as a
+ * closure variable in `registerClaimFile`, which does nothing at all, because `server.ts` says
+ * "a fresh server per request; all shared state lives in `deps`" — and `app.ts` builds a new
+ * `{ ...deps, householdId }` literal for every request, so neither the closure nor the `deps`
+ * object identity survives from one call to the next. The store is the object that does survive,
+ * and it is the thing being protected. A `WeakMap` so a torn-down server takes its entry with
+ * it, which also keeps one test's harness out of another's.
+ *
+ * `attachEvidence` is deliberately not part of the key: the point is that one promise becomes
+ * one claim, so a second caller asking for a different evidence attachment joins the filing
+ * already under way rather than starting a second one.
+ */
+function fileOnce(
+  deps: OwedDeps,
+  promiseId: string,
+  confirmed: boolean,
+  attachEvidence: boolean,
+): Promise<ClaimFileOutcome> {
+  if (!confirmed) return handleClaimFile(deps, promiseId, confirmed, attachEvidence);
+
+  const existing = inFlightFilings.get(deps.store);
+  const inFlight = existing ?? new Map<string, Promise<ClaimFileOutcome>>();
+  if (existing === undefined) inFlightFilings.set(deps.store, inFlight);
+
+  const key = `${deps.householdId}\u0000${promiseId}`;
+  const running = inFlight.get(key);
+  if (running !== undefined) return running;
+
+  const attempt = handleClaimFile(deps, promiseId, confirmed, attachEvidence).finally(() => {
+    inFlight.delete(key);
+  });
+  inFlight.set(key, attempt);
+  return attempt;
 }
 
 async function handleClaimFile(

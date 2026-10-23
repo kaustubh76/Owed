@@ -427,6 +427,55 @@ A `DECLINE` must carry a human escalation route.
 > inspect a zero settlement, so a merchant author reads it off `reaches-a-conclusion`, which
 > carries the violation's own sentence.
 
+> **Amended D31 — two taps on "File it" filed the promise twice.** `claim_file` reads the ledger,
+> checks whether this promise already has a claim, negotiates with the merchant, and only then
+> appends. The check and the write are separated by the **whole negotiation** — up to three round
+> trips to an agent across a network — so two calls arriving together both passed the check.
+> Nothing serializes tool calls, and the store cannot catch it either: `#reserveSequenceBlock`
+> hands concurrent appends **disjoint** sequence numbers, so `attribute_not_exists(sk)` keeps the
+> log append-only and says nothing about logical uniqueness. Two taps on the home's chip reach it,
+> as do two Echo devices and a brain retrying a call it believed had timed out.
+>
+> **What it was not.** I went looking for doubled money and there is none, which is worth writing
+> down because the reason is not the obvious one. The claim id is derived from the promise, so a
+> second filing is the *same* claim — and `ClaimProposed` is a **constructor, not a merge**:
+> `state.claims.set(id, { …, rounds: [] })` rebuilds the claim, so the duplicate lifecycle
+> overwrites the first instead of compounding it. Folding `Settled` and `Recovered` amounts into a
+> running total — the plausible refactor, and how `summarize`'s own accumulator works — does *not*
+> double the recovered figure, because the second `ClaimProposed` resets the field first. The
+> change that *does* break it is making `ClaimProposed` preserve a claim it already has, the
+> equally plausible "don't clobber": rounds then accumulate and one claim reads as two
+> negotiations. Both were tried as mutations; only the second reddens, and
+> `ledger/projections.test.ts` is now positioned on it rather than on the totals alone.
+>
+> **What it was.** The merchant was claimed against **twice for one promise in the same instant**,
+> which is exactly the pile-on the frequency cap exists to prevent — and the cap counts distinct
+> claims, so it never saw this. And the append-only ledger this submission offers as *evidence*
+> held one claim's whole life twice, including two settlements of $8.00 for one $8.00 debt.
+>
+> **One shared in-flight filing**, the shape `apps/brain/src/session.ts` already uses for linking:
+> N calls produce one, a joined caller gets the first call's outcome — the same claim the
+> sequential path returns from its idempotency check — and the entry is cleared in `finally` so a
+> failure is not cached. Entered only for a *confirmed* call, because an unconfirmed one asks a
+> question and does no work, and handing a caller that passed `confirm: true` somebody else's
+> "shall I?" would be a new bug.
+>
+> **Keyed by the store, after one wrong turn worth keeping.** The map began as a closure variable
+> in `registerClaimFile`, which does nothing at all: `server.ts` says "a fresh server per request;
+> all shared state lives in `deps`", and `app.ts` builds a new `{ ...deps, householdId }` literal
+> every request, so neither the closure nor the `deps` identity survives between calls. The store
+> is the object that does, and it is the thing being protected. A `WeakMap` on it, so a torn-down
+> server takes its entry along and one test's harness cannot see another's.
+>
+> **Per process, which is the deployment that exists** — one `owed-server` unit per box. Two
+> instances behind a load balancer would still race; the answer there is a conditional write on
+> the *deterministic claim id* rather than on the sequence number, which the id scheme already
+> allows and which nothing here implements. The same window also spans the
+> `MAX_CLAIMS_PER_MERCHANT` cap — six concurrent filings against one merchant's six promises would
+> each read a count below it — but demonstrating that needs two filable promises for one merchant
+> and the seeded week has exactly one, so it is recorded as a limit rather than claimed as a
+> defect.
+
 > **Amended D25 — the grant Alexa+ does not support was a way into the ledger.** The
 > authorization server advertised `grant_types_supported: ["authorization_code",
 > "refresh_token", "client_credentials"]` and implemented all three. Amazon's account-linking
